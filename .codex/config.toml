@@ -1,0 +1,30 @@
+# Project-scoped Codex settings for interactive use in this repository.
+# The application itself invokes each role as a separate `codex exec` process
+# (see server/ai/codex-provider.ts) with an isolated workdir and a minimal environment.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+
+[mcp_servers.github]
+command = "bunx"
+args = ["@modelcontextprotocol/server-github"]
+env_vars = ["GITHUB_TOKEN"]
+
+[mcp_servers.filesystem]
+command = "bunx"
+args = ["@modelcontextprotocol/server-filesystem", "."]
+
+[mcp_servers.postgres]
+# The server expects its URL as argv[2], not only in the environment.
+# Supply DATABASE_URL in the Codex host environment; never store it here.
+command = "sh"
+args = ["-c", 'exec bunx @modelcontextprotocol/server-postgres "${DATABASE_URL:?Set DATABASE_URL in the Codex host environment}"']
+env_vars = ["DATABASE_URL"]
+
+[mcp_servers.chromeDevtools]
+command = "bunx"
+args = ["chrome-devtools-mcp@latest", "--no-usage-statistics"]
+
+[mcp_servers.playwright]
+command = "bunx"
+args = ["@playwright/mcp@latest"]

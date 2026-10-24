@@ -1,0 +1,26 @@
+[Unit]
+Description=iis · Nuxt / Bun
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=iis
+Group=iis
+WorkingDirectory=/var/www/iis/current
+EnvironmentFile=/etc/iis/app.env
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+# Install Bun at a stable, root-owned path; do not rely on an interactive shell PATH.
+ExecStart=/usr/local/bin/bun run .output/server/index.mjs
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

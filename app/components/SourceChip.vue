@@ -1,0 +1,76 @@
+<script setup lang="ts">
+import type { SourceRef } from '#shared/types/investment'
+
+defineProps<{
+  id: string
+  source?: SourceRef
+}>()
+
+const KIND: Record<string, {
+  icon: string
+  label: string
+}> = {
+  candles: {
+    icon: 'i-lucide-candlestick-chart',
+    label: 'Котировки',
+  },
+  metrics: {
+    icon: 'i-lucide-calculator',
+    label: 'Расчёт кодом',
+  },
+  backtest: {
+    icon: 'i-lucide-history',
+    label: 'Бэктест',
+  },
+  event: {
+    icon: 'i-lucide-newspaper',
+    label: 'Событие',
+  },
+  report: {
+    icon: 'i-lucide-file-spreadsheet',
+    label: 'Отчётность',
+  },
+  memory: {
+    icon: 'i-lucide-brain',
+    label: 'Память',
+  },
+}
+</script>
+
+<template>
+  <UPopover
+    mode="hover"
+    :open-delay="0"
+    :content="{ side: 'top' }"
+  >
+    <button
+      type="button"
+      class="num inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] ring ring-inset transition-colors"
+      :class="source ? 'bg-elevated/60 text-toned ring-default hover:bg-elevated' : 'bg-error/10 text-error ring-error/30'"
+    >
+      <UIcon :name="KIND[source?.kind ?? '']?.icon ?? 'i-lucide-circle-help'" class="size-3" />{{ id }}
+    </button>
+    <template #content>
+      <div class="max-w-xs space-y-1 p-2.5 text-xs">
+        <template v-if="source">
+          <p class="section-label">
+            {{ KIND[source.kind]?.label ?? source.kind }} · {{ fmtDate(source.asOf) }}
+          </p>
+          <p class="text-sm text-highlighted">
+            {{ source.title }}
+          </p>
+          <a
+            v-if="source.url"
+            :href="source.url"
+            target="_blank"
+            rel="noopener"
+            class="text-primary hover:underline"
+          >Открыть источник</a>
+        </template>
+        <p v-else class="text-error">
+          Источник не найден в пакете данных — кодовая валидация отметит это как нарушение.
+        </p>
+      </div>
+    </template>
+  </UPopover>
+</template>

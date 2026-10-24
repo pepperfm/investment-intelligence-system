@@ -1,0 +1,37 @@
+# LOCAL DEVELOPMENT ONLY. Production uses Ubuntu services, not these containers.
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: iis
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports: ["127.0.0.1:5442:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d iis"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis-cache:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports: ["127.0.0.1:6392:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis-state:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:6393:6379"]
+    volumes: ["redis-state-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  postgres-data: {}
+  redis-state-data: {}

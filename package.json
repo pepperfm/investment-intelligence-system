@@ -1,0 +1,62 @@
+{
+  "name": "investment-intelligence-system",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bun nuxt dev",
+    "build": "bun --bun nuxt build",
+    "preview": "bun --bun nuxt preview",
+    "start": "bun run .output/server/index.mjs",
+    "postinstall": "bun --bun nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix --max-warnings 0",
+    "test": "vitest run",
+    "db:generate": "nuxt db generate",
+    "db:migrate": "nuxt db migrate",
+    "worker": "bun run workers/index.ts",
+    "queue:demo": "bun run workers/enqueue.ts",
+    "schedule:register": "bun run workers/schedules.ts",
+    "typecheck:worker": "tsc --noEmit -p tsconfig.worker.json",
+    "services:up": "docker compose up -d --wait",
+    "services:down": "docker compose down"
+  },
+  "dependencies": {
+    "@better-auth/core": "^1.7.12",
+    "@better-auth/redis-storage": "^1.7.12",
+    "@nuxt/eslint": "^1.17.0",
+    "@nuxt/ui": "^4.12.0",
+    "@nuxthub/core": "^0.10.11",
+    "@pinia/nuxt": "^0.11.3",
+    "@tanstack/charts": "^1.1.0",
+    "@vueuse/core": "^13.9.0",
+    "@vueuse/nuxt": "^13.9.0",
+    "better-auth": "^1.7.12",
+    "bullmq": "^5.81.5",
+    "drizzle-kit": "1.0.0-beta.21",
+    "drizzle-orm": "1.0.0-beta.21",
+    "ioredis": "^5.11.1",
+    "nuxt": "^4.6.2",
+    "nuxt-security": "^2.7.0",
+    "pinia": "^3.0.4",
+    "postgres": "^3.4.9",
+    "tailwindcss": "^4.3.3",
+    "unstorage": "^1.17.6",
+    "vue": "^3.5.44",
+    "vue-router": "^4.6.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.147",
+    "@types/node": "^24.19.2",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5",
+    "vue-tsc": "^3.3.13"
+  },
+  "engines": {
+    "bun": ">=1.4.0",
+    "node": ">=24"
+  }
+}

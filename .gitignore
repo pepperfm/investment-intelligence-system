@@ -1,0 +1,87 @@
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.bun/
+
+# Nuxt / Nitro and build output
+.nuxt/
+.output/
+.data/
+.nitro/
+dist/
+.cache/
+.turbo/
+.parcel-cache/
+.vite/
+.vercel/
+.netlify/
+.wrangler/
+
+# Test and tooling output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# Logs and temporary files
+*.log
+*.log.*
+tmp/
+temp/
+.tmp/
+.temp/
+*.swp
+*.swo
+*~
+*.bak
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.*.sample
+!.env.template
+
+# Editors / IDEs (personal preferences are not project defaults)
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.zed/
+.fleet/
+.history/
+.settings/
+.project
+.classpath
+*.sublime-workspace
+
+# Operating systems
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Local AI tooling state (project agent roles in .codex/agents are committed)
+.claude/settings.local.json
+.claude/worktrees/
+
+.codex/*
+!.codex/agents/
+!.codex/config.toml
+.claude/*
+!.claude/agents
+.cursor/*
+!.cursor/mcp.json
+.ai-factory.json

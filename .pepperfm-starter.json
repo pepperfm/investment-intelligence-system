@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": "0.1.0",
+  "ui": "nuxt-ui",
+  "modules": [
+    "eslint",
+    "test",
+    "vueuse",
+    "pinia",
+    "security"
+  ],
+  "features": [
+    "hub",
+    "redis",
+    "auth",
+    "queue"
+  ],
+  "database": "postgresql",
+  "packageManager": "bun",
+  "runtime": "bun",
+  "locales": [],
+  "localDocker": true,
+  "ubuntuDeployment": true
+}

@@ -1,0 +1,7 @@
+*
+!.gitignore
+!ARCHITECTURE.md
+!DESCRIPTION.md
+!rules
+!rules/*
+!config.yaml
