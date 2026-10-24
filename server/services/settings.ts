@@ -42,3 +42,14 @@ export async function saveRiskLimits(value: Omit<RiskLimits, 'allowLeverage'>) {
 export async function saveCostModel(value: CostModel) {
   await write('cost_model', value)
 }
+
+export type AiProfile = 'primary' | 'llmost'
+
+export async function getAiProfile(): Promise<AiProfile> {
+  const value = await read<{ profile: AiProfile }>('ai_profile', { profile: 'primary' })
+  return value.profile === 'llmost' ? 'llmost' : 'primary'
+}
+
+export async function saveAiProfile(profile: AiProfile) {
+  await write('ai_profile', { profile })
+}

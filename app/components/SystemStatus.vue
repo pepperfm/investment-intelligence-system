@@ -25,7 +25,7 @@ const healthy = computed(() => Boolean(status.value?.analyst.available && status
       </span>
       <span v-if="!collapsed" class="flex min-w-0 flex-col items-start leading-tight">
         <span class="text-xs font-medium text-highlighted">manual · проверка критиком</span>
-        <span class="truncate text-[11px] text-muted">{{ status?.activeRuns ? `идёт анализ (${status.activeRuns})` : `${status?.analyst.id ?? '…'} · ${status?.codex.model ?? ''}` }}</span>
+        <span class="truncate text-[11px] text-muted">{{ status?.activeRuns ? `идёт анализ (${status.activeRuns})` : `${status?.analyst.id ?? '…'} · ${status?.aiModel ?? ''}` }}</span>
       </span>
     </UButton>
     <template #content>

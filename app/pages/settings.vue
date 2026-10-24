@@ -1,6 +1,15 @@
 <script setup lang="ts">
 const { data } = await useFetch('/api/settings')
-const { data: status } = useSystemStatus()
+const { data: status, refresh: refreshStatus } = useSystemStatus()
+const profileAction = useAction()
+
+async function switchProfile(profile: 'primary' | 'llmost') {
+  await profileAction.run(() => $fetch<ApiResponse<'/api/settings/ai-profile', 'put'>>('/api/settings/ai-profile', {
+    method: 'PUT',
+    body: { profile },
+  }), 'Профиль переключён')
+  await refreshStatus()
+}
 const action = useAction()
 const form = reactive({
   risk: { ...data.value!.risk },
@@ -132,6 +141,31 @@ useHead({ title: 'Настройки · IIS' })
                 Агенты и данные
               </h2>
             </template>
+            <div v-if="status" class="mb-5 space-y-2">
+              <div class="flex flex-wrap gap-2">
+                <UButton
+                  :variant="status.aiProfile === 'primary' ? 'solid' : 'outline'"
+                  :loading="profileAction.pending.value"
+                  @click="switchProfile('primary')"
+                >
+                  Основной
+                </UButton>
+                <UButton
+                  :variant="status.aiProfile === 'llmost' ? 'solid' : 'outline'"
+                  :disabled="!status.llmost.configured"
+                  :loading="profileAction.pending.value"
+                  @click="switchProfile('llmost')"
+                >
+                  LLMost · резерв
+                </UButton>
+              </div>
+              <p class="text-xs text-muted">
+                Для новых исследований и ручной повторной проверки критика. Текущие исследования сохраняют выбранный провайдер.
+              </p>
+              <p v-if="!status.llmost.configured" class="text-xs text-warning">
+                Для LLMost нужны ключ и модели по ролям в серверном .env.
+              </p>
+            </div>
             <dl v-if="status" class="space-y-2.5 text-sm">
               <div
                 v-for="[label, health] in [['Аналитик', status.analyst], ['Критик', status.critic]] as const"
@@ -163,6 +197,18 @@ useHead({ title: 'Настройки · IIS' })
                   Рыночные данные
                 </dt><dd>{{ status.marketProvider }}{{ status.finamConfigured ? ' · ключ задан' : '' }}</dd>
               </div>
+              <div
+                v-for="role in status.llmost.roles"
+                :key="`llmost-${role.role}`"
+                class="flex flex-wrap justify-between gap-2"
+              >
+                <dt class="text-muted">
+                  {{ role.role }} · LLMost
+                </dt>
+                <dd class="num text-xs">
+                  {{ role.model || 'не настроена' }} · {{ role.effort || 'default' }}
+                </dd>
+              </div>
               <div class="flex justify-between gap-2">
                 <dt class="text-muted">
                   Эмбеддинги
@@ -172,7 +218,7 @@ useHead({ title: 'Настройки · IIS' })
             <template #footer>
               <p class="text-xs text-muted">
                 Задаются в <code class="num">.env</code>: <code class="num">NUXT_AI_PROVIDER</code>, <code class="num">NUXT_AI_CRITIC_PROVIDER</code>, <code class="num">NUXT_CODEX_MODEL</code>, <code class="num">NUXT_MARKET_PROVIDER</code>.
-                Агенты работают отдельными процессами в пустой временной папке, без секретов в окружении.
+                Секреты хранятся на сервере и не входят в пакеты данных агентов.
               </p>
             </template>
           </UCard>

@@ -5,16 +5,19 @@ import type { ProviderHealth } from '../ai/provider'
 /** CLI health spawns a process; the sidebar asks often, so keep it for a minute. */
 let healthCache: {
   at: number
+  key: string
   value: [ProviderHealth, ProviderHealth]
 } | null = null
 
 export default defineEventHandler(async (event) => {
   await requireUser(event)
   const config = useRuntimeConfig()
-  const [analyst, critic] = [agentProvider('analyst'), agentProvider('critic')]
-  if (!healthCache || Date.now() - healthCache.at > 60_000) {
+  const { profile, analyst, critic } = await selectedAgentProviders()
+  const healthKey = `${profile}:${analyst.id}:${critic.id}`
+  if (!healthCache || healthCache.key !== healthKey || Date.now() - healthCache.at > 60_000) {
     healthCache = {
       at: Date.now(),
+      key: healthKey,
       value: await Promise.all([analyst.health(), critic.health()]),
     }
   }
@@ -29,7 +32,42 @@ export default defineEventHandler(async (event) => {
   const [instruments] = await db.select({ value: count() }).from(schema.instruments)
   const [candles] = await db.select({ value: count() }).from(schema.candles)
   const [documents] = await db.select({ value: count() }).from(schema.documents)
+  let aiModel = analyst.id as string
+  if (analyst.id === 'codex') {
+    aiModel = config.codexAnalystModel || config.codexModel || 'default'
+  } else if (analyst.id === 'llmost') {
+    aiModel = config.llmostAnalystModel
+  } else if (analyst.id === 'claude') {
+    aiModel = config.claudeModel || 'default'
+  }
   return {
+    aiProfile: profile,
+    aiModel,
+    llmost: {
+      configured: Boolean(config.llmostApiKey && config.llmostResearcherModel && config.llmostAnalystModel && config.llmostCriticModel && config.llmostReviewerModel),
+      roles: [
+        {
+          role: 'Исследователь',
+          model: config.llmostResearcherModel,
+          effort: config.llmostResearcherEffort,
+        },
+        {
+          role: 'Аналитик',
+          model: config.llmostAnalystModel,
+          effort: config.llmostAnalystEffort,
+        },
+        {
+          role: 'Критик',
+          model: config.llmostCriticModel,
+          effort: config.llmostCriticEffort,
+        },
+        {
+          role: 'Ретроспектива',
+          model: config.llmostReviewerModel,
+          effort: config.llmostReviewerEffort,
+        },
+      ],
+    },
     mode: 'manual' as const,
     criticGate: true,
     liveTrading: false,

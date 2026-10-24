@@ -1,6 +1,8 @@
 import { ClaudeProvider } from '../ai/claude-provider'
 import { CodexProvider } from '../ai/codex-provider'
 import { MockProvider } from '../ai/mock-provider'
+import { LlmostProvider } from '../ai/llmost-provider'
+import { getAiProfile } from '../services/settings'
 import type { AgentProvider, ProviderId } from '../ai/provider'
 import { FinamMarketDataProvider } from '../adapters/market/finam'
 import { MockMarketDataProvider } from '../adapters/market/mock'
@@ -24,19 +26,56 @@ export function marketProvider(): MarketDataProvider {
   return market
 }
 
-export function agentProvider(kind: 'analyst' | 'critic'): AgentProvider {
+export async function selectedAgentProviders() {
   const config = useRuntimeConfig()
-  const id = parseProvider(kind === 'analyst' ? config.aiProvider : config.aiCriticProvider)
-  return providerById(id)
+  const profile = await getAiProfile()
+  return {
+    profile,
+    analyst: providerById(profile === 'llmost' ? 'llmost' : config.aiProvider),
+    critic: providerById(profile === 'llmost' ? 'llmost' : config.aiCriticProvider),
+  }
 }
 
-export function providerById(id: ProviderId): AgentProvider {
+export async function agentProvider(kind: 'analyst' | 'critic'): Promise<AgentProvider> {
+  const providers = await selectedAgentProviders()
+  return providers[kind]
+}
+
+export function providerById(value: string): AgentProvider {
+  const id = parseProvider(value)
   const existing = agents.get(id)
   if (existing) {
     return existing
   }
   const config = useRuntimeConfig()
   const timeoutMs = Number(config.aiTimeoutMs) || 600_000
+  if (id === 'llmost') {
+    const provider = new LlmostProvider({
+      baseUrl: config.llmostBaseUrl,
+      apiKey: config.llmostApiKey,
+      timeoutMs,
+      roles: {
+        market_researcher: {
+          model: config.llmostResearcherModel,
+          effort: config.llmostResearcherEffort,
+        },
+        hypothesis_analyst: {
+          model: config.llmostAnalystModel,
+          effort: config.llmostAnalystEffort,
+        },
+        hypothesis_critic: {
+          model: config.llmostCriticModel,
+          effort: config.llmostCriticEffort,
+        },
+        outcome_reviewer: {
+          model: config.llmostReviewerModel,
+          effort: config.llmostReviewerEffort,
+        },
+      },
+    })
+    agents.set(id, provider)
+    return provider
+  }
   const provider = id === 'codex'
     ? new CodexProvider({
         bin: config.codexBin,
@@ -84,7 +123,7 @@ function parseEffort(value: string) {
 }
 
 function parseProvider(value: string): ProviderId {
-  if (value === 'codex' || value === 'claude' || value === 'mock') {
+  if (value === 'codex' || value === 'claude' || value === 'llmost' || value === 'mock') {
     return value
   }
   throw new Error(`Unknown AI provider "${value}"`)

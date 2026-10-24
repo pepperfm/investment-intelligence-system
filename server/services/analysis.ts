@@ -30,6 +30,7 @@ export async function startRun(userId: string, input: StartRunInput) {
     })
   }
   const versions: Record<string, number> = {}
+  const providers = await selectedAgentProviders()
   for (const strategy of input.strategies) {
     versions[strategy] = (await activeVersion(strategy)).version
   }
@@ -40,8 +41,8 @@ export async function startRun(userId: string, input: StartRunInput) {
     instrumentIds: input.instrumentIds,
     asOf,
     status: 'queued',
-    provider: agentProvider('analyst').id,
-    criticProvider: agentProvider('critic').id,
+    provider: providers.analyst.id,
+    criticProvider: providers.critic.id,
     rulesVersions: versions,
   }).returning()
   // Runs only on explicit user command; the process keeps state in the database.
@@ -397,7 +398,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
       },
     }
   }
-  const analyst = agentProvider('analyst')
+  const analyst = providerById(run.provider)
   await logger.log('info', `${label}: market_researcher (${analyst.id})`)
   const research = await analyst.run({
     role: 'market_researcher',
@@ -454,7 +455,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
     researchDataGaps: research.output.dataGaps,
   })
   await logger.log('info', `${label}: гипотеза ${hypothesis.id.slice(0, 8)} → hypothesis_critic`)
-  const status = await runCritic(hypothesis.id, logger)
+  const status = await runCritic(hypothesis.id, logger, run.criticProvider)
   return {
     kind: 'hypothesis' as const,
     entry: {
@@ -531,7 +532,7 @@ async function insertHypothesis(run: Run, input: InsertInput) {
  * Independent critic. It receives its own evidence packet (rebuilt from the immutable snapshot)
  * and the claims only — never the analyst's confidence or the pipeline's preliminary status.
  */
-export async function runCritic(hypothesisId: string, logger?: RunLogger): Promise<HypothesisStatus> {
+export async function runCritic(hypothesisId: string, logger?: RunLogger, providerId?: string): Promise<HypothesisStatus> {
   const [h] = await db.select().from(schema.hypotheses).where(eq(schema.hypotheses.id, hypothesisId))
   if (!h) {
     throw createError({
@@ -560,7 +561,7 @@ export async function runCritic(hypothesisId: string, logger?: RunLogger): Promi
     entry: h.entryScenario,
     exit: h.exitScenario,
   }
-  const critic = agentProvider('critic')
+  const critic = providerId ? providerById(providerId) : await agentProvider('critic')
   const started = Date.now()
   try {
     const result = await critic.run({

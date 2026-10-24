@@ -138,7 +138,7 @@ export async function reviewOutcome(hypothesisId: string) {
     },
     strategyStats: stats,
   }
-  const result = await agentProvider('analyst').run({
+  const result = await (await agentProvider('analyst')).run({
     role: 'outcome_reviewer',
     task: 'Разбери завершившуюся гипотезу: прогноз против факта, издержки, просадка, сравнение с индексом, уроки. Предложения по правилам — только как предложения.',
     packet,

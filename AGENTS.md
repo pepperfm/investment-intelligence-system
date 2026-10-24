@@ -16,7 +16,7 @@ IIS (investment-intelligence-system) — локальная персональн
 - **Фреймворк:** Nuxt 4 + Nitro, UI — Nuxt UI v4
 - **База данных:** PostgreSQL 17 + pgvector; Redis (cache и state — разные инстансы)
 - **ORM:** Drizzle через NuxtHub DB
-- **AI:** локальный `codex exec` (опционально `claude -p`, offline `mock`)
+- **AI:** локальный `codex exec`, резервный HTTP-провайдер LLMost (опционально `claude -p`, offline `mock`)
 
 ## Структура проекта
 
@@ -57,6 +57,7 @@ IIS (investment-intelligence-system) — локальная персональн
 | `server/domain/strategies/rules.ts` | Правила стратегий и детерминированный сигнал (`evaluateSignal`) |
 | `server/domain/evaluations/` | Симуляция исхода, бэктест, walk-forward |
 | `server/ai/codex-provider.ts` | Запуск роли в изолированном `codex exec` со строгой схемой |
+| `server/ai/llmost-provider.ts` | Резервные stateless-запросы LLMost со строгой JSON Schema, без tools |
 | `server/trading/paper-broker.ts` | Paper-заявки: проверка риска → подтверждение → исполнение |
 | `server/db/schema/investment.ts` | Схема БД: инструменты, свечи, гипотезы, версии правил, память, заявки |
 | `shared/schemas/investment.ts` | zod-контракты API и ответов агентов |
@@ -122,8 +123,9 @@ IIS (investment-intelligence-system) — локальная персональн
 - Независимый `hypothesis_critic` — hard gate. Только `gateStatus` переводит гипотезу в `ready_for_user`;
   критик получает тезисы без уверенности и рекомендации аналитика.
 - Числа (индикаторы, уровни, размер позиции, исходы) считаются в `server/domain/**`, никогда не LLM.
-- Агенты запускаются только через `server/ai/*-provider.ts`: изолированная временная директория, read-only sandbox,
-  белый список окружения `agentEnv()`. Никогда не передавайте агенту секреты брокера, БД или авторизации
+- Агенты запускаются только через `server/ai/*-provider.ts`: для CLI — изолированная временная директория,
+  read-only sandbox Codex и белый список `agentEnv()`; для LLMost — отдельный HTTP-контекст на каждую роль без tools.
+  Никогда не передавайте агенту секреты брокера, БД или авторизации
   и не давайте агентам путь к `server/trading/**`.
 - Реальные заявки брокеру не реализованы. Состояние заявок меняет только `server/trading/paper-broker.ts` —
   всегда через создание (проверка риска) → явное подтверждение пользователем (повторная проверка риска).

@@ -1,7 +1,7 @@
 import type { z } from 'zod'
 import type { AgentRole } from './contracts'
 
-export type ProviderId = 'codex' | 'claude' | 'mock'
+export type ProviderId = 'codex' | 'claude' | 'llmost' | 'mock'
 
 export interface AgentRequest<T> {
   role: AgentRole
