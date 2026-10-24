@@ -15,7 +15,7 @@ const EVALUABLE = ['user_approved', 'user_rejected', 'watching', 'closed', 'read
 
 /**
  * Evaluates every hypothesis whose horizon has passed in available data.
- * Anything not approved by the user is counterfactual: no fill, no liquidity impact.
+ * Every scenario is counterfactual, including approved ideas: this simulator does not replay paper executions.
  */
 export async function evaluateDue() {
   const costs = await getCostModel()
@@ -47,7 +47,7 @@ export async function evaluateDue() {
       continue
     }
     const decision = await userDecision(h.id)
-    const isCounterfactual = decision !== 'user_approved' || h.direction === 'no_trade'
+    const isCounterfactual = true
     const [evaluation] = await db.transaction(async (tx) => {
       const inserted = await tx.insert(schema.hypothesisEvaluations).values({
         hypothesisId: h.id,
@@ -181,7 +181,7 @@ export async function reviewOutcome(hypothesisId: string) {
 }
 
 export async function listEvaluations() {
-  return db.select({
+  const rows = await db.select({
     evaluation: schema.hypothesisEvaluations,
     hypothesisId: schema.hypotheses.id,
     strategyId: schema.hypotheses.strategyId,
@@ -194,16 +194,38 @@ export async function listEvaluations() {
     .innerJoin(schema.hypotheses, eq(schema.hypotheses.id, schema.hypothesisEvaluations.hypothesisId))
     .innerJoin(schema.instruments, eq(schema.instruments.id, schema.hypotheses.instrumentId))
     .orderBy(desc(schema.hypothesisEvaluations.evaluatedAt))
+  const decisions = await db.select({
+    hypothesisId: schema.hypothesisEvents.hypothesisId,
+    toStatus: schema.hypothesisEvents.toStatus,
+  }).from(schema.hypothesisEvents)
+    .where(and(eq(schema.hypothesisEvents.actor, 'user'), inArray(schema.hypothesisEvents.type, ['user_approve', 'user_reject', 'user_watch'])))
+    .orderBy(desc(schema.hypothesisEvents.createdAt))
+  const latest = new Map<string, string | null>()
+  for (const decision of decisions) {
+    if (!latest.has(decision.hypothesisId)) {
+      latest.set(decision.hypothesisId, decision.toStatus)
+    }
+  }
+  // Historical evaluations used approval as a proxy for execution. They are
+  // scenario simulations too; present them correctly without rewriting history.
+  return rows.map(row => ({
+    ...row,
+    userApproved: latest.get(row.hypothesisId) === 'user_approved',
+    evaluation: {
+      ...row.evaluation,
+      isCounterfactual: true,
+    },
+  }))
 }
 
-/** Per-strategy statistics split into real (approved) vs counterfactual and by critic verdict. */
+/** Scenario statistics: approval is a decision label, never evidence of execution. */
 export async function strategyStats(strategyId?: StrategyId) {
   const rows = (await listEvaluations()).filter(r => !strategyId || r.strategyId === strategyId)
   const toStats = (list: typeof rows) => aggregateStats(list.map(r => r.evaluation))
   const longs = rows.filter(r => r.direction === 'long')
   return {
     all: toStats(longs),
-    approved: toStats(longs.filter(r => !r.evaluation.isCounterfactual)),
+    approved: toStats(longs.filter(r => r.userApproved)),
     counterfactual: toStats(longs.filter(r => r.evaluation.isCounterfactual)),
     criticSupported: toStats(longs.filter(r => r.criticVerdict === 'supported')),
     criticDisputed: toStats(longs.filter(r => r.criticVerdict !== 'supported')),

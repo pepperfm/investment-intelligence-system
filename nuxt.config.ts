@@ -3,6 +3,51 @@ export default defineNuxtConfig({
   devtools: {
     enabled: true,
   },
+  app: {
+    head: {
+      title: 'IIS · Личный исследовательский стол',
+      htmlAttrs: { lang: 'ru' },
+      meta: [
+        {
+          name: 'description',
+          content: 'Личный исследовательский стол: акции MOEX, гипотезы и независимая проверка решений.',
+        },
+        {
+          name: 'application-name',
+          content: 'IIS',
+        },
+        {
+          name: 'apple-mobile-web-app-title',
+          content: 'IIS',
+        },
+        {
+          name: 'theme-color',
+          content: '#18181b',
+        },
+      ],
+      link: [
+        {
+          rel: 'icon',
+          href: '/favicon.ico',
+          sizes: '16x16 32x32 48x48',
+        },
+        {
+          rel: 'icon',
+          type: 'image/svg+xml',
+          href: '/favicon.svg',
+        },
+        {
+          rel: 'apple-touch-icon',
+          href: '/apple-touch-icon.png',
+          sizes: '180x180',
+        },
+        {
+          rel: 'manifest',
+          href: '/site.webmanifest',
+        },
+      ],
+    },
+  },
   css: ['~/assets/css/main.css'],
   ui: {
     fonts: false,
@@ -19,11 +64,20 @@ export default defineNuxtConfig({
     marketProvider: 'mock',
     finamReadSecret: '',
     finamAccountId: '',
+    finamSymbols: '',
     aiProvider: 'mock',
     aiCriticProvider: 'mock',
     codexBin: 'codex',
     codexModel: '',
     codexReasoningEffort: '',
+    codexResearcherModel: '',
+    codexResearcherEffort: '',
+    codexAnalystModel: '',
+    codexAnalystEffort: '',
+    codexCriticModel: '',
+    codexCriticEffort: '',
+    codexReviewerModel: '',
+    codexReviewerEffort: '',
     claudeBin: 'claude',
     claudeModel: '',
     aiTimeoutMs: 600000,

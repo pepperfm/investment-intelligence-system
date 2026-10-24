@@ -18,6 +18,7 @@ export function marketProvider(): MarketDataProvider {
     ? new FinamMarketDataProvider({
         secret: config.finamReadSecret,
         accountId: config.finamAccountId,
+        symbols: config.finamSymbols.split(',').map(s => s.trim()).filter(Boolean),
       })
     : new MockMarketDataProvider()
   return market
@@ -41,6 +42,24 @@ export function providerById(id: ProviderId): AgentProvider {
         bin: config.codexBin,
         model: config.codexModel || undefined,
         reasoningEffort: parseEffort(config.codexReasoningEffort),
+        roles: {
+          market_researcher: {
+            model: config.codexResearcherModel || undefined,
+            reasoningEffort: parseEffort(config.codexResearcherEffort),
+          },
+          hypothesis_analyst: {
+            model: config.codexAnalystModel || undefined,
+            reasoningEffort: parseEffort(config.codexAnalystEffort),
+          },
+          hypothesis_critic: {
+            model: config.codexCriticModel || undefined,
+            reasoningEffort: parseEffort(config.codexCriticEffort),
+          },
+          outcome_reviewer: {
+            model: config.codexReviewerModel || undefined,
+            reasoningEffort: parseEffort(config.codexReviewerEffort),
+          },
+        },
         timeoutMs,
       })
     : id === 'claude'

@@ -69,13 +69,12 @@ const groups = computed<NavigationMenuItem[][]>(() => {
           to="/"
           class="flex min-w-0 items-center gap-2.5"
           :class="collapsed ? 'mx-auto' : 'px-1'"
+          aria-label="IIS — обзор"
         >
-          <span class="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-inverted">
-            <UIcon name="i-lucide-activity" class="size-4" />
-          </span>
+          <BrandMark class="size-8" />
           <span v-if="!collapsed" class="flex min-w-0 flex-col leading-none">
-            <span class="text-sm font-semibold tracking-tight text-highlighted">IIS</span>
-            <span class="text-[11px] text-muted">research desk</span>
+            <span class="text-sm font-semibold tracking-[0.16em] text-highlighted">IIS</span>
+            <span class="mt-1 text-[11px] text-muted">личный research desk</span>
           </span>
         </NuxtLink>
       </template>

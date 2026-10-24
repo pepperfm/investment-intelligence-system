@@ -1,0 +1,10 @@
+<template>
+  <img
+    src="/favicon.svg"
+    alt=""
+    width="64"
+    height="64"
+    class="shrink-0"
+    aria-hidden="true"
+  >
+</template>

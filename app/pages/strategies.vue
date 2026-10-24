@@ -320,6 +320,10 @@ useHead({ title: 'Стратегии · IIS' })
         </UCard>
 
         <UCard v-if="comparison" :ui="{ body: 'space-y-4' }">
+          <p class="text-xs text-muted">
+            IS заканчивается до границы. Повторный подбор по результатам OOS делает этот период
+            частью исследования; для независимой проверки нужен новый holdout или forward-период.
+          </p>
           <div class="flex items-center justify-between">
             <p class="section-label">
               Walk-forward · граница {{ fmtDate(comparison.splitAt) }}

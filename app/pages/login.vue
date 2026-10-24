@@ -2,6 +2,7 @@
 import { authClient } from '~/lib/auth-client'
 
 definePageMeta({ layout: false })
+useHead({ title: 'Вход · IIS' })
 
 const email = ref('')
 const password = ref('')
@@ -46,12 +47,10 @@ async function submit() {
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--ui-color-primary-500)_0%,transparent_55%)] opacity-[0.08]" />
     <div class="relative w-full max-w-sm space-y-6">
       <div class="flex flex-col items-center gap-3 text-center">
-        <span class="flex size-11 items-center justify-center rounded-xl bg-primary text-inverted shadow-lg shadow-primary/20">
-          <UIcon name="i-lucide-activity" class="size-6" />
-        </span>
+        <BrandMark class="size-14" />
         <div>
           <h1 class="text-xl font-semibold tracking-tight text-highlighted">
-            {{ register ? 'Локальный аккаунт' : 'IIS · research desk' }}
+            {{ register ? 'Локальный аккаунт' : 'IIS · личный research desk' }}
           </h1>
           <p class="text-sm text-muted">
             Исследование акций с независимой проверкой гипотез. Не автотрейдер.
@@ -136,6 +135,9 @@ async function submit() {
       <div class="flex justify-center">
         <ThemeSwitcher class="w-32" />
       </div>
+      <p class="text-center text-xs tracking-wide text-dimmed">
+        Сначала тезис. Потом решение.
+      </p>
     </div>
   </main>
 </template>

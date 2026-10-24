@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, lt } from 'drizzle-orm'
 import type { PositionSnapshot } from '../../shared/types/investment'
 import { addTradingDays, startOfUtcDay } from '../domain/market/calendar'
 import { checkOrderRisk, suggestQuantity, type PortfolioState } from '../domain/risk/limits'
+import { paperFill } from '../domain/risk/paper-fill'
 import { avgTurnover } from '../domain/market/indicators'
 import { getInstrument, lastClose, loadCandles } from '../services/market'
 import { getCostModel, getRiskLimits } from '../services/settings'
@@ -300,8 +301,8 @@ async function lockedTransition(orderId: string, from: string | string[], next: 
 }
 
 /**
- * Simulated execution. Market orders fill at the latest close plus slippage;
- * limit orders fill when a bar after confirmation trades through the limit.
+ * Simulated execution on daily bars strictly after confirmation: market at the next
+ * available open plus costs, limit only when a later bar trades through its price.
  */
 async function tryFill(orderId: string) {
   const costs = await getCostModel()
@@ -311,25 +312,20 @@ async function tryFill(orderId: string) {
       return false
     }
     const sign = order.side === 'buy' ? 1 : -1
-    let price: number | null = null
-    let executedAt = new Date()
-    if (order.type === 'market') {
-      const last = await lastClose(order.instrumentId)
-      price = last ? last.close * (1 + sign * (costs.slippagePct + costs.spreadPct / 2) / 100) : null
-    } else {
-      const last = await lastClose(order.instrumentId)
-      const bars = await loadCandles(order.instrumentId, { after: startOfUtcDay(order.confirmedAt ?? order.createdAt) })
-      const hit = bars.find(b => order.side === 'buy' ? b.low <= order.limitPrice! : b.high >= order.limitPrice!)
-      if (hit) {
-        price = order.side === 'buy' ? Math.min(hit.open, order.limitPrice!) : Math.max(hit.open, order.limitPrice!)
-        executedAt = new Date(hit.ts)
-      } else if (last && (order.side === 'buy' ? last.close <= order.limitPrice! : last.close >= order.limitPrice!)) {
-        price = order.limitPrice!
-      }
-    }
-    if (price === null) {
+    if (!order.confirmedAt) {
       return false
     }
+    const bars = await loadCandles(order.instrumentId, { after: order.confirmedAt })
+    const fill = paperFill({
+      side: order.side as 'buy' | 'sell',
+      type: order.type as 'market' | 'limit',
+      limitPrice: order.limitPrice,
+      confirmedAt: order.confirmedAt,
+    }, bars, costs)
+    if (!fill) {
+      return false
+    }
+    const { price, executedAt } = fill
     const notional = price * order.quantity
     const commission = notional * costs.commissionPct / 100
     const [account] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, order.accountId)).for('update')

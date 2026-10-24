@@ -32,6 +32,9 @@ export interface ProviderReport {
   metrics: Record<string, number>
   source: string
   url: string | null
+  documentUrl?: string | null
+  /** First observation of this specific numeric snapshot, possibly after publication. */
+  availableAt?: string
   publishedAt: string
 }
 

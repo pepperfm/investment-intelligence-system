@@ -7,6 +7,13 @@ const HISTORY_DAYS = 3 * 365
 
 export async function syncInstruments() {
   const provider = marketProvider()
+  const stored = await db.select({ provider: schema.instruments.provider }).from(schema.instruments)
+  if (stored.some(i => i.provider !== provider.id)) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Market provider differs from stored data. Use a separate database to avoid mixing mock and real history.',
+    })
+  }
   const list = await provider.listInstruments()
   for (const item of list) {
     await db.insert(schema.instruments).values({
@@ -16,6 +23,9 @@ export async function syncInstruments() {
       target: schema.instruments.symbol,
       set: {
         name: item.name,
+        board: item.board,
+        currency: item.currency,
+        isin: item.isin,
         lotSize: item.lotSize,
         sector: item.sector,
         kind: item.kind,
@@ -84,10 +94,15 @@ export async function syncFundamentals(instrumentId: string) {
   const provider = marketProvider()
   const from = new Date(Date.now() - HISTORY_DAYS * 86_400_000)
   const to = new Date()
-  const [events, reports] = await Promise.all([
+  const results = await Promise.allSettled([
     provider.getEvents(instrument.symbol, from, to),
     provider.getReports(instrument.symbol, from, to),
   ])
+  const events = results[0].status === 'fulfilled' ? results[0].value : []
+  const reports = results[1].status === 'fulfilled' ? results[1].value : []
+  const errors = results.flatMap((result, index) => result.status === 'rejected'
+    ? [`${instrument.ticker} · ${index === 0 ? 'новости' : 'отчётность'}: ${result.reason instanceof Error ? result.reason.message : 'Источник недоступен'}`]
+    : [])
   const existing = new Set((await db.select({ externalId: schema.marketEvents.externalId }).from(schema.marketEvents).where(eq(schema.marketEvents.instrumentId, instrumentId))).map(r => r.externalId))
   for (const event of events.filter(e => !existing.has(e.externalId))) {
     const [row] = await db.insert(schema.marketEvents).values({
@@ -108,12 +123,12 @@ export async function syncFundamentals(instrumentId: string) {
         instrumentId,
         title: `${instrument.ticker}: ${event.title}`,
         content: event.body,
-        availableAt: new Date(event.publishedAt),
+        availableAt: new Date(),
       })
     }
   }
   for (const report of reports) {
-    await db.insert(schema.issuerReports).values({
+    const [row] = await db.insert(schema.issuerReports).values({
       externalId: report.externalId,
       instrumentId,
       period: report.period,
@@ -121,12 +136,31 @@ export async function syncFundamentals(instrumentId: string) {
       metrics: report.metrics,
       source: report.source,
       url: report.url,
+      documentUrl: report.documentUrl ?? null,
+      availableAt: new Date(report.availableAt ?? report.publishedAt),
       publishedAt: new Date(report.publishedAt),
-    }).onConflictDoNothing()
+    }).onConflictDoNothing().returning({ id: schema.issuerReports.id })
+    if (row) {
+      await upsertDocument({
+        kind: 'report',
+        refId: row.id,
+        instrumentId,
+        title: `${instrument.ticker}: ${report.reportType} ${report.period}`,
+        content: JSON.stringify({
+          source: report.source,
+          url: report.url,
+          documentUrl: report.documentUrl,
+          period: report.period,
+          metrics: report.metrics,
+        }),
+        availableAt: new Date(report.availableAt ?? report.publishedAt),
+      })
+    }
   }
   return {
     events: events.length,
     reports: reports.length,
+    errors,
   }
 }
 
@@ -134,13 +168,22 @@ export async function syncAll() {
   const instruments = await syncInstruments()
   const rows = await db.select({ id: schema.instruments.id }).from(schema.instruments).where(eq(schema.instruments.active, true))
   let candles = 0
+  let events = 0
+  let reports = 0
+  const sourceErrors: string[] = []
   for (const row of rows) {
     candles += await syncCandles(row.id)
-    await syncFundamentals(row.id)
+    const fundamentals = await syncFundamentals(row.id)
+    events += fundamentals.events
+    reports += fundamentals.reports
+    sourceErrors.push(...fundamentals.errors)
   }
   return {
     instruments,
     candles,
+    events,
+    reports,
+    sourceErrors,
   }
 }
 

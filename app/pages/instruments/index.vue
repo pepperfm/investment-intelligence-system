@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { data, refresh } = await useFetch('/api/instruments/overview')
 const sync = useAction()
+const sourceErrors = ref<string[]>([])
 const q = ref('')
 const filter = ref<'all' | 'setup'>('all')
 const sort = ref<'ticker' | 'change1d' | 'change20d'>('ticker')
@@ -16,7 +17,8 @@ const items = computed(() => (data.value ?? [])
   }))
 
 async function syncData() {
-  await sync.run(() => $fetch<ApiResponse<'/api/instruments/sync', 'post'>>('/api/instruments/sync', { method: 'POST' }), r => `Загружено ${fmtNum(r.candles)} свечей`)
+  const result = await sync.run(() => $fetch<ApiResponse<'/api/instruments/sync', 'post'>>('/api/instruments/sync', { method: 'POST' }), r => `Свечи: ${fmtNum(r.candles)} · новости: ${r.events} · отчёты: ${r.reports}`)
+  sourceErrors.value = result?.sourceErrors ?? []
   await refresh()
 }
 useHead({ title: 'Инструменты · IIS' })
@@ -77,6 +79,12 @@ useHead({ title: 'Инструменты · IIS' })
       </UDashboardToolbar>
     </template>
     <template #body>
+      <UAlert
+        v-if="sourceErrors.length"
+        color="warning"
+        title="Часть источников недоступна"
+        :description="sourceErrors.join('; ')"
+      />
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <NuxtLink
           v-for="i in items"

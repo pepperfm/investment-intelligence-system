@@ -82,6 +82,10 @@ export interface EvidencePacket {
     id: string
     period: string
     publishedAt: string
+    availableAt?: string
+    source?: string
+    sourceUrl?: string | null
+    documentUrl?: string | null
     metrics: Record<string, number>
   }[]
   memory: {

@@ -1,10 +1,24 @@
 import type { Candle } from '../../../shared/types/investment'
 import type { MarketDataProvider, ProviderAccount, ProviderInstrument } from './types'
+import { PublicFundamentals } from './public-fundamentals'
 
 const BASE_URL = 'https://api.finam.ru'
 
 interface FinamDecimal {
   value?: string
+}
+
+interface FinamAsset {
+  symbol?: string
+  ticker: string
+  mic: string
+  name: string
+  type: string
+  isin?: string
+  is_archived?: boolean
+  board?: string
+  lot_size?: FinamDecimal
+  quote_currency?: string
 }
 
 function num(value: FinamDecimal | string | number | undefined | null) {
@@ -18,15 +32,17 @@ function num(value: FinamDecimal | string | number | undefined | null) {
 }
 
 export interface FinamConfig {
-  /** Read-only secret. The trade-write secret is deliberately not part of this adapter. */
+  /** Server-only credential. This adapter never calls order-write endpoints. */
   secret: string
   accountId: string
+  /** Optional explicit research universe; always includes the benchmark. */
+  symbols?: string[]
   fetchImpl?: typeof fetch
 }
 
 /**
  * Finam Trade API v1 (REST), market-data and account read endpoints only.
- * Written from the public docs; not verified against a live account (see IMPLEMENTATION_PLAN).
+ * Uses only market-data and account read endpoints. Secrets never reach AI processes.
  */
 export class FinamMarketDataProvider implements MarketDataProvider {
   readonly id = 'finam' as const
@@ -34,52 +50,87 @@ export class FinamMarketDataProvider implements MarketDataProvider {
   private token: string | null = null
   private tokenExpiresAt = 0
   private readonly fetchImpl: typeof fetch
+  private readonly fundamentals: PublicFundamentals
 
   constructor(private readonly config: FinamConfig) {
     if (!config.secret) {
       throw new Error('NUXT_FINAM_READ_SECRET is not configured')
     }
     this.fetchImpl = config.fetchImpl ?? fetch
+    this.fundamentals = new PublicFundamentals(this.fetchImpl)
   }
 
   async listInstruments(): Promise<ProviderInstrument[]> {
-    const data = await this.get<{
-      assets?: {
-        symbol: string
-        ticker: string
-        mic: string
-        name: string
-        type: string
-        isin?: string
-      }[]
-    }>('/v1/assets')
-    return (data.assets ?? [])
-      .filter(a => a.mic === 'MISX' && (a.type === 'EQUITIES' || a.type === 'INDICES'))
-      .map(a => ({
-        symbol: a.symbol,
+    let symbols = this.config.symbols?.length ? [...this.config.symbols] : []
+    if (!symbols.length) {
+      // /v1/assets can exceed the gateway response limit; AllAssets is paginated.
+      const seen = new Set<string>()
+      let cursor = ''
+      do {
+        const query = new URLSearchParams({
+          only_active: 'true',
+          cursor,
+        })
+        const data = await this.get<{
+          assets: FinamAsset[]
+          next_cursor?: string
+        }>(`/v1/assets/all?${query}`)
+        symbols.push(...data.assets.filter(a => a.mic === 'MISX' && a.type === 'EQUITIES' && !a.is_archived).map(a => a.symbol!))
+        cursor = data.next_cursor ?? ''
+        if (cursor && seen.has(cursor)) {
+          throw new Error('Finam asset pagination repeated a cursor')
+        }
+        seen.add(cursor)
+      } while (cursor && cursor !== '0')
+    }
+    symbols = [...new Set([...symbols, this.benchmarkSymbol])]
+    const instruments: ProviderInstrument[] = []
+    for (const symbol of symbols) {
+      const a = await this.asset(symbol)
+      if (a.mic !== 'MISX' || !['EQUITIES', 'INDICES'].includes(a.type) || a.is_archived) {
+        throw new Error(`Finam unsupported research instrument: ${symbol}`)
+      }
+      instruments.push({
+        symbol,
         ticker: a.ticker,
-        board: a.type === 'INDICES' ? 'SNDX' : 'TQBR',
+        board: a.board || (a.type === 'INDICES' ? 'SNDX' : 'TQBR'),
         name: a.name,
         sector: 'other',
         kind: a.type === 'INDICES' ? 'index' as const : 'equity' as const,
-        lotSize: 1,
-        currency: 'RUB',
+        lotSize: this.lotSize(a),
+        currency: a.quote_currency || 'RUB',
         isin: a.isin ?? null,
-      }))
+      })
+    }
+    return instruments
   }
 
   async getLotSize(symbol: string) {
+    return this.lotSize(await this.asset(symbol))
+  }
+
+  private lotSize(asset: FinamAsset) {
+    const size = num(asset.lot_size)
+    if (!Number.isSafeInteger(size) || size < 1) {
+      throw new Error(`Finam invalid lot size for ${asset.ticker}`)
+    }
+    return size
+  }
+
+  private asset(symbol: string) {
     const params = this.config.accountId ? `?account_id=${encodeURIComponent(this.config.accountId)}` : ''
-    const data = await this.get<{ lot_size?: FinamDecimal }>(`/v1/assets/${encodeURIComponent(symbol)}${params}`)
-    return Math.max(1, num(data.lot_size))
+    return this.get<FinamAsset>(`/v1/assets/${encodeURIComponent(symbol)}${params}`)
   }
 
   async getCandles(symbol: string, from: Date, to: Date): Promise<Candle[]> {
-    const result: Candle[] = []
+    const result = new Map<string, Candle>()
+    // Only completed UTC days; today's changing bar must not enter research/backtests.
+    const today = new Date()
+    const until = new Date(Math.min(to.getTime(), Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))
     // Daily bars are requested in yearly windows to respect the API interval limit.
     let start = from
-    while (start < to) {
-      const end = new Date(Math.min(to.getTime(), start.getTime() + 365 * 86_400_000))
+    while (start < until) {
+      const end = new Date(Math.min(until.getTime(), start.getTime() + 365 * 86_400_000))
       const query = new URLSearchParams({
         'timeframe': 'TIME_FRAME_D',
         'interval.start_time': start.toISOString(),
@@ -97,27 +148,39 @@ export class FinamMarketDataProvider implements MarketDataProvider {
       }>(`/v1/instruments/${encodeURIComponent(symbol)}/bars?${query}`)
       for (const bar of data.bars ?? []) {
         const day = new Date(bar.timestamp)
-        result.push({
+        if (!Number.isFinite(day.getTime())) {
+          throw new Error(`Finam invalid candle timestamp for ${symbol}`)
+        }
+        const candle = {
           ts: new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate())).toISOString(),
           open: num(bar.open),
           high: num(bar.high),
           low: num(bar.low),
           close: num(bar.close),
           volume: num(bar.volume),
-        })
+        }
+        if (day < start || day >= end) {
+          continue
+        }
+        if (![candle.open, candle.high, candle.low, candle.close, candle.volume].every(Number.isFinite)
+          || Math.min(candle.open, candle.high, candle.low, candle.close) <= 0
+          || candle.low > Math.min(candle.open, candle.close)
+          || candle.high < Math.max(candle.open, candle.close) || candle.volume < 0) {
+          throw new Error(`Finam invalid candle prices for ${symbol}`)
+        }
+        result.set(candle.ts, candle)
       }
       start = end
     }
-    return result
+    return [...result.values()].sort((a, b) => a.ts.localeCompare(b.ts))
   }
 
-  /** Finam does not provide news/filings via Trade API: a separate source is an open decision. */
-  async getEvents() {
-    return []
+  getEvents(symbol: string, from: Date, to: Date) {
+    return this.fundamentals.getEvents(symbol, from, to)
   }
 
-  async getReports() {
-    return []
+  getReports(symbol: string, from: Date, to: Date) {
+    return this.fundamentals.getReports(symbol, from, to)
   }
 
   async getAccount(): Promise<ProviderAccount | null> {
@@ -176,13 +239,21 @@ export class FinamMarketDataProvider implements MarketDataProvider {
     return this.token
   }
 
-  private async get<T>(path: string): Promise<T> {
+  private async get<T>(path: string, attempt = 0): Promise<T> {
     const response = await this.fetchImpl(`${BASE_URL}${path}`, {
       headers: { Authorization: await this.authToken() },
       signal: AbortSignal.timeout(20_000),
     })
     if (response.status === 401) {
       this.token = null
+      if (attempt === 0) {
+        return this.get<T>(path, 1)
+      }
+    }
+    if (response.status === 429 && attempt < 2) {
+      const seconds = Number(response.headers.get('retry-after')) || 30
+      await new Promise(resolve => setTimeout(resolve, Math.min(60, Math.max(1, seconds)) * 1000))
+      return this.get<T>(path, attempt + 1)
     }
     if (!response.ok) {
       throw new Error(`Finam ${path.split('?')[0]} failed: HTTP ${response.status}`)

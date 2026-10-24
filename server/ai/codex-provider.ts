@@ -4,6 +4,12 @@ import { strictJsonSchema } from './contracts'
 import { agentEnv, runProcess, withIsolatedWorkdir } from './process'
 import { AgentOutputError, buildPrompt, extractJson, type AgentProvider, type AgentRequest, type AgentResult, type ProviderHealth } from './provider'
 import { loadRole } from './roles'
+import type { AgentRole } from './contracts'
+
+export interface CodexRoleOptions {
+  model?: string
+  reasoningEffort?: 'low' | 'medium' | 'high'
+}
 
 export interface CodexOptions {
   bin: string
@@ -11,6 +17,7 @@ export interface CodexOptions {
   /** Passed explicitly because --ignore-user-config drops the user's ~/.codex defaults. */
   reasoningEffort?: 'low' | 'medium' | 'high'
   timeoutMs: number
+  roles?: Partial<Record<AgentRole, CodexRoleOptions>>
 }
 
 /**
@@ -72,11 +79,14 @@ export class CodexProvider implements AgentProvider {
         '-o', outPath,
         '-C', dir,
       ]
-      if (this.options.model) {
-        args.push('-m', this.options.model)
+      const roleOptions = this.options.roles?.[request.role]
+      const model = roleOptions?.model || this.options.model
+      const effort = roleOptions?.reasoningEffort || this.options.reasoningEffort
+      if (model) {
+        args.push('-m', model)
       }
-      if (this.options.reasoningEffort) {
-        args.push('-c', `model_reasoning_effort="${this.options.reasoningEffort}"`)
+      if (effort) {
+        args.push('-c', `model_reasoning_effort="${effort}"`)
       }
       args.push('-')
       const result = await runProcess(this.options.bin, args, {

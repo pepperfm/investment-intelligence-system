@@ -196,7 +196,14 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
               <span class="mt-1.5 size-1.5 shrink-0 rounded-full" :class="(e.sentiment ?? 0) > 0.25 ? 'bg-success' : (e.sentiment ?? 0) < -0.25 ? 'bg-error' : 'bg-(--ui-text-dimmed)'" />
               <div class="min-w-0">
                 <p class="text-sm text-highlighted">
-                  {{ e.title }}
+                  <a
+                    v-if="e.url"
+                    :href="e.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hover:underline"
+                  >{{ e.title }}</a>
+                  <span v-else>{{ e.title }}</span>
                 </p>
                 <p class="text-xs text-muted">
                   {{ fmtDate(e.publishedAt) }} · {{ e.source }} · {{ e.kind }}
@@ -204,25 +211,29 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
               </div>
             </li>
             <li v-if="!data.events.length" class="px-5 py-4 text-sm text-muted">
-              Нет событий — источник новостей не подключён для этого провайдера.
+              В текущей ленте нет новостей по этому эмитенту. Это не означает отсутствия корпоративных рисков.
             </li>
           </ul>
           <div v-else-if="tab === 'reports'" class="overflow-x-auto">
+            <p class="px-5 py-3 text-xs text-muted">
+              Публичные таблицы МСФО Smart-Lab — вторичный источник. Первоисточник — по ссылке «Отчёт»,
+              если он доступен. Показатели не включаются в анализ до момента их получения системой.
+            </p>
             <table class="w-full text-sm">
               <thead class="text-left text-xs text-muted">
                 <tr class="border-b border-default">
                   <th class="px-5 py-2 font-medium">
                     Период
                   </th><th class="px-3 py-2 text-right font-medium">
-                    Выручка, млрд
+                    Выручка, млрд ₽
                   </th><th class="px-3 py-2 text-right font-medium">
-                    Маржа
+                    Прибыль, млрд ₽
                   </th><th class="px-3 py-2 text-right font-medium">
                     Долг/EBITDA
                   </th><th class="px-3 py-2 text-right font-medium">
-                    P/E
+                    ROE
                   </th><th class="px-5 py-2 text-right font-medium">
-                    Див. доходность
+                    Источник
                   </th>
                 </tr>
               </thead>
@@ -230,21 +241,41 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
                 <tr v-for="r in data.reports" :key="r.id">
                   <td class="px-5 py-2 font-sans text-highlighted">
                     {{ r.period }} <span class="text-xs text-muted">{{ r.reportType }}</span>
+                    <p class="text-xs text-muted">
+                      Опубликован {{ fmtDate(r.publishedAt) }}
+                    </p>
+                    <p class="text-xs text-muted">
+                      Получен {{ fmtDate(r.availableAt) }}
+                    </p>
                   </td>
                   <td class="px-3 py-2 text-right">
-                    {{ fmtNum((r.metrics.revenue ?? 0) / 1e9, 1) }}
+                    {{ fmtNum(r.metrics.revenue === undefined ? null : r.metrics.revenue / 1e9, 1) }}
                   </td>
                   <td class="px-3 py-2 text-right">
-                    {{ fmtPct(r.metrics.netMargin) }}
+                    {{ fmtNum(r.metrics.netIncome === undefined ? null : r.metrics.netIncome / 1e9, 1) }}
                   </td>
                   <td class="px-3 py-2 text-right" :class="(r.metrics.debtToEbitda ?? 0) > 2.5 ? 'text-warning' : ''">
                     {{ fmtNum(r.metrics.debtToEbitda) }}
                   </td>
                   <td class="px-3 py-2 text-right">
-                    {{ fmtNum(r.metrics.pe) }}
+                    {{ fmtPct(r.metrics.roe) }}
                   </td>
                   <td class="px-5 py-2 text-right">
-                    {{ fmtPct(r.metrics.dividendYield) }}
+                    <a
+                      v-if="r.documentUrl"
+                      :href="r.documentUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-primary hover:underline"
+                    >Отчёт</a>
+                    <a
+                      v-if="r.url"
+                      :href="r.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="ml-2 text-primary hover:underline"
+                    >Таблица</a>
+                    <span v-if="!r.url && !r.documentUrl">—</span>
                   </td>
                 </tr>
               </tbody>

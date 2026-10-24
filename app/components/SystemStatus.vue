@@ -61,7 +61,7 @@ const healthy = computed(() => Boolean(status.value?.analyst.available && status
           </div>
           <div v-if="status.analyst.id === 'codex' || status.critic.id === 'codex'" class="flex justify-between gap-3">
             <dt class="text-muted">
-              Модель Codex
+              Codex · аналитик
             </dt><dd class="num text-xs">
               {{ status.codex.model }} · {{ status.codex.reasoningEffort }}
             </dd>

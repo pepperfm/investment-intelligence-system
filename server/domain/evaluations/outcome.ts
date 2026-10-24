@@ -92,16 +92,27 @@ export function simulateOutcome({ future, benchmarkFuture, entry, exit, costs }:
   const lastIndex = entryIndex + exit.timeExitDays - 1
   for (let i = entryIndex; i < future.length && i <= lastIndex; i++) {
     const bar = future[i]!
+    // An opening gap crosses the level before any intraday high/low. This also
+    // applies to the entry bar: buying below the stop cannot create a profit.
+    const enteredAtOpen = i > entryIndex || entryPrice === bar.open
+    if (enteredAtOpen && (bar.open <= exit.stopLoss || bar.open >= exit.takeProfit)) {
+      exitPrice = bar.open
+      exitReason = bar.open <= exit.stopLoss ? 'stop_loss' : 'take_profit'
+      exitIndex = i
+      worst = Math.min(worst, bar.open / entryPrice - 1)
+      best = Math.max(best, bar.open / entryPrice - 1)
+      break
+    }
     worst = Math.min(worst, bar.low / entryPrice - 1)
     best = Math.max(best, bar.high / entryPrice - 1)
     if (bar.low <= exit.stopLoss) {
-      exitPrice = i > entryIndex && bar.open < exit.stopLoss ? bar.open : exit.stopLoss
+      exitPrice = exit.stopLoss
       exitReason = 'stop_loss'
       exitIndex = i
       break
     }
-    if (bar.high >= exit.takeProfit) {
-      exitPrice = i > entryIndex && bar.open > exit.takeProfit ? bar.open : exit.takeProfit
+    if (bar.high >= exit.takeProfit && (i > entryIndex || entryPrice === bar.open)) {
+      exitPrice = exit.takeProfit
       exitReason = 'take_profit'
       exitIndex = i
       break

@@ -172,9 +172,18 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   const benchmarkMetrics = computeMetrics(benchmarkCandles)
   const signal = evaluateSignal(strategy, version.rules, candles, benchmarkCandles)
   const windowStart = new Date(run.asOf.getTime() - 90 * 86_400_000)
-  const rawEvents = await db.select().from(schema.marketEvents).where(and(eq(schema.marketEvents.instrumentId, instrumentId), lte(schema.marketEvents.publishedAt, run.asOf), gte(schema.marketEvents.publishedAt, windowStart))).orderBy(desc(schema.marketEvents.publishedAt)).limit(40)
+  const rawEvents = await db.select().from(schema.marketEvents).where(and(eq(schema.marketEvents.instrumentId, instrumentId), lte(schema.marketEvents.publishedAt, run.asOf), lte(schema.marketEvents.retrievedAt, run.asOf), gte(schema.marketEvents.publishedAt, windowStart))).orderBy(desc(schema.marketEvents.publishedAt)).limit(40)
   const events = dedupeEvents(rawEvents).slice(0, 10)
-  const reports = await db.select().from(schema.issuerReports).where(and(eq(schema.issuerReports.instrumentId, instrumentId), lte(schema.issuerReports.publishedAt, run.asOf))).orderBy(desc(schema.issuerReports.publishedAt)).limit(2)
+  const reportRows = await db.select().from(schema.issuerReports).where(and(eq(schema.issuerReports.instrumentId, instrumentId), lte(schema.issuerReports.publishedAt, run.asOf), lte(schema.issuerReports.availableAt, run.asOf))).orderBy(desc(schema.issuerReports.publishedAt), desc(schema.issuerReports.availableAt))
+  const seenPeriods = new Set<string>()
+  const reports = reportRows.filter((report) => {
+    const key = `${report.reportType}:${report.period}`
+    if (seenPeriods.has(key)) {
+      return false
+    }
+    seenPeriods.add(key)
+    return true
+  }).slice(0, 4)
   const situation = `${instrument.name} ${instrument.sector} ${STRATEGY_INFO[strategy].name} ${signal.setupType} ${signal.reasons.join(' ')} ${signal.failures.join(' ')}`
   // Only resolved situations (retrospectives with real outcomes): open ideas and their critic verdicts would anchor.
   const candidates = await searchMemory(situation, {
@@ -299,6 +308,10 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
       id: `rep:${r.id.slice(0, 8)}`,
       period: r.period,
       publishedAt: r.publishedAt.toISOString(),
+      availableAt: r.availableAt.toISOString(),
+      source: r.source,
+      sourceUrl: r.url,
+      documentUrl: r.documentUrl,
       metrics: r.metrics,
     })),
     memory: memory.map(m => ({

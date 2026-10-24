@@ -55,6 +55,8 @@ export const issuerReports = pgTable('issuer_reports', {
   metrics: jsonb('metrics').$type<Record<string, number>>().notNull(),
   source: text('source').notNull(),
   url: text('url'),
+  documentUrl: text('document_url'),
+  availableAt: timestamp('available_at', { withTimezone: true }).notNull().defaultNow(),
   publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),
 }, table => [index('issuer_reports_instrument_idx').on(table.instrumentId, table.publishedAt)])
 

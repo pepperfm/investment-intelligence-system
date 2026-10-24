@@ -10,6 +10,8 @@ export interface BacktestSeries {
 export interface BacktestTrade extends StatsRow {
   symbol: string
   signalAt: string
+  entryAt: string
+  exitAt: string
   setupType: string
   exitReason: string
 }
@@ -34,7 +36,7 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
     let i = WARMUP
     while (i < candles.length - 1) {
       const bar = candles[i]!
-      if ((from && bar.ts < from) || (to && bar.ts > to)) {
+      if ((from && bar.ts < from) || (to && bar.ts >= to)) {
         i++
         continue
       }
@@ -44,10 +46,12 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
         i++
         continue
       }
-      const future = candles.slice(i + 1)
+      // `to` is exclusive for both signals and executions, so in-sample
+      // cannot see outcomes from the holdout period.
+      const future = candles.slice(i + 1).filter(c => !to || c.ts < to)
       const result = simulateOutcome({
         future,
-        benchmarkFuture: benchmark.filter(c => c.ts > bar.ts),
+        benchmarkFuture: benchmark.filter(c => c.ts > bar.ts && (!to || c.ts < to)),
         entry: {
           type: 'market_next_open',
           price: signal.entry!,
@@ -68,6 +72,8 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
       trades.push({
         symbol,
         signalAt: bar.ts,
+        entryAt: result.entryAt!,
+        exitAt: result.exitAt,
         setupType: signal.setupType,
         exitReason: result.exitReason,
         netReturn: result.netReturn,

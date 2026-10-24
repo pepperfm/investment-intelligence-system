@@ -29,8 +29,9 @@ const groups = computed(() => [{
       open.value = false
       const r = await $fetch<ApiResponse<'/api/instruments/sync', 'post'>>('/api/instruments/sync', { method: 'POST' })
       toast.add({
-        title: `Загружено ${r.candles} свечей`,
-        color: 'success',
+        title: `Свечи: ${r.candles} · новости: ${r.events} · отчёты: ${r.reports}`,
+        description: r.sourceErrors.length ? r.sourceErrors.join('; ') : undefined,
+        color: r.sourceErrors.length ? 'warning' : 'success',
       })
     },
   }, {

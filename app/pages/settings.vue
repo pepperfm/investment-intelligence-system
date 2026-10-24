@@ -147,11 +147,15 @@ useHead({ title: 'Настройки · IIS' })
                   <span class="num text-xs text-muted">{{ health.version }}</span>
                 </dd>
               </div>
-              <div class="flex justify-between gap-2">
+              <div
+                v-for="role in status.codex.roles"
+                :key="role.role"
+                class="flex justify-between gap-2"
+              >
                 <dt class="text-muted">
-                  Модель Codex
+                  {{ role.role }} · Codex
                 </dt><dd class="num text-xs">
-                  {{ status.codex.model }} · {{ status.codex.reasoningEffort }}
+                  {{ role.model }} · {{ role.effort }}
                 </dd>
               </div>
               <div class="flex justify-between gap-2">

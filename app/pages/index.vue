@@ -5,6 +5,7 @@ const { data: runs } = await useFetch('/api/runs')
 const { data: portfolio } = await useFetch('/api/portfolio')
 const { data: overview } = await useFetch('/api/instruments/overview')
 const sync = useAction()
+const sourceErrors = ref<string[]>([])
 const preview = ref<string | null>(null)
 
 const toDecide = computed(() => (hypotheses.value ?? []).filter(h => h.status === 'ready_for_user' || h.status === 'needs_review').slice(0, 8))
@@ -20,7 +21,8 @@ const pnl = computed(() => portfolio.value ? portfolio.value.equity - portfolio.
 const equityCurve = computed(() => (portfolio.value?.snapshots ?? []).map(s => s.equity).concat(portfolio.value ? [portfolio.value.equity] : []))
 
 async function syncData() {
-  await sync.run(() => $fetch<ApiResponse<'/api/instruments/sync', 'post'>>('/api/instruments/sync', { method: 'POST' }), r => `Обновлено: ${r.instruments} инструментов, ${fmtNum(r.candles)} свечей`)
+  const result = await sync.run(() => $fetch<ApiResponse<'/api/instruments/sync', 'post'>>('/api/instruments/sync', { method: 'POST' }), r => `Свечи: ${fmtNum(r.candles)} · новости: ${r.events} · отчёты: ${r.reports}`)
+  sourceErrors.value = result?.sourceErrors ?? []
   await refreshStatus()
   await refreshNuxtData()
 }
@@ -49,6 +51,12 @@ useHead({ title: 'Обзор · IIS' })
       </PageNavbar>
     </template>
     <template #body>
+      <UAlert
+        v-if="sourceErrors.length"
+        color="warning"
+        title="Часть источников недоступна"
+        :description="sourceErrors.join('; ')"
+      />
       <UEmpty
         v-if="status && !status.counts.candles"
         icon="i-lucide-database"

@@ -37,8 +37,34 @@ export default defineEventHandler(async (event) => {
     finamConfigured: Boolean(config.finamReadSecret),
     embeddingProvider: config.embeddingProvider,
     codex: {
-      model: config.codexModel || 'default',
-      reasoningEffort: config.codexReasoningEffort || 'default',
+      model: config.codexAnalystModel || config.codexModel || 'default',
+      reasoningEffort: config.codexAnalystEffort || config.codexReasoningEffort || 'default',
+      roles: [
+        {
+          role: 'Исследователь',
+          model: config.codexResearcherModel,
+          effort: config.codexResearcherEffort,
+        },
+        {
+          role: 'Аналитик',
+          model: config.codexAnalystModel,
+          effort: config.codexAnalystEffort,
+        },
+        {
+          role: 'Критик',
+          model: config.codexCriticModel,
+          effort: config.codexCriticEffort,
+        },
+        {
+          role: 'Ретроспектива',
+          model: config.codexReviewerModel,
+          effort: config.codexReviewerEffort,
+        },
+      ].map(role => ({
+        role: role.role,
+        model: role.model || config.codexModel || 'default',
+        effort: role.effort || config.codexReasoningEffort || 'default',
+      })),
     },
     analyst: analystHealth,
     critic: criticHealth,
