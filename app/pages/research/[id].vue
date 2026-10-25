@@ -25,6 +25,7 @@ const rows = computed(() => {
   const ids = new Set(run.value?.hypotheses.map(h => h.id))
   return (allHypotheses.value ?? []).filter(h => ids.has(h.id))
 })
+const dataBlocked = computed(() => summary.value?.screenedOut.some(row => row.reasons.some(reason => reason.startsWith('data_quality_blocked:'))))
 const done = computed(() => (run.value?.hypotheses.length ?? 0) + (summary.value?.screenedOut.length ?? 0) + (summary.value?.failures.length ?? 0))
 const total = computed(() => (run.value?.instrumentIds.length ?? 0) * (run.value?.strategies.length ?? 0))
 const duration = computed(() => {
@@ -65,6 +66,19 @@ useHead({ title: 'Исследование · IIS' })
     </template>
     <template #body>
       <template v-if="run">
+        <UAlert
+          color="neutral"
+          class="mb-4"
+          :title="run.pinnedStrategies ? 'Правила закреплены в запуске' : 'Legacy: версия правил не была закреплена'"
+          description="Для анализа прошлого используется явно выбранный набор правил — это ретроспективный эксперимент. Версии в mock и Finam независимы; параметры и результаты не переносятся автоматически."
+        />
+        <UAlert
+          v-if="dataBlocked"
+          color="warning"
+          class="mb-4"
+          title="Вывод заблокирован качеством данных"
+          description="Семантика дневных свечей или календаря не подтверждена. Система сохранила диагностику, но не сформировала новую рекомендацию. Это не сигнал покупать или продавать."
+        />
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <StatTile
             label="Данные на"

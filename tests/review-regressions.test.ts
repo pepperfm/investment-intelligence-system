@@ -11,6 +11,7 @@ import { upsertDocument, searchMemory } from '../server/services/memory'
 const store = vi.hoisted(() => ({
   rows: {} as Record<string, Record<string, unknown>[]>,
   locks: [] as string[],
+  provider: 'mock' as 'mock' | 'finam',
 }))
 
 vi.mock('drizzle-orm', async (original) => {
@@ -169,6 +170,8 @@ vi.mock('@nuxthub/db', async () => {
 
 vi.mock('../server/services/market', () => ({
   getInstrument: async () => ({
+    provider: store.provider,
+    board: 'TQBR',
     id: 'a',
     kind: 'equity',
     sector: 'test',
@@ -208,6 +211,7 @@ vi.mock('../server/services/source-status', () => ({
 beforeEach(() => {
   store.rows = {}
   store.locks = []
+  store.provider = 'mock'
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-10-20T12:00:00Z'))
   vi.stubGlobal('createError', (value: { statusMessage: string }) => new Error(value.statusMessage))
@@ -239,6 +243,23 @@ function account() {
     cash: 1_000_000,
   }]
   store.rows.executions = []
+  store.rows.instruments = [{
+    id: 'a',
+    provider: 'mock',
+    board: 'TQBR',
+  }]
+  store.rows.hypotheses = [{
+    id: 'approved-h',
+    instrumentId: 'a',
+    status: 'user_approved',
+    direction: 'long',
+    criticVerdict: 'supported',
+    validation: { ok: true },
+    semanticVersion: 'decision_v2',
+    evidenceTimestamp: new Date('2026-10-20'),
+    entryScenario: { validDays: 3 },
+    exitScenario: { stopLoss: 95 },
+  }]
 }
 
 describe('review regressions', () => {
@@ -281,6 +302,7 @@ describe('review regressions', () => {
     }
   })
   it('executes only one of two sales against the same ten shares', async () => {
+    vi.setSystemTime(new Date('2026-10-22T12:00:00Z'))
     account()
     store.rows.executions = [{
       accountId: 'account',
@@ -297,16 +319,43 @@ describe('review regressions', () => {
     expect(store.locks).toContain('accounts')
   })
   it('rechecks position limits when two purchases execute later', async () => {
+    vi.setSystemTime(new Date('2026-10-22T12:00:00Z'))
     account()
     store.rows.orders = [order('one', {
       side: 'buy',
       quantity: 600,
+      hypothesisId: 'approved-h',
     }), order('two', {
       side: 'buy',
       quantity: 600,
+      hypothesisId: 'approved-h',
     })]
     expect((await processWorkingOrders()).filled).toBe(1)
     expect(store.rows.orders.map(row => row.status)).toEqual(['filled', 'rejected'])
+  })
+  it('cannot confirm a buy ticket without an approved hypothesis', async () => {
+    account()
+    store.rows.orders = [order('naked-buy', {
+      side: 'buy',
+      status: 'pending_confirmation',
+      confirmedAt: null,
+    })]
+    const result = await confirmOrder('naked-buy')
+    expect(result.status).toBe('rejected')
+    expect(String(result.rejectReason)).toContain('критиком')
+    expect(store.rows.executions).toHaveLength(0)
+  })
+  it('blocks a paper fill on an unverified Finam daily contract', async () => {
+    account()
+    store.provider = 'finam'
+    store.rows.orders = [order('one', {
+      side: 'buy',
+      quantity: 10,
+    })]
+    expect((await processWorkingOrders()).filled).toBe(0)
+    expect(store.rows.orders[0]!.status).toBe('rejected')
+    expect(String(store.rows.orders[0]!.rejectReason)).toContain('data_quality_blocked')
+    expect(store.rows.executions).toHaveLength(0)
   })
   it.each(['expired', 'closed', 'disputed', 'mismatched'])('rejects confirmation of a %s hypothesis', async (reason) => {
     account()

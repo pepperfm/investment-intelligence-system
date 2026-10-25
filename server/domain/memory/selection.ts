@@ -47,3 +47,16 @@ export function balanceByOutcome<T extends {
   }
   return result.sort((a, b) => b.similarity - a.similarity)
 }
+
+/** Versioned retrospective refs keep the original hypothesis UUID separate from the result revision. */
+export function retrospectiveRef(ref: string) {
+  const [kind, hypothesisId, revisionId] = ref.split(':')
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (kind !== 'retro' || !hypothesisId || !uuid.test(hypothesisId) || (revisionId && !uuid.test(revisionId))) {
+    return null
+  }
+  return {
+    hypothesisId,
+    revisionId: revisionId ?? null,
+  }
+}

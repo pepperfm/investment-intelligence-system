@@ -6,6 +6,7 @@ import { and, desc, eq } from 'drizzle-orm'
 import { STRATEGY_IDS } from '../../../shared/types/investment'
 import { evaluateSignal } from '../../domain/strategies/rules'
 import { benchmarkInstrument, getInstrument, loadCandles } from '../../services/market'
+import { inspectBarQuality } from '../../domain/market/bar-quality'
 import { activeVersion } from '../../services/strategies'
 
 export default defineEventHandler(async (event) => {
@@ -15,12 +16,23 @@ export default defineEventHandler(async (event) => {
   const candles = await loadCandles(id, { limit: 400 })
   const benchmark = await benchmarkInstrument()
   const benchmarkCandles = benchmark ? await loadCandles(benchmark.id, { limit: 300 }) : []
+  const quality = inspectBarQuality(candles, {
+    dataSource: instrument.provider === 'mock' ? 'mock' : 'finam',
+    board: instrument.board,
+    asOf: new Date(),
+  })
+  const benchmarkQuality = inspectBarQuality(benchmarkCandles, {
+    dataSource: benchmark?.provider === 'mock' ? 'mock' : 'finam',
+    board: benchmark?.board,
+    asOf: new Date(),
+  })
+  const verified = quality.status === 'verified' && benchmarkQuality.status === 'verified'
   const signals = await Promise.all(STRATEGY_IDS.map(async (strategy) => {
     const version = await activeVersion(strategy)
     return {
       strategy,
       version: version.version,
-      ...evaluateSignal(strategy, version.rules, candles, benchmarkCandles),
+      ...evaluateSignal(strategy, version.rules, verified ? quality.completedBars : [], verified ? benchmarkQuality.completedBars : []),
     }
   }))
   const [events, reports] = await Promise.all([
@@ -29,6 +41,10 @@ export default defineEventHandler(async (event) => {
   ])
   const issuerFundamentals = await loadIssuerFacts(id, new Date())
   return {
+    dataQuality: {
+      status: verified ? 'verified' : 'data_quality_blocked',
+      issues: [...quality.issues, ...benchmarkQuality.issues].slice(0, 10),
+    },
     issuerFundamentals,
     financialComparisons: compareFinancialFacts(issuerFundamentals),
     issuerIndustry: issuerIndustry(instrument.isin, instrument.sector),

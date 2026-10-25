@@ -203,9 +203,8 @@ useHead({ title: 'Исследования · IIS' })
                   {{ p.label }}
                 </UButton>
               </UFieldGroup>
-              <UInput
+              <AppDatePicker
                 v-model="asOf"
-                type="date"
                 size="sm"
                 :max="new Date().toISOString().slice(0, 10)"
                 class="w-40"

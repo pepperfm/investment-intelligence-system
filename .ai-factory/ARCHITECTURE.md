@@ -148,3 +148,20 @@ DB lease исключает параллельные синхронизации.
 Проверенный каталог использует локальный Poppler и детерминированные hash/row/unit проверки;
 machine_verified и manual_verified различаются. Оригинал, текст и факты раздельны. Старые snapshots не меняются. Проверенные endpoints и ограничения —
 [availability.md](../docs/data-sources/availability.md).
+
+
+## Версионированные решения и календарь
+
+Новые гипотезы decision_v2 раздельно хранят recommendation/decisionThesis и optional priceForecast.
+Критик имеет decisionVerdict и forecastVerdict, source IDs проверяются после structured-output
+валидации. Registry coverage gaps не являются evidence citations. Legacy не переинтерпретируется.
+
+Запуск закрепляет ID/правила/hash и cost model. Пакет использует только эти значения. Полный
+backtest audit хранится отдельным immutable source_snapshot, LLM получает ограниченный контекст
+и ссылку на аудит. Оценки добавляются в hypothesis_evaluation_revisions, старые результаты не
+переписываются. Ретроспектива — отдельное явное AI-действие с revision-specific memory ref.
+
+Календарь различает физическую и логическую дату. Завершение/доступность и единица агрегации
+должны быть подтверждены до вычислений. Пока Finam D-feed не подтверждён, сырые котировки
+остаются видны, но индикаторы/сигналы, анализ, оценка и paper fills блокируются; mock имеет
+отдельную синтетическую политику. Отсутствие данных и unknown никогда не заменяются нулями.

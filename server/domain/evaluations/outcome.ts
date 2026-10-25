@@ -188,3 +188,70 @@ export function aggregateStats(rows: StatsRow[]) {
     profitFactor: grossLosses > 0 ? grossWins / grossLosses : grossWins > 0 ? Infinity : 0,
   }
 }
+
+export const EVALUATION_VERSION = 'scenario-decision-v2'
+export type EvaluationStatus = 'not_entered' | 'missing_future_data' | 'ambiguous_session' | 'incomplete_horizon' | 'evaluated'
+
+export interface ScenarioDecisionInput extends OutcomeInput {
+  recommendation: 'long' | 'no_trade'
+  evidenceQuality: {
+    validationOk: boolean
+    decisionVerdict: string | null
+    semantics: 'explicit' | 'legacy'
+  }
+  /** Unknown/legacy feed or mismatched calendar cannot produce numeric conclusions. */
+  qualityIssues?: string[]
+}
+
+/** A simulated purchase never establishes the truth of a decision or a price forecast. */
+export function evaluateScenarioDecision(input: ScenarioDecisionInput) {
+  const issues = input.qualityIssues ?? []
+  const outcome = issues.length ? null : simulateOutcome(input)
+  let status: EvaluationStatus
+  if (issues.length) {
+    status = 'ambiguous_session'
+  } else if (!input.future.length) {
+    status = 'missing_future_data'
+  } else if (!outcome?.complete) {
+    status = 'incomplete_horizon'
+  } else {
+    status = outcome.entered ? 'evaluated' : 'not_entered'
+  }
+  const hasReturn = status === 'evaluated' && outcome !== null
+  const benchmarkAvailable = hasReturn && outcome.entryAt !== null && outcome.exitAt !== null
+    && input.benchmarkFuture.some(c => c.ts === outcome.entryAt)
+    && input.benchmarkFuture.some(c => c.ts === outcome.exitAt)
+  return {
+    evaluationVersion: EVALUATION_VERSION,
+    status,
+    issues,
+    scenarioEvaluation: {
+      isCounterfactual: true as const,
+      status,
+      entered: outcome?.entered ?? false,
+      entryAt: outcome?.entryAt ?? null,
+      exitAt: outcome?.exitAt ?? null,
+      entryPrice: outcome?.entryPrice ?? null,
+      exitPrice: outcome?.exitPrice ?? null,
+      exitReason: outcome?.exitReason ?? 'pending',
+      grossReturn: hasReturn ? outcome.grossReturn : null,
+      netReturn: hasReturn ? outcome.netReturn : null,
+      benchmarkReturn: benchmarkAvailable ? outcome.benchmarkReturn : null,
+      excessReturn: benchmarkAvailable ? outcome.excessReturn : null,
+      maxDrawdown: hasReturn ? outcome.maxDrawdown : null,
+      maxFavorable: hasReturn ? outcome.maxFavorable : null,
+      outcome: hasReturn ? outcome.outcome : null,
+      costs: outcome?.costs ?? null,
+    },
+    decisionEvaluation: {
+      recommendation: input.recommendation,
+      evidenceQuality: input.evidenceQuality,
+      cashReturn: 0,
+      benchmarkReturn: benchmarkAvailable ? outcome.benchmarkReturn : null,
+      benchmarkNote: 'IMOEX is an index, not an investable return; fees, tracking and dividends may differ.',
+      avoidedLoss: input.recommendation === 'no_trade' && hasReturn ? Math.max(0, -outcome.netReturn) : null,
+      missedGain: input.recommendation === 'no_trade' && hasReturn ? Math.max(0, outcome.netReturn) : null,
+      conclusion: 'Single counterfactual trade does not establish decision correctness or forecast accuracy.',
+    },
+  }
+}

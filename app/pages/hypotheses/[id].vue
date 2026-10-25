@@ -223,7 +223,7 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [[
   {
     label: 'Повторить проверку критиком',
     icon: 'i-lucide-rotate-ccw',
-    disabled: !['needs_review', 'awaiting_critic', 'watching'].includes(h.value?.status ?? ''),
+    disabled: h.value?.semanticVersion === 'legacy' || !['needs_review', 'awaiting_critic', 'watching'].includes(h.value?.status ?? ''),
     onSelect: rerunCritic,
   },
   {
@@ -243,7 +243,12 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
       <PageNavbar :title="h ? `${h.instrument.ticker} · ${STRATEGY_LABELS[h.strategyId]} v${h.strategyVersion?.version ?? '?'}` : 'Гипотеза'" back="/hypotheses">
         <template v-if="h" #title-extra>
           <StatusBadge :status="h.status" class="hidden sm:inline-flex" />
-          <VerdictBadge :verdict="h.criticVerdict" class="hidden sm:inline-flex" />
+          <VerdictBadge
+            :verdict="h.criticVerdict"
+            :direction="h.direction"
+            :verdict-target="h.verdictTarget"
+            class="hidden sm:inline-flex"
+          />
         </template>
         <template v-if="h" #right>
           <UButton
@@ -296,7 +301,7 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                     </UBadge>
                   </div>
                   <p class="mt-1 text-xs text-muted">
-                    Данные на {{ fmtDate(h.evidenceTimestamp, true) }} · проверка исхода {{ fmtDate(h.checkAt) }} · {{ h.analystProvider }}
+                    Данные на {{ fmtDate(h.evidenceTimestamp, true) }} · {{ h.semanticVersion === 'legacy' ? 'Legacy: календарная дата проверки не подтверждена' : `проверка исхода ${fmtDate(h.checkAt)}` }} · {{ h.analystProvider }}
                   </p>
                 </div>
                 <dl class="flex gap-5 text-right">
@@ -314,10 +319,10 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                       {{ rr ? rr.toFixed(2) : '—' }}
                     </dd>
                   </div>
-                  <UTooltip text="Уверенность аналитика — критик её не видит">
+                  <UTooltip text="Субъективная оценка качества свидетельств, не вероятность прибыли. Legacy: исходная уверенность без переинтерпретации.">
                     <div>
                       <dt class="text-[11px] text-muted">
-                        Уверенность
+                        {{ h.semanticVersion === 'legacy' ? 'Уверенность · legacy' : 'Качество обоснования' }}
                       </dt><dd class="num text-sm font-semibold text-highlighted">
                         {{ fmtPct(h.confidence, 0) }}
                       </dd>
@@ -325,9 +330,7 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                   </UTooltip>
                 </dl>
               </div>
-              <p class="mt-4 text-[15px] leading-relaxed text-highlighted">
-                {{ h.thesis }}
-              </p>
+              <HypothesisSemantics :h="h" class="mt-4" />
               <LevelsBar
                 v-if="h.direction === 'long'"
                 class="mt-5"
@@ -337,8 +340,13 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                 :last="lastClose"
               />
               <USeparator class="my-5" />
+              <p class="mb-2 text-xs text-muted">
+                График загруженной истории может включать цены после asOf. Они не входят в исходный пакет анализа; будущие цены используются только для отдельной оценки исхода.
+              </p>
               <PriceChart
                 :candles="instrumentData?.candles ?? []"
+                :indicators="instrumentData?.dataQuality.status === 'verified'"
+                :ranges="instrumentData?.dataQuality.status === 'verified'"
                 :levels="levels"
                 :markers="[{ ts: h.evidenceTimestamp, label: 'идея' }]"
                 :height="240"
@@ -361,7 +369,7 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
               <div v-if="tab === 'evidence'" class="grid gap-6 md:grid-cols-2">
                 <div>
                   <p class="section-label mb-3 flex items-center gap-1.5">
-                    <span class="size-1.5 rounded-full bg-success" />За · {{ h.supportingEvidence.length }}
+                    <span class="size-1.5 rounded-full bg-success" /> {{ h.semanticVersion === 'legacy' ? 'Исходные аргументы за · legacy' : 'В пользу решения' }} · {{ h.supportingEvidence.length }}
                   </p>
                   <EvidenceList
                     :items="h.supportingEvidence"
@@ -371,7 +379,7 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                 </div>
                 <div>
                   <p class="section-label mb-3 flex items-center gap-1.5">
-                    <span class="size-1.5 rounded-full bg-error" />Против · {{ h.counterEvidence.length }}
+                    <span class="size-1.5 rounded-full bg-error" /> {{ h.semanticVersion === 'legacy' ? 'Исходные аргументы против · legacy' : 'Против решения' }} · {{ h.counterEvidence.length }}
                   </p>
                   <EvidenceList
                     :items="h.counterEvidence"
@@ -382,6 +390,12 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
               </div>
 
               <div v-else-if="tab === 'critic'" class="space-y-4">
+                <UAlert
+                  v-if="critique?.validationIssues?.length"
+                  color="error"
+                  title="Ответ критика не прошёл проверку источников"
+                  :description="critique.validationIssues.join('; ')"
+                />
                 <template v-if="critique">
                   <div class="flex flex-wrap items-center gap-2">
                     <VerdictBadge :verdict="critique.verdict" size="md" />

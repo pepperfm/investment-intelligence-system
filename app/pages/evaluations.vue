@@ -1,11 +1,25 @@
 <script setup lang="ts">
 const { data, refresh } = await useFetch('/api/evaluations')
 const action = useAction()
+const reviewAction = useAction()
+async function review(hypothesisId: string) {
+  await reviewAction.run(() => $fetch<ApiResponse<'/api/evaluations/:id/review', 'post'>>(`/api/evaluations/${hypothesisId}/review`, { method: 'POST' }), 'Ретроспектива сохранена отдельной версией')
+  await refresh()
+}
 const tab = ref<'all' | 'swing' | 'position'>('all')
 const preview = ref<string | null>(null)
+const showHistory = shallowRef(false)
+const EVALUATION_LABELS: Record<string, string> = {
+  evaluated: 'Рассчитано',
+  not_entered: 'Входа не было',
+  missing_future_data: 'Нет будущих данных',
+  ambiguous_session: 'Сессии не подтверждены',
+  incomplete_horizon: 'Горизонт неполон',
+  legacy: 'Legacy · старый расчёт',
+}
 
 async function evaluate() {
-  await action.run(() => $fetch<ApiResponse<'/api/evaluations/run', 'post'>>('/api/evaluations/run', { method: 'POST' }), r => `Оценено ${r.evaluated}, ретроспектив ${r.reviewed}, ещё не созрело ${r.pending}${r.reviewErrors.length ? `, ошибок ретро ${r.reviewErrors.length}` : ''}`)
+  await action.run(() => $fetch<ApiResponse<'/api/evaluations/run', 'post'>>('/api/evaluations/run', { method: 'POST' }), r => `Оценено ${r.evaluated}, ретроспектив ${r.reviewed}, неполных или заблокированных ${r.pending}${r.reviewErrors.length ? `, ошибок ретро ${r.reviewErrors.length}` : ''}`)
   await refresh()
 }
 
@@ -29,7 +43,7 @@ const rows = computed(() => {
           hint: 'контрфактически',
         },
         {
-          label: 'Критик подтвердил',
+          label: 'Критик подтвердил решение',
           stats: s.criticSupported,
         },
         {
@@ -39,7 +53,7 @@ const rows = computed(() => {
         {
           label: '«Не покупать», если бы купили',
           stats: s.whyNotBuy,
-          hint: 'проверка отказов',
+          hint: 'альтернативные покупки; не точность решения',
         },
       ]
     : []
@@ -47,12 +61,12 @@ const rows = computed(() => {
 const chart = computed(() => rows.value.filter(r => r.stats.traded).map(r => ({
   sample: r.label.replace('Критик ', '').replace(' / мало данных', ''),
   net: +(r.stats.avgNetReturn * 100).toFixed(2),
-  bench: +((r.stats.avgNetReturn - r.stats.avgExcessReturn) * 100).toFixed(2),
+  bench: r.stats.avgBenchmarkReturn === null ? null : +(r.stats.avgBenchmarkReturn * 100).toFixed(2),
 })))
-const list = computed(() => (data.value?.rows ?? []).filter(r => tab.value === 'all' || r.strategyId === tab.value))
+const list = computed(() => (data.value?.rows ?? []).filter(r => (showHistory.value || r.isLatest) && (tab.value === 'all' || r.strategyId === tab.value)))
 const exits = computed(() => {
   const counts: Record<string, number> = {}
-  for (const r of list.value) {
+  for (const r of list.value.filter(row => row.status === 'evaluated' || row.status === 'not_entered')) {
     counts[r.evaluation.exitReason] = (counts[r.evaluation.exitReason] ?? 0) + 1
   }
   return Object.entries(counts).map(([reason, n]) => ({
@@ -89,7 +103,7 @@ useHead({ title: 'Оценки · IIS' })
                 </p>
                 <p>Вход на открытии после даты данных; выход по стопу, цели или горизонту. Комиссия, спред и проскальзывание вычитаются.</p>
                 <p>Если стоп и цель задеты в один день — засчитывается стоп. Гэп через стоп исполняется по открытию.</p>
-                <p>Неодобренные идеи оцениваются контрфактически. Ретроспективу пишет outcome_reviewer — правила он не меняет.</p>
+                <p>Все показанные покупки — условные сценарии, включая одобренные идеи. Фактические paper-исполнения находятся в портфеле. Кнопка запускает только расчёт, без AI.</p>
               </div>
             </template>
           </UPopover>
@@ -121,14 +135,15 @@ useHead({ title: 'Оценки · IIS' })
               Выборки
             </p>
             <span class="text-xs text-muted">индекс за те же периоды: <DeltaValue
-              :value="stats?.benchmarkAvg"
+              v-if="stats?.benchmarkAvg !== null && stats?.benchmarkAvg !== undefined"
+              :value="stats.benchmarkAvg"
               :digits="2"
               :arrow="false"
             /></span>
           </div>
           <StatsGrid :rows="rows" />
           <p class="mt-3 text-xs text-muted">
-            Малые выборки статистически незначимы — смотрите на число сделок.
+            В статистике только последние завершённые расчёты новой версии. Выборки пересекаются. Одна прибыльная или убыточная условная покупка не доказывает правильность решения «не покупать».
           </p>
         </UCard>
         <UCard :ui="{ body: 'space-y-4' }">
@@ -164,8 +179,13 @@ useHead({ title: 'Оценки · IIS' })
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
           <p class="section-label">
-            Оценённые гипотезы
+            Сценарии и решения
           </p>
+          <UCheckbox
+            v-model="showHistory"
+            label="Показать предыдущие версии и legacy"
+            class="mt-2"
+          />
         </template>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -176,7 +196,7 @@ useHead({ title: 'Оценки · IIS' })
                 </th><th class="px-3 py-2 font-medium">
                   Критик
                 </th><th class="px-3 py-2 font-medium">
-                  Выход
+                  Состояние / выход
                 </th><th class="px-3 py-2 text-right font-medium">
                   Нетто
                 </th><th class="px-3 py-2 text-right font-medium">
@@ -184,7 +204,7 @@ useHead({ title: 'Оценки · IIS' })
                 </th><th class="px-3 py-2 text-right font-medium">
                   Просадка
                 </th><th class="px-5 py-2 font-medium">
-                  Тип
+                  Решение / аудит
                 </th>
               </tr>
             </thead>
@@ -200,28 +220,79 @@ useHead({ title: 'Оценки · IIS' })
                   <span class="ml-2 text-xs text-muted">{{ STRATEGY_LABELS[r.strategyId] }}{{ r.direction === 'no_trade' ? ' · не покупать' : '' }}</span>
                 </td>
                 <td class="px-3 py-2.5">
-                  <VerdictBadge :verdict="r.criticVerdict" size="xs" />
+                  <VerdictBadge
+                    :verdict="r.criticVerdict"
+                    :direction="r.direction"
+                    :verdict-target="r.verdictTarget"
+                    size="xs"
+                  />
                 </td>
                 <td class="px-3 py-2.5 text-xs text-muted">
-                  {{ EXIT_LABELS[r.evaluation.exitReason] ?? r.evaluation.exitReason }}
-                </td>
-                <td class="px-3 py-2.5 text-right">
-                  <DeltaValue :value="r.evaluation.netReturn" :digits="2" />
+                  <p>{{ EVALUATION_LABELS[r.status] ?? r.status }}</p>
+                  <p v-if="r.status === 'evaluated'">
+                    {{ EXIT_LABELS[r.evaluation.exitReason] ?? r.evaluation.exitReason }}
+                  </p>
+                  <details
+                    v-if="r.issues.length"
+                    class="mt-1 max-w-xs"
+                    @click.stop
+                  >
+                    <summary>Диагностика · {{ r.issues.length }}</summary>
+                    <p
+                      v-for="issue in r.issues"
+                      :key="issue"
+                      class="mt-1 text-xs text-warning"
+                    >
+                      {{ issue }}
+                    </p>
+                  </details>
                 </td>
                 <td class="px-3 py-2.5 text-right">
                   <DeltaValue
+                    v-if="r.evaluation.netReturn !== null"
+                    :value="r.evaluation.netReturn"
+                    :digits="2"
+                  /><span v-else>—</span>
+                </td>
+                <td class="px-3 py-2.5 text-right">
+                  <DeltaValue
+                    v-if="r.evaluation.benchmarkReturn !== null"
                     :value="r.evaluation.benchmarkReturn"
                     :digits="2"
                     :arrow="false"
                   />
                 </td>
                 <td class="num px-3 py-2.5 text-right text-muted">
-                  {{ fmtPct(r.evaluation.maxDrawdown) }}
+                  {{ r.evaluation.maxDrawdown === null ? '—' : fmtPct(r.evaluation.maxDrawdown) }}
                 </td>
                 <td class="px-5 py-2.5">
-                  <UBadge :color="r.evaluation.isCounterfactual ? 'neutral' : 'primary'" size="sm">
-                    {{ r.evaluation.isCounterfactual ? 'контрфакт' : 'реальная' }}
+                  <UBadge color="neutral" size="sm">
+                    Условная покупка
                   </UBadge>
+                  <div v-if="r.decisionEvaluation?.recommendation === 'no_trade'" class="mt-1 text-xs text-muted">
+                    <p>Альтернатива: деньги · 0%</p>
+                    <p>Избежанный убыток: {{ r.decisionEvaluation.avoidedLoss === null ? '—' : fmtPct(r.decisionEvaluation.avoidedLoss) }}</p>
+                    <p>Упущенный рост: {{ r.decisionEvaluation.missedGain === null ? '—' : fmtPct(r.decisionEvaluation.missedGain) }}</p>
+                    <p>{{ r.semanticVersion === 'legacy' ? 'Исходный вердикт · legacy' : 'Вердикт по решению' }}: {{ VERDICT_LABELS[r.decisionEvaluation.evidenceQuality.decisionVerdict ?? ''] ?? 'не оценено' }}</p>
+                  </div>
+                  <details class="mt-2 max-w-xs break-all text-xs text-muted" @click.stop>
+                    <summary>Версия и воспроизводимость</summary>
+                    <p>{{ r.evaluationVersion }} · {{ r.calendarVersion }}</p>
+                    <p>{{ fmtDate(r.evaluation.evaluatedAt, true) }}</p>
+                    <p>Издержки: {{ r.costModelHash }}</p>
+                    <p>Исходный snapshot: {{ r.sourceSnapshotHash }}</p>
+                  </details>
+                  <UButton
+                    v-if="r.isLatest && r.status === 'evaluated'"
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    class="mt-2"
+                    :loading="reviewAction.pending.value"
+                    @click.stop="review(r.hypothesisId)"
+                  >
+                    Разобрать исход · AI
+                  </UButton>
                 </td>
               </tr>
             </tbody>
@@ -230,7 +301,7 @@ useHead({ title: 'Оценки · IIS' })
             v-if="!list.length"
             icon="i-lucide-target"
             title="Пока нет оценок"
-            description="Совет: запустите исследование «на дату» в прошлом — горизонт уже пройден, и исход можно оценить сразу."
+            description="Совет: запустите исследование «на дату» в прошлом — исход рассчитывается только при полном горизонте и подтверждённых сессиях."
             :actions="[{ label: 'Оценить созревшие', onClick: evaluate, loading: action.pending.value }]"
             variant="naked"
             class="py-10"

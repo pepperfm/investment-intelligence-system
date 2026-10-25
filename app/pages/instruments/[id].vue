@@ -60,6 +60,13 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
       </PageNavbar>
     </template>
     <template #body>
+      <UAlert
+        v-if="data?.dataQuality.status === 'data_quality_blocked'"
+        color="warning"
+        class="mb-4"
+        title="Сырые котировки · расчётные периоды не подтверждены"
+        description="График показывает исходные значения поставщика. Индикаторы и сетапы заблокированы до подтверждения контракта дневных свечей и календаря."
+      />
       <template v-if="data">
         <div class="grid gap-4 xl:grid-cols-[1fr_20rem]">
           <UCard>
@@ -93,7 +100,12 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
                 </UBadge>
               </div>
             </div>
-            <PriceChart :candles="data.candles" :height="400" />
+            <PriceChart
+              :candles="data.candles"
+              :height="400"
+              :indicators="data.dataQuality.status === 'verified'"
+              :ranges="data.dataQuality.status === 'verified'"
+            />
           </UCard>
           <div class="space-y-4">
             <UCard :ui="{ body: 'space-y-3' }">

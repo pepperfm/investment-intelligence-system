@@ -1,6 +1,6 @@
 import { ensureSources, recordSourceResult } from './source-status'
 import { db, schema } from '@nuxthub/db'
-import { and, asc, desc, eq, gt, gte, lte, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, gte, lte } from 'drizzle-orm'
 import type { Candle } from '../../shared/types/investment'
 import { upsertDocument } from './memory'
 
@@ -70,23 +70,12 @@ export async function syncCandles(instrumentId: string) {
       low: c.low,
       close: c.close,
       volume: c.volume,
+      metadata: Object.fromEntries(Object.entries(c).filter(([key]) => !['ts', 'open', 'high', 'low', 'close', 'volume'].includes(key))),
     }))
-    await db.insert(schema.candles).values(chunk).onConflictDoUpdate({
-      target: [schema.candles.instrumentId, schema.candles.timeframe, schema.candles.ts],
-      set: {
-        open: sqlExcluded('open'),
-        high: sqlExcluded('high'),
-        low: sqlExcluded('low'),
-        close: sqlExcluded('close'),
-        volume: sqlExcluded('volume'),
-      },
-    })
+    // Keep the first stored bar intact. Corrections require a separately audited normalization/version.
+    await db.insert(schema.candles).values(chunk).onConflictDoNothing()
   }
   return candles.length
-}
-
-function sqlExcluded(column: string) {
-  return sql.raw(`excluded.${column}`)
 }
 
 /** Events and reports, mirrored into point-in-time memory documents. */
@@ -214,7 +203,8 @@ export async function loadCandles(instrumentId: string, options: {
   const ordered = options.limit && !options.after
     ? (await db.select().from(schema.candles).where(and(...conditions)).orderBy(desc(schema.candles.ts)).limit(options.limit)).reverse()
     : await db.select().from(schema.candles).where(and(...conditions)).orderBy(asc(schema.candles.ts)).limit(options.limit ?? 100_000)
-  return ordered.map(c => ({
+  return ordered.filter(c => !options.to || ((!c.metadata?.completedAt || new Date(c.metadata.completedAt) <= options.to) && (!c.metadata?.availableAt || new Date(c.metadata.availableAt) <= options.to))).map(c => ({
+    ...c.metadata,
     ts: c.ts.toISOString(),
     open: c.open,
     high: c.high,

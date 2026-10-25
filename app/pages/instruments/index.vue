@@ -80,6 +80,13 @@ useHead({ title: 'Инструменты · IIS' })
     </template>
     <template #body>
       <UAlert
+        v-if="data?.some(instrument => instrument.dataQuality.status === 'data_quality_blocked')"
+        color="warning"
+        class="mb-4"
+        title="Часть дневных рядов не подтверждена"
+        description="Сырые цены доступны для просмотра; изменения за период, индикаторы и сетапы по неподтверждённым рядам не рассчитываются."
+      />
+      <UAlert
         v-if="sourceErrors.length"
         color="warning"
         title="Часть источников недоступна"

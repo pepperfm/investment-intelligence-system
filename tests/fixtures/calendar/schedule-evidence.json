@@ -1,0 +1,12 @@
+{
+  "verifiedAt": "2026-10-25",
+  "calendarVersion": "moex-stocks-2026-v2",
+  "sources": [
+    {"url": "https://www.moex.com/n95564", "publishedAt": "2025-11-25T08:15:00Z", "fact": "Weekend additional sessions 09:50-19:00 Moscow belong to the following regular trading day; specified maintenance closures."},
+    {"url": "https://www.moex.com/n96571", "publishedAt": "2025-12-30T07:34:00Z", "fact": "2026 holiday calendar and four additional holiday sessions; supersedes the older n94172 holiday schedule."},
+    {"url": "https://www.moex.com/n103931", "publishedAt": "2026-09-04T08:00:00Z", "fact": "November28-29 closed instead of December5-6. Other additional-session dates unchanged."},
+    {"url": "https://www.moex.com/a8920", "publishedAt": null, "fact": "Instrument admission differs; eligible stock boards include TQBR. Market schedule does not prove security eligibility."},
+    {"url": "https://www.moex.com/ru/tradingcalendar?market=stocks-market&type=trading", "publishedAt": null, "fact": "Dynamic official calendar observed closed on October25, next market opening October26 at06:50 Moscow. Market-wide view not instrument admission."},
+    {"url": "https://api.finam.ru/docs/rest", "publishedAt": null, "fact": "TIME_FRAME_D depth365 days; interval start inclusive/end exclusive; response OHLCV/timestamp. No verified daily session-overlap/completion contract."}
+  ]
+}

@@ -56,6 +56,8 @@ IIS (investment-intelligence-system) — локальная персональн
 | `nuxt.config.ts` | Модули, runtimeConfig (провайдеры AI/рынка, Codex-модель), preset `bun` |
 | `server/services/analysis.ts` | Оркестратор исследования: пакет данных, агенты, критик, hard gate |
 | `server/domain/strategies/rules.ts` | Правила стратегий и детерминированный сигнал (`evaluateSignal`) |
+| `server/domain/market/bar-quality.ts` | Проверка завершения/доступности дневных баров; неподтверждённый Finam заблокирован |
+| `server/domain/strategies/pinned.ts` | Immutable ID/rules/hash, закреплённые в запуске анализа |
 | `server/domain/evaluations/` | Симуляция исхода, бэктест, walk-forward |
 | `server/ai/codex-provider.ts` | Запуск роли в изолированном `codex exec` со строгой схемой |
 | `server/ai/llmost-provider.ts` | Резервные stateless-запросы LLMost со строгой JSON Schema, без tools |

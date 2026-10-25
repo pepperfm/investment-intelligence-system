@@ -137,6 +137,7 @@ function research(p: EvidencePacket): ResearchOutput {
     growthFactors: growth.slice(0, 15),
     riskFactors: risks.slice(0, 15),
     dataGaps: gaps,
+    coverageGaps: p.coverageGaps ?? [],
   }
 }
 
@@ -145,18 +146,19 @@ function analyse(p: EvidencePacket, r: ResearchOutput): AnalystOutput {
   const direction = long ? 'long' : 'no_trade'
   const confidence = Math.max(0.1, Math.min(0.85, 0.45 + 0.05 * (r.growthFactors.length - r.riskFactors.length) - 0.07 * r.dataGaps.length))
   const thesis = direction === 'long'
-    ? `${p.instrument.name}: сетап «${p.signal.setupType}» стратегии ${p.strategy.name}. Ожидаем движение к ${fmt(p.signal.takeProfit)} за ${p.strategy.rules.horizonDays} торговых дн. при стопе ${fmt(p.signal.stopLoss)} (прибыль/риск ${p.signal.rewardRisk?.toFixed(2)}).`
+    ? `${p.instrument.name}: сетап «${p.signal.setupType}» стратегии ${p.strategy.name}. Покупка обоснована техническими условиями и доступными свидетельствами; уровни условного сценария заданы кодом.`
     : `${p.instrument.name}: покупка по стратегии ${p.strategy.name} сейчас не обоснована — ${(p.signal.failures[0] ?? 'аргументы против перевешивают').toLowerCase()}.`
   return {
+    recommendation: direction,
+    decisionThesis: thesis,
+    decisionBasis: direction === 'long' ? ['positive_evidence'] : ['contradictory_signals'],
+    decisionConfidence: Math.round(confidence * 100) / 100,
+    priceForecast: null,
+    coverageGaps: p.coverageGaps ?? [],
     direction,
     thesis,
     supportingEvidence: (direction === 'long' ? r.growthFactors : r.riskFactors).slice(0, 6),
-    counterEvidence: (direction === 'long' ? r.riskFactors : r.growthFactors).slice(0, 6).concat(r.dataGaps.length
-      ? [{
-          claim: `Пробелы данных: ${r.dataGaps.join('; ')}`,
-          sourceIds: ['metrics'],
-        }]
-      : []),
+    counterEvidence: (direction === 'long' ? r.riskFactors : r.growthFactors).slice(0, 6),
     assumptions: [
       'Рыночный режим (тренд индекса) сохранится на горизонте',
       'Ликвидность позволит войти и выйти без существенного проскальзывания',
@@ -248,8 +250,12 @@ function critique(p: EvidencePacket, claims: CriticClaims): CriticOutput {
   }
   return {
     verdict,
+    verdictTarget: 'decision',
+    decisionVerdict: verdict,
+    forecastVerdict: claims.priceForecast ? 'insufficient_evidence' : 'not_applicable',
+    coverageGaps: p.coverageGaps ?? [],
     summary: verdict === 'supported'
-      ? 'Существенных опровергающих данных в пакете не найдено; тезис согласуется с метриками.'
+      ? 'Рекомендация согласуется с предоставленными метриками; это не подтверждение движения цены.'
       : verdict === 'disputed'
         ? `Тезис оспорен: ${findings.filter(f => f.severity !== 'info').map(f => f.topic.toLowerCase()).join(', ')}.`
         : 'Недостаточно данных для вывода: нет отчётности.',

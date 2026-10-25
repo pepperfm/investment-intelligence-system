@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-25",
+  "scope": "personal local IIS; no real orders or paid model requests",
+  "migration": {
+    "path": "server/db/migrations/postgresql/20261025163741_hot_unus/migration.sql",
+    "isolatedDatabase": "iis_hypothesis_review_verify_20261025",
+    "primaryDatabase": "iis_finam",
+    "originalAuditedRowsPreserved": true,
+    "legacyCounts": {
+      "reviews": {
+        "hash": "f4f9e12564690f9bde9532bcaaae3e7a",
+        "count": 5
+      },
+      "snapshots": {
+        "hash": "0c2d80644ccc44f931a2e658239e32a4",
+        "count": 7
+      },
+      "hypotheses": {
+        "hash": "b303916bc31ffffd20670019f06020cb",
+        "count": 5
+      },
+      "evaluations": {
+        "hash": null,
+        "count": 0
+      }
+    }
+  },
+  "postgresAcceptance": {
+    "isolatedDatabase": "iis_hypothesis_review_verify_20261025",
+    "legacyBefore": 5,
+    "legacyPreserved": true,
+    "legacyScenarioStatuses": [
+      {
+        "ticker": "CHMF",
+        "status": "ambiguous_session"
+      },
+      {
+        "ticker": "GAZP",
+        "status": "ambiguous_session"
+      },
+      {
+        "ticker": "NVTK",
+        "status": "ambiguous_session"
+      },
+      {
+        "ticker": "TATN",
+        "status": "ambiguous_session"
+      },
+      {
+        "ticker": "ROSN",
+        "status": "ambiguous_session"
+      }
+    ],
+    "recomputation": {
+      "evaluated": 0,
+      "pending": 5,
+      "reviewed": 0,
+      "reviewErrors": [],
+      "unchanged": 0
+    },
+    "race": {
+      "runId": "96c94487-73e2-449f-9f11-d9da62732943",
+      "pinnedVersion": 1,
+      "activatedVersion": 505,
+      "actualVersion": 1
+    },
+    "invalidCriticCitation": {
+      "status": "needs_review",
+      "sanitized": true
+    },
+    "pointInTime": true,
+    "marketSourceCount": 3
+  },
+  "criticConcurrency": {
+    "concurrentCriticBlocked": true,
+    "priorApprovalCleared": true,
+    "criticResult": "needs_review",
+    "pinnedVersion": 1,
+    "versionedRetrospectiveRef": true
+  },
+  "browser": {
+    "environment": "isolated copied database on localhost:3014; synthetic decision_v2 fixtures clearly labelled",
+    "legacyBadge": true,
+    "separateDecisionForecastVerdicts": true,
+    "markdownClipboard": {
+      "selectedCount": 1,
+      "characters": 9304,
+      "onlySelected": true
+    },
+    "txtClipboard": {
+      "selectedCount": 1,
+      "characters": 10672,
+      "onlyFiltered": true
+    },
+    "selectionResetsOnFilter": true,
+    "consoleErrors": 0,
+    "blockedEvaluationsShowNoInventedReturns": true,
+    "legacyEvaluationVerdictsRemainLegacy": true
+  },
+  "marketFixture": {
+    "path": "tests/fixtures/calendar/daily-feed-probe.json",
+    "sha256": "8349bf00c6d506e018957c33f1b234ee72ccd437dd3f9bee5cae1312f918f637",
+    "realReadOnlyProbe": [
+      "ROSN",
+      "NVTK",
+      "TATN"
+    ],
+    "verdict": "data_quality_blocked"
+  },
+  "remainingBlockers": [
+    "Finam daily timestamp/session-overlap/completion contract and historical instrument admission are not proven.",
+    "Five original real scenarios have ambiguous_session diagnostics; independently verified numerical outcomes are deferred until a valid normalized feed exists."
+  ],
+  "limitations": [
+    "The lexical guard catches the reproduced ROSN/NVTK mixed-thesis forms; arbitrary natural-language truth still needs the independent critic.",
+    "Only 2026 MOEX schedule is bundled; other real years return unknown. Mock calendar is separate.",
+    "Historical universe membership/delistings are unavailable; track record declares survivorship bias and overlapping samples."
+  ],
+  "qualityCommands": {
+    "bun run typecheck": "passed (existing nonfatal Volar plugin warning remains)",
+    "bun run typecheck:worker": "passed",
+    "bun run lint": "passed",
+    "bun run test": {
+      "passed": 144,
+      "files": 20
+    },
+    "bun run build": "passed",
+    "git diff --check": "passed"
+  }
+}

@@ -63,7 +63,11 @@ const bySeverity = computed(() => {
       <div v-else-if="h" class="space-y-5">
         <div class="flex flex-wrap items-center gap-2">
           <StatusBadge :status="h.status" />
-          <VerdictBadge :verdict="h.criticVerdict" />
+          <VerdictBadge
+            :verdict="h.criticVerdict"
+            :direction="h.recommendation ?? h.direction"
+            :verdict-target="h.verdictTarget"
+          />
           <UBadge
             v-if="!h.validation.ok"
             color="error"
@@ -72,15 +76,7 @@ const bySeverity = computed(() => {
             валидация
           </UBadge>
         </div>
-        <p class="text-sm leading-relaxed">
-          {{ h.thesis }}
-        </p>
-        <LevelsBar
-          v-if="h.direction === 'long'"
-          :entry="h.entryScenario.price"
-          :stop="h.exitScenario.stopLoss"
-          :target="h.exitScenario.takeProfit"
-        />
+        <HypothesisSemantics :h="h" />
         <div v-if="critique" class="space-y-2 rounded-lg bg-elevated/50 p-3">
           <div class="flex items-center justify-between">
             <p class="section-label">
@@ -110,9 +106,9 @@ const bySeverity = computed(() => {
         <dl class="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt class="text-xs text-muted">
-              Уверенность
+              {{ h.semanticVersion === 'decision_v2' ? 'Качество обоснования' : 'Уверенность · legacy' }}
             </dt><dd class="num">
-              {{ fmtPct(h.confidence, 0) }}
+              {{ fmtPct(h.decisionConfidence ?? h.confidence, 0) }}
             </dd>
           </div>
           <div>

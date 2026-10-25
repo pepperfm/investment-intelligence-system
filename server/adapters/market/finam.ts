@@ -153,6 +153,11 @@ export class FinamMarketDataProvider implements MarketDataProvider {
         }
         const candle = {
           ts: new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate())).toISOString(),
+          dataSource: 'finam',
+          sessionType: 'unknown' as const,
+          normalizationVersion: 'legacy-utc-date-unverified',
+          contractVerified: false,
+          rawTimestamp: bar.timestamp,
           open: num(bar.open),
           high: num(bar.high),
           low: num(bar.low),

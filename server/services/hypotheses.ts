@@ -1,6 +1,6 @@
 import type { EvidenceCoverage } from '../../shared/types/evidence'
 import { db, schema } from '@nuxthub/db'
-import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, gt, sql, type SQL } from 'drizzle-orm'
 import type { HypothesisStatus, StrategyId } from '../../shared/types/investment'
 import { nextStatusForDecision, type DecisionAction } from '../domain/hypotheses/state'
 
@@ -26,6 +26,11 @@ export async function listHypotheses(filter: HypothesisFilter = {}) {
     id: schema.hypotheses.id,
     runId: schema.hypotheses.runId,
     status: schema.hypotheses.status,
+    semanticVersion: schema.hypotheses.semanticVersion,
+    recommendation: schema.hypotheses.recommendation,
+    decisionThesis: schema.hypotheses.decisionThesis,
+    decisionConfidence: schema.hypotheses.decisionConfidence,
+    verdictTarget: schema.hypotheses.verdictTarget,
     direction: schema.hypotheses.direction,
     strategyId: schema.hypotheses.strategyId,
     thesis: schema.hypotheses.thesis,
@@ -73,8 +78,26 @@ export async function getHypothesis(id: string) {
       : Promise.resolve([]),
     db.select().from(schema.orders).where(eq(schema.orders.hypothesisId, id)).orderBy(desc(schema.orders.createdAt)),
   ])
+  const [storedSnapshot] = row.snapshotId ? await db.select({ payload: schema.sourceSnapshots.payload }).from(schema.sourceSnapshots).where(eq(schema.sourceSnapshots.id, row.snapshotId)) : []
+  const payload = storedSnapshot?.payload as import('../ai/contracts').EvidencePacket | undefined
+  const laterSources = await db.select({ sourceId: schema.sourceFetches.sourceId }).from(schema.sourceFetches).where(gt(schema.sourceFetches.completedAt, row.evidenceTimestamp)).limit(1000)
+  const sourceHealth = payload?.sourceHealth ?? []
+  const audit = {
+    calendarVersion: payload?.calendarVersion ?? 'legacy_unknown',
+    normalizationVersion: payload?.normalizationVersion ?? 'legacy_unknown',
+    dataQuality: payload?.dataQuality ?? null,
+    marketProvider: instrument?.provider ?? 'unknown',
+    pinnedStrategy: payload?.pinnedStrategy ?? null,
+    trackRecordAuditId: payload?.trackRecord.audit?.id ?? null,
+    sourceAvailability: {
+      available: [...new Set(row.sources.map(source => source.sourceId ?? source.kind))],
+      observedLater: [...new Set(laterSources.map(source => source.sourceId))].filter(key => !sourceHealth.some(source => source.sourceId === key && source.status === 'ok')),
+      unavailable: sourceHealth.filter(source => source.status !== 'ok' && !laterSources.some(later => later.sourceId === source.sourceId)).map(source => source.sourceId),
+    },
+  }
   return {
     ...row,
+    audit,
     instrument: instrument!,
     strategyVersion: version
       ? {

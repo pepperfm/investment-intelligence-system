@@ -116,3 +116,15 @@ export interface RegulatoryIdentitySnapshot {
   }[]
   provenance: EvidenceProvenance
 }
+
+/** Registry identifiers describe coverage, never an individual evidence citation. */
+export const EVIDENCE_SOURCE_KEYS = ['cbr_daily', 'cbr_statistics', 'cbr_news', 'cbr_banks', 'cbr_finorg', 'issuer_disclosure', 'finam_news_rss', 'smartlab_ifrs'] as const
+export type EvidenceSourceKey = typeof EVIDENCE_SOURCE_KEYS[number]
+export const COVERAGE_GAP_STATUSES = ['not_covered', 'unavailable', 'stale', 'not_yet_observed', 'not_applicable'] as const
+export interface CoverageGap {
+  sourceKey: EvidenceSourceKey
+  status: typeof COVERAGE_GAP_STATUSES[number]
+  reason: string
+  impact: string
+  asOf: string
+}

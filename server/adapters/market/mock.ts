@@ -191,7 +191,7 @@ export class MockMarketDataProvider implements MarketDataProvider {
       return cached
     }
     const spec = this.spec(symbol)
-    const days = tradingDaysBetween(HISTORY_START, this.now())
+    const days = tradingDaysBetween(HISTORY_START, this.now(), { provider: 'mock' })
     const market = rng(seedOf('market-factor'))
     const own = rng(seedOf(symbol))
     const dt = 1 / 252

@@ -7,6 +7,7 @@ interface Stats {
   avgExcessReturn: number
   worstDrawdown: number
   profitFactor: number | null
+  benchmarkCount?: number
 }
 defineProps<{
   rows: {
@@ -59,7 +60,7 @@ defineProps<{
             {{ r.stats.traded }}<span class="text-dimmed">/{{ r.stats.count }}</span>
           </td>
           <td class="px-3 py-2">
-            <div class="flex items-center gap-2">
+            <div v-if="r.stats.traded" class="flex items-center gap-2">
               <UProgress
                 :model-value="r.stats.winRate * 100"
                 size="xs"
@@ -68,22 +69,26 @@ defineProps<{
               />
               <span class="num text-xs">{{ fmtPct(r.stats.winRate, 0) }}</span>
             </div>
+            <span v-else>—</span>
           </td>
           <td class="px-3 py-2 text-right">
-            <DeltaValue :value="r.stats.avgNetReturn" :digits="2" />
+            <DeltaValue :value="r.stats.traded ? r.stats.avgNetReturn : null" :digits="2" />
           </td>
           <td class="px-3 py-2 text-right">
             <DeltaValue
-              :value="r.stats.avgExcessReturn"
+              :value="r.stats.traded && r.stats.benchmarkCount !== 0 ? r.stats.avgExcessReturn : null"
               :digits="2"
               :arrow="false"
             />
           </td>
           <td class="num px-3 py-2 text-right text-muted">
-            {{ fmtPct(r.stats.worstDrawdown) }}
+            {{ r.stats.traded ? fmtPct(r.stats.worstDrawdown) : '—' }}
           </td>
           <td class="num py-2 pl-3 text-right" :class="(r.stats.profitFactor ?? 0) >= 1 ? 'text-success' : 'text-error'">
-            {{ r.stats.profitFactor === null || !Number.isFinite(r.stats.profitFactor) ? '∞' : fmtNum(r.stats.profitFactor, 2) }}
+            <template v-if="r.stats.traded">
+              {{ r.stats.profitFactor === null || !Number.isFinite(r.stats.profitFactor) ? '∞' : fmtNum(r.stats.profitFactor, 2) }}
+            </template>
+            <span v-else>—</span>
           </td>
         </tr>
       </tbody>

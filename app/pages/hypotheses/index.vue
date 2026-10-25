@@ -148,9 +148,13 @@ const columns: TableColumn<Row>[] = [
   },
   {
     accessorKey: 'criticVerdict',
-    header: 'Критик',
+    header: 'Критик · решение',
     cell: ({ row }) => render('div', { class: 'flex items-center gap-1.5' }, [
-      render(VerdictBadge, { verdict: row.original.criticVerdict }),
+      render(VerdictBadge, {
+        verdict: row.original.criticVerdict,
+        direction: row.original.recommendation ?? row.original.direction,
+        verdictTarget: row.original.verdictTarget,
+      }),
       row.original.validationOk === false
         ? render(UTooltip, { text: 'Кодовая валидация не пройдена' }, () => render(UIcon, {
             name: 'i-lucide-octagon-alert',
@@ -166,8 +170,8 @@ const columns: TableColumn<Row>[] = [
   },
   {
     accessorKey: 'confidence',
-    header: 'Увер.',
-    cell: ({ row }) => render('span', { class: 'num text-xs text-muted' }, fmtPct(row.original.confidence, 0)),
+    header: 'Качество / legacy',
+    cell: ({ row }) => render('span', { class: 'num text-xs text-muted' }, fmtPct(row.original.decisionConfidence ?? row.original.confidence, 0)),
   },
   {
     accessorKey: 'createdAt',

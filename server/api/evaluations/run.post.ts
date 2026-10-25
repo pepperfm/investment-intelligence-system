@@ -1,6 +1,6 @@
 import { evaluateDue } from '../../services/evaluations'
 
-/** Manual: evaluate matured hypotheses and run outcome_reviewer retrospectives. */
+/** Manual: append deterministic scenario/decision evaluation revisions; no implicit AI calls. */
 export default defineEventHandler(async (event) => {
   await requireUser(event)
   return evaluateDue()

@@ -1,5 +1,8 @@
 import { pgTable, uuid, text, timestamp, integer, doublePrecision, boolean, jsonb, index, uniqueIndex, primaryKey, vector } from 'drizzle-orm/pg-core'
-import type { MetricValues, AgentFinding, EntryScenario, ExitScenario, EvidenceItem, SourceRef, StrategyRules, RiskCheckResult, EvaluationCosts, PositionSnapshot, RunLogEntry } from '../../../shared/types/investment'
+import type { MetricValues, AgentFinding, EntryScenario, ExitScenario, EvidenceItem, SourceRef, StrategyRules, RiskCheckResult, EvaluationCosts, PositionSnapshot, RunLogEntry, MarketScenario, DecisionBasis, PriceForecast, HypothesisSemantics } from '../../../shared/types/investment'
+
+import type { CoverageGap } from '../../../shared/types/evidence'
+import type { PinnedStrategy } from '../../domain/strategies/pinned'
 
 export const EMBEDDING_DIMENSIONS = 256
 
@@ -30,6 +33,7 @@ export const candles = pgTable('candles', {
   low: doublePrecision('low').notNull(),
   close: doublePrecision('close').notNull(),
   volume: doublePrecision('volume').notNull(),
+  metadata: jsonb('metadata').$type<Partial<import('../../../shared/types/investment').Candle> & { rawTimestamp?: string }>(),
 }, table => [primaryKey({ columns: [table.instrumentId, table.timeframe, table.ts] })])
 
 export const marketEvents = pgTable('market_events', {
@@ -107,6 +111,8 @@ export const analysisRuns = pgTable('analysis_runs', {
   status: text('status').notNull(),
   provider: text('provider').notNull(),
   criticProvider: text('critic_provider').notNull(),
+  pinnedStrategies: jsonb('pinned_strategies').$type<Record<string, PinnedStrategy>>(),
+  executionCosts: jsonb('execution_costs').$type<import('../../../shared/types/investment').CostModel>(),
   rulesVersions: jsonb('rules_versions').$type<Record<string, number>>().notNull().default({}),
   log: jsonb('log').$type<RunLogEntry[]>().notNull().default([]),
   summary: jsonb('summary').$type<Record<string, unknown>>(),
@@ -134,6 +140,16 @@ export const hypotheses = pgTable('hypotheses', {
   strategyId: text('strategy_id').notNull().references(() => strategies.id),
   strategyVersionId: uuid('strategy_version_id').notNull().references(() => strategyVersions.id),
   snapshotId: uuid('snapshot_id').references(() => sourceSnapshots.id),
+  semanticVersion: text('semantic_version').$type<HypothesisSemantics>().notNull().default('legacy'),
+  recommendation: text('recommendation').$type<'long' | 'no_trade'>(),
+  decisionThesis: text('decision_thesis'),
+  decisionBasis: jsonb('decision_basis').$type<DecisionBasis[]>(),
+  decisionConfidence: doublePrecision('decision_confidence'),
+  priceForecast: jsonb('price_forecast').$type<PriceForecast>(),
+  marketScenario: jsonb('market_scenario').$type<MarketScenario>(),
+  coverageGaps: jsonb('coverage_gaps').$type<CoverageGap[]>(),
+  verdictTarget: text('verdict_target').notNull().default('legacy'),
+  forecastVerdict: text('forecast_verdict'),
   direction: text('direction').notNull(),
   horizonDays: integer('horizon_days').notNull(),
   thesis: text('thesis').notNull(),
@@ -169,6 +185,9 @@ export const hypothesisReviews = pgTable('hypothesis_reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
   hypothesisId: uuid('hypothesis_id').notNull().references(() => hypotheses.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
+  verdictTarget: text('verdict_target').notNull().default('legacy'),
+  forecastVerdict: text('forecast_verdict'),
+  validationIssues: jsonb('validation_issues').$type<string[]>(),
   provider: text('provider').notNull(),
   verdict: text('verdict').notNull(),
   summary: text('summary').notNull(),
@@ -211,6 +230,18 @@ export const hypothesisEvaluations = pgTable('hypothesis_evaluations', {
   costs: jsonb('costs').$type<EvaluationCosts>().notNull(),
   evaluatedAt: createdAt(),
 }, table => [uniqueIndex('hypothesis_evaluations_hypothesis_idx').on(table.hypothesisId)])
+
+/** Immutable recomputations; legacy hypothesis_evaluations rows remain untouched. */
+export const hypothesisEvaluationRevisions = pgTable('hypothesis_evaluation_revisions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  hypothesisId: uuid('hypothesis_id').notNull().references(() => hypotheses.id),
+  result: jsonb('result').$type<Record<string, unknown>>().notNull(),
+  evaluationVersion: text('evaluation_version').notNull(),
+  calendarVersion: text('calendar_version').notNull(),
+  costModelHash: text('cost_model_hash'),
+  sourceSnapshotHash: text('source_snapshot_hash'),
+  computedAt: timestamp('computed_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => [index('hypothesis_evaluation_revisions_hypothesis_idx').on(table.hypothesisId, table.computedAt)])
 
 export const accounts = pgTable('accounts', {
   id: uuid('id').primaryKey().defaultRandom(),

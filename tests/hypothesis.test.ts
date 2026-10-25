@@ -51,6 +51,12 @@ describe('user decisions', () => {
 })
 
 const draft: AnalystOutput = {
+  recommendation: 'long',
+  decisionThesis: 'Тезис',
+  decisionBasis: ['positive_evidence'],
+  decisionConfidence: 0.5,
+  priceForecast: null,
+  coverageGaps: [],
   direction: 'long',
   thesis: 'Тезис',
   supportingEvidence: [{
@@ -168,6 +174,7 @@ describe('fundamental evidence gate', () => {
       draft: {
         ...input.draft,
         direction: 'no_trade',
+        recommendation: 'no_trade',
       },
     }).ok).toBe(true)
   })

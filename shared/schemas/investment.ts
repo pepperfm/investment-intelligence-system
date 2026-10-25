@@ -1,8 +1,49 @@
 import { z } from 'zod'
-import { CRITIC_VERDICTS, STRATEGY_IDS } from '../types/investment'
+import { CRITIC_VERDICTS, DECISION_BASES, STRATEGY_IDS } from '../types/investment'
+
+import { COVERAGE_GAP_STATUSES, EVIDENCE_SOURCE_KEYS } from '../types/evidence'
 
 const text = (max = 2000) => z.string().trim().min(1).max(max)
 const sourceIds = z.array(z.string().max(80)).max(20)
+
+export const coverageGapSchema = z.object({
+  sourceKey: z.enum(EVIDENCE_SOURCE_KEYS),
+  status: z.enum(COVERAGE_GAP_STATUSES),
+  reason: text(500),
+  impact: text(500),
+  asOf: z.iso.datetime({ offset: true }),
+})
+export const priceForecastSchema = z.object({
+  criterion: z.enum(['take_profit_before_stop', 'stop_before_take_profit', 'positive_net_return', 'non_positive_net_return']),
+  windowTradingDays: z.int().min(1).max(365),
+  rationale: text(1500),
+  sourceIds,
+})
+export const marketScenarioSchema = z.object({
+  entry: z.object({
+    type: z.enum(['market_next_open', 'limit']),
+    price: z.number().positive(),
+    validDays: z.int().positive(),
+    note: z.string(),
+  }),
+  exit: z.object({
+    stopLoss: z.number().positive(),
+    takeProfit: z.number().positive(),
+    timeExitDays: z.int().positive(),
+    note: z.string(),
+  }),
+  horizonTradingDays: z.int().positive(),
+  strategyVersionId: z.string().min(1),
+  version: z.int().positive(),
+  rulesHash: z.string().min(1),
+  calendarVersion: z.string().min(1),
+  normalizationVersion: z.string().min(1),
+  costs: z.object({
+    commissionPct: z.number().min(0),
+    spreadPct: z.number().min(0),
+    slippagePct: z.number().min(0),
+  }),
+})
 
 export const evidenceItemSchema = z.object({
   claim: text(),
@@ -22,11 +63,18 @@ export const researchOutputSchema = z.object({
   growthFactors: z.array(evidenceItemSchema).max(15),
   riskFactors: z.array(evidenceItemSchema).max(15),
   dataGaps: z.array(text(500)).max(15),
+  coverageGaps: z.array(coverageGapSchema).max(20),
 })
 export type ResearchOutput = z.infer<typeof researchOutputSchema>
 
-/** Root analyst draft hypothesis. Price levels are proposals; code re-validates them. */
+/** Decision v2. Legacy storage aliases must agree; price levels remain code-owned. */
 export const analystOutputSchema = z.object({
+  recommendation: z.enum(['long', 'no_trade']),
+  decisionThesis: text(3000),
+  decisionBasis: z.array(z.enum(DECISION_BASES)).min(1).max(6),
+  decisionConfidence: z.number().min(0).max(1),
+  priceForecast: priceForecastSchema.nullable(),
+  coverageGaps: z.array(coverageGapSchema).max(20),
   direction: z.enum(['long', 'no_trade']),
   thesis: text(3000),
   supportingEvidence: z.array(evidenceItemSchema).max(15),
@@ -38,15 +86,21 @@ export const analystOutputSchema = z.object({
   confidence: z.number().min(0).max(1),
   entryNote: z.string().max(500),
   exitNote: z.string().max(500),
-})
+}).refine(value => value.direction === value.recommendation && value.thesis === value.decisionThesis && value.confidence === value.decisionConfidence, { message: 'Legacy aliases must equal the explicit decision fields' })
+  // A narrow guard for the reproduced mixed-thesis cases, not a claim to prove arbitrary prose semantics.
+  .refine(value => value.recommendation !== 'no_trade' || !/достигнет|достигнут|продолжит[^.!?]*рост|цена\s+(?:упад[её]т|вырастет|снизится|повысится)/iu.test(value.decisionThesis), { message: 'no_trade decisionThesis explains missing entry advantage; put explicit price predictions only in priceForecast' })
 export type AnalystOutput = z.infer<typeof analystOutputSchema>
 
 export const criticOutputSchema = z.object({
+  verdictTarget: z.literal('decision'),
+  decisionVerdict: z.enum(CRITIC_VERDICTS),
+  forecastVerdict: z.enum([...CRITIC_VERDICTS, 'not_applicable']),
+  coverageGaps: z.array(coverageGapSchema).max(20),
   verdict: z.enum(CRITIC_VERDICTS),
   summary: text(3000),
   findings: z.array(findingSchema).max(25),
   missingChecks: z.array(text(500)).max(15),
-})
+}).refine(value => value.verdict === value.decisionVerdict, { message: 'verdict is the decisionVerdict storage alias' })
 export type CriticOutput = z.infer<typeof criticOutputSchema>
 
 export const outcomeReviewSchema = z.object({

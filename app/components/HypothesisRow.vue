@@ -3,6 +3,11 @@ import type { EntryScenario, ExitScenario } from '#shared/types/investment'
 
 defineProps<{
   h: {
+    semanticVersion?: string
+    recommendation?: string | null
+    decisionThesis?: string | null
+    decisionConfidence?: number | null
+    verdictTarget?: string
     id: string
     symbol: string
     name: string
@@ -53,18 +58,23 @@ defineEmits<{ preview: [id: string] }>()
       :content="{ side: 'top', align: 'start' }"
     >
       <p class="min-w-0 flex-1 cursor-default truncate text-sm text-toned">
-        {{ h.thesis }}
+        {{ h.decisionThesis ?? h.thesis }}
       </p>
       <template #content>
         <div class="max-w-md space-y-2 p-3 text-sm">
-          <p>{{ h.thesis }}</p>
+          <p>{{ h.decisionThesis ?? h.thesis }}</p>
           <div class="flex items-center gap-2 text-xs text-muted">
-            Уверенность аналитика <span class="num text-highlighted">{{ fmtPct(h.confidence, 0) }}</span>
+            {{ h.semanticVersion === 'decision_v2' ? 'Качество обоснования' : 'Уверенность · legacy' }} <span class="num text-highlighted">{{ fmtPct(h.decisionConfidence ?? h.confidence, 0) }}</span>
           </div>
         </div>
       </template>
     </UPopover>
-    <VerdictBadge :verdict="h.criticVerdict" class="hidden sm:inline-flex" />
+    <VerdictBadge
+      :verdict="h.criticVerdict"
+      :direction="h.recommendation ?? h.direction"
+      :verdict-target="h.verdictTarget"
+      class="hidden sm:inline-flex"
+    />
     <StatusBadge :status="h.status" />
     <UButton
       icon="i-lucide-panel-right-open"

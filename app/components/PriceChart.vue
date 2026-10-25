@@ -15,12 +15,14 @@ const props = withDefaults(defineProps<{
   height?: number
   /** Show the 1M/3M/6M/1Y selector. */
   ranges?: boolean
+  indicators?: boolean
   defaultRange?: number
 }>(), {
   levels: () => [],
   markers: () => [],
   height: 280,
   ranges: true,
+  indicators: true,
   defaultRange: 126,
 })
 
@@ -108,8 +110,8 @@ const view = computed(() => {
     y,
     line,
     area: `${line}L${x(rows.length - 1).toFixed(1)},${pad.top + h}L${x(0).toFixed(1)},${pad.top + h}Z`,
-    sma20: sma(20),
-    sma50: sma(50),
+    sma20: props.indicators ? sma(20) : '',
+    sma50: props.indicators ? sma(50) : '',
     up,
     // Axis labels give way to level pills so the two never overlap.
     ticks: [0, 0.25, 0.5, 0.75, 1].map(t => min + span * t).map(v => ({
@@ -227,6 +229,7 @@ function onMove(event: PointerEvent) {
       >{{ t.label }}</text>
       <path :d="view.area" fill="url(#price-fill)" />
       <path
+        v-if="indicators"
         :d="view.sma50"
         fill="none"
         stroke="var(--ui-warning)"
@@ -234,6 +237,7 @@ function onMove(event: PointerEvent) {
         opacity="0.55"
       />
       <path
+        v-if="indicators"
         :d="view.sma20"
         fill="none"
         stroke="var(--ui-info)"
@@ -325,8 +329,8 @@ function onMove(event: PointerEvent) {
     />
     <div v-if="view" class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted">
       <span class="flex items-center gap-1.5"><span class="h-0.5 w-3 rounded" :class="view.up ? 'bg-success' : 'bg-error'" />Закрытие</span>
-      <span class="flex items-center gap-1.5"><span class="h-0.5 w-3 rounded bg-info" />SMA20</span>
-      <span class="flex items-center gap-1.5"><span class="h-0.5 w-3 rounded bg-warning" />SMA50</span>
+      <span v-if="indicators" class="flex items-center gap-1.5"><span class="h-0.5 w-3 rounded bg-info" />SMA20</span>
+      <span v-if="indicators" class="flex items-center gap-1.5"><span class="h-0.5 w-3 rounded bg-warning" />SMA50</span>
       <span
         v-for="l in levels"
         :key="l.label"

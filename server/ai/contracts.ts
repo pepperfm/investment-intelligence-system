@@ -1,6 +1,6 @@
-import type { EvidenceCoverage, EvidenceContext, EvidenceSourceHealth } from '../../shared/types/evidence'
+import type { EvidenceCoverage, EvidenceContext, EvidenceSourceHealth, CoverageGap } from '../../shared/types/evidence'
 import { z } from 'zod'
-import type { EntryScenario, EvidenceItem, ExitScenario, SourceRef, StrategyRules } from '../../shared/types/investment'
+import type { EntryScenario, EvidenceItem, ExitScenario, SourceRef, StrategyRules, PriceForecast, DecisionBasis, MarketScenario } from '../../shared/types/investment'
 import type { Signal } from '../domain/strategies/rules'
 
 export interface TrackStats {
@@ -21,6 +21,8 @@ export interface TrackStats {
 export type AgentRole = 'market_researcher' | 'hypothesis_analyst' | 'hypothesis_critic' | 'outcome_reviewer'
 
 export interface EvidencePacket {
+  calendarVersion?: string
+  normalizationVersion?: string
   mode: 'research' | 'why_not_buy'
   asOf: string
   instrument: {
@@ -54,6 +56,12 @@ export interface EvidencePacket {
   /** Daily closes (oldest first) so SMA/momentum can be reproduced independently. */
   closes: number[]
   trackRecord: {
+    audit?: {
+      id: string
+      hash: string
+      inputSeriesHash: string
+    }
+    validity?: string
     note: string
     universe: number
     all: TrackStats
@@ -109,11 +117,31 @@ export interface EvidencePacket {
   }
   financialComparisons?: ReturnType<typeof import('../domain/evidence/financials').compareFinancialFacts>
   evidenceCoverage?: EvidenceCoverage
+  permittedSourceIds?: string[]
+  pinnedStrategy?: {
+    strategyVersionId: string
+    version: number
+    rules: StrategyRules
+    rulesHash: string
+  }
+  dataQuality?: {
+    status: string
+    issues: string[]
+    calendarVersion: string
+    normalizationVersion: string
+  }
+  coverageGaps?: CoverageGap[]
+  marketScenario?: MarketScenario
   sources: SourceRef[]
 }
 
-/** What the critic sees of the draft: claims only — no confidence, no status, no recommendation strength. */
+/** What the critic sees of the draft: decision and optional forecast claims — no confidence, no status, no recommendation strength. */
 export interface CriticClaims {
+  recommendation?: 'long' | 'no_trade'
+  decisionThesis?: string
+  decisionBasis?: DecisionBasis[]
+  priceForecast?: PriceForecast | null
+  coverageGaps?: CoverageGap[]
   direction: 'long' | 'no_trade'
   thesis: string
   supportingEvidence: EvidenceItem[]

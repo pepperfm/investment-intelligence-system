@@ -114,9 +114,8 @@ useHead({ title: 'Память · IIS' })
             </UButton>
             <span class="mx-1 h-4 w-px bg-(--ui-border)" />
             <UTooltip text="Point-in-time: только то, что было доступно к этой дате">
-              <UInput
+              <AppDatePicker
                 v-model="before"
-                type="date"
                 size="xs"
                 icon="i-lucide-calendar-clock"
                 class="w-40"

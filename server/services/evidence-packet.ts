@@ -3,7 +3,7 @@ import { regulatoryLinks } from '../domain/evidence/event-links'
 import { bankEvidence } from './bank-evidence'
 import { db, schema } from '@nuxthub/db'
 import { desc, lte, eq } from 'drizzle-orm'
-import type { EvidenceSourceHealth } from '../../shared/types/evidence'
+import type { EvidenceSourceHealth, CoverageGap, EvidenceSourceKey } from '../../shared/types/evidence'
 import { SOURCE_DEFINITIONS } from './source-status'
 import type { SourceRef } from '../../shared/types/investment'
 import { macroOverview, regulatoryHistory } from './macro'
@@ -107,7 +107,34 @@ export async function loadEvidenceContext(instrumentId: string, asOf: Date) {
     && asOf.getTime() - Date.parse(row.provenance.observedAt) <= 72 * 3600_000
     && asOf.getTime() - Date.parse(row.date) <= 7 * 86400_000)
   const recentFacts = facts.filter(fact => asOf.getTime() - Date.parse(fact.periodEnd) <= 3 * 365 * 86400_000)
+  const coverageGaps: CoverageGap[] = sourceHealth.filter(source => source.status !== 'ok').map((source) => {
+    const current = registry.find(row => row.id === source.sourceId)
+    const observedLater = !source.lastAttemptAt && !!current?.lastAttemptAt && current.lastAttemptAt > asOf
+    let status: CoverageGap['status'] = 'not_covered'
+    if (observedLater) {
+      status = 'not_yet_observed'
+    } else if (source.status === 'stale' || source.status === 'unavailable') {
+      status = source.status
+    }
+    return {
+      sourceKey: source.sourceId as EvidenceSourceKey,
+      status,
+      reason: observedLater ? 'На дату анализа источник ещё не наблюдался системой' : `Состояние источника на дату: ${source.status}`,
+      impact: 'Отсутствие покрытия не доказывает отсутствие событий или рисков',
+      asOf: asOf.toISOString(),
+    }
+  })
+  if (!facts.length && !coverageGaps.some(gap => gap.sourceKey === 'issuer_disclosure')) {
+    coverageGaps.push({
+      sourceKey: 'issuer_disclosure',
+      status: 'not_covered',
+      reason: 'Нет доступных фактов по этому эмитенту',
+      impact: 'Нельзя обосновать фундаментальные числовые утверждения',
+      asOf: asOf.toISOString(),
+    })
+  }
   return {
+    coverageGaps,
     sourceHealth,
     macroContext: macro.map(({ history: _history, ...row }) => row),
     issuerFundamentals: facts,

@@ -1,9 +1,12 @@
-import type { EvidenceCoverage } from '../../../shared/types/evidence'
+import { COVERAGE_GAP_STATUSES, EVIDENCE_SOURCE_KEYS } from '../../../shared/types/evidence'
+import type { CoverageGap, EvidenceCoverage } from '../../../shared/types/evidence'
 import type { EntryScenario, ExitScenario, EvidenceItem, SourceRef } from '../../../shared/types/investment'
-import type { AnalystOutput } from '../../../shared/schemas/investment'
-import { staleDays } from '../market/calendar'
+import { criticOutputSchema } from '../../../shared/schemas/investment'
+import type { CriticOutput, AnalystOutput } from '../../../shared/schemas/investment'
+import { staleDays, type CalendarOptions } from '../market/calendar'
 
 export interface ValidationInput {
+  calendar?: CalendarOptions
   strategy?: string
   coverage?: EvidenceCoverage
   draft: AnalystOutput
@@ -23,6 +26,17 @@ export function validateHypothesis(input: ValidationInput) {
   const issues: string[] = []
   const known = new Set(input.sources.map(s => s.id))
   const evidence: EvidenceItem[] = [...input.draft.supportingEvidence, ...input.draft.counterEvidence]
+  if (input.draft.priceForecast) {
+    evidence.push({
+      claim: input.draft.priceForecast.rationale,
+      sourceIds: input.draft.priceForecast.sourceIds,
+    })
+    if (input.draft.priceForecast.windowTradingDays !== input.exit.timeExitDays) {
+      issues.push('Окно прогноза не совпадает с замороженным горизонтом сценария')
+    }
+  }
+  issues.push(...validateCoverageGaps(input.draft.coverageGaps ?? [], input.asOf))
+  issues.push(...validateSourceAvailability(input.sources, input.asOf))
   const unknown = new Set(evidence.flatMap(e => e.sourceIds).filter(id => !known.has(id)))
   if (unknown.size) {
     issues.push(`Ссылки на несуществующие источники: ${[...unknown].join(', ')}`)
@@ -53,12 +67,61 @@ export function validateHypothesis(input: ValidationInput) {
   if (input.draft.counterEvidence.length === 0) {
     issues.push('Не приведено ни одного контраргумента')
   }
-  const age = staleDays(input.lastCandleTs, input.asOf)
+  const age = staleDays(input.lastCandleTs, input.asOf, input.calendar)
   if (age > input.maxStaleDays) {
     issues.push(`Котировки устарели: последние данные ${age === Infinity ? 'отсутствуют' : `${age} дн. назад`}`)
   }
   return {
     ok: issues.length === 0,
     issues,
+  }
+}
+
+/** Deterministic checks prove provenance/shape, never the truth of free-form prose. */
+export function validateCoverageGaps(gaps: CoverageGap[], asOf: Date): string[] {
+  const issues: string[] = []
+  for (const gap of gaps) {
+    if (!EVIDENCE_SOURCE_KEYS.includes(gap.sourceKey) || !COVERAGE_GAP_STATUSES.includes(gap.status)) {
+      issues.push(`Неизвестный реестр или статус пробела: ${gap.sourceKey}`)
+    }
+    if (new Date(gap.asOf).getTime() !== asOf.getTime()) {
+      issues.push(`Пробел покрытия относится к другой дате: ${gap.sourceKey}`)
+    }
+  }
+  return issues
+}
+
+function validateSourceAvailability(sources: SourceRef[], asOf: Date): string[] {
+  return sources.filter(source => [source.asOf, source.availableAt, source.publishedAt]
+    .filter((value): value is string => !!value)
+    .some(value => !Number.isFinite(Date.parse(value)) || Date.parse(value) > asOf.getTime()))
+    .map(source => `Источник недоступен на дату анализа: ${source.id}`)
+}
+
+/** Called after the critic provider: malformed/unknown citations must never establish supported. */
+export function validateCriticOutput(output: unknown, sources: SourceRef[], asOf: Date, priceForecast: AnalystOutput['priceForecast'] = null) {
+  const parsed = criticOutputSchema.safeParse(output)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      issues: ['Невалидный контракт критика'],
+      output: null,
+    }
+  }
+  const critic: CriticOutput = parsed.data
+  const known = new Set(sources.map(source => source.id))
+  const unknown = [...new Set(critic.findings.flatMap(finding => finding.sourceIds).filter(id => !known.has(id)))]
+  const issues = [
+    ...unknown.map(id => `Ссылка критика на несуществующий источник: ${id}`),
+    ...validateCoverageGaps(critic.coverageGaps, asOf),
+    ...validateSourceAvailability(sources, asOf),
+  ]
+  if ((!priceForecast && critic.forecastVerdict !== 'not_applicable') || (priceForecast && critic.forecastVerdict === 'not_applicable')) {
+    issues.push('Вердикт по прогнозу не соответствует наличию отдельного прогноза')
+  }
+  return {
+    ok: issues.length === 0,
+    issues,
+    output: critic,
   }
 }

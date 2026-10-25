@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Candle, CostModel, StrategyId, StrategyRules } from '../../../shared/types/investment'
 import { evaluateSignal } from '../strategies/rules'
 import { aggregateStats, simulateOutcome, type StatsRow } from './outcome'
@@ -14,12 +15,20 @@ export interface BacktestTrade extends StatsRow {
   exitAt: string
   setupType: string
   exitReason: string
+  entryPrice: number
+  exitPrice: number
+  grossReturn: number
 }
 
 const WARMUP = 210
 
 /** Point-in-time replay: each signal sees only candles up to its own bar. */
 export function backtest(strategy: StrategyId, rules: StrategyRules, series: BacktestSeries[], benchmark: Candle[], costs: CostModel, from?: string, to?: string) {
+  series = series.map(s => ({
+    ...s,
+    candles: s.candles.filter(c => !to || c.ts < to),
+  }))
+  benchmark = benchmark.filter(c => !to || c.ts < to)
   const trades: BacktestTrade[] = []
   const benchmarkIndex = new Map(benchmark.map((c, i) => [c.ts, i]))
   const benchmarkUpTo = (ts: string) => {
@@ -76,6 +85,9 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
         exitAt: result.exitAt,
         setupType: signal.setupType,
         exitReason: result.exitReason,
+        entryPrice: result.entryPrice!,
+        exitPrice: result.exitPrice!,
+        grossReturn: result.grossReturn,
         netReturn: result.netReturn,
         excessReturn: result.excessReturn,
         maxDrawdown: result.maxDrawdown,
@@ -88,6 +100,30 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
   return {
     trades,
     stats: aggregateStats(trades),
+    audit: {
+      strategy,
+      rules,
+      rulesHash: evaluationHash(rules),
+      costModel: costs,
+      costModelHash: evaluationHash(costs),
+      inputSeriesHash: evaluationHash({
+        series,
+        benchmark,
+      }),
+      universe: series.map(s => ({
+        symbol: s.symbol,
+        bars: s.candles.length,
+        from: s.candles[0]?.ts ?? null,
+        to: s.candles.at(-1)?.ts ?? null,
+      })),
+      universeCoverage: 'Current active universe only; historical membership/delistings unavailable. Survivorship bias possible.',
+      overlappingSamples: 'all / sameSetup / sameSymbol overlap and are not independent evidence.',
+      series,
+      benchmark,
+      trades,
+      from: from ?? null,
+      toExclusive: to ?? null,
+    },
   }
 }
 
@@ -112,4 +148,18 @@ export function walkForwardCompare(strategy: StrategyId, versions: {
       outOfSample: backtest(strategy, v.rules, series, benchmark, costs, splitAt).stats,
     })),
   }
+}
+
+/** Stable object-key ordering for immutable input/version identities. */
+export function evaluationHash(value: unknown): string {
+  const canonical = (v: unknown): unknown => {
+    if (Array.isArray(v)) {
+      return v.map(canonical)
+    }
+    if (!v || typeof v !== 'object') {
+      return v
+    }
+    return Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([k, item]) => [k, canonical(item)]))
+  }
+  return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')
 }

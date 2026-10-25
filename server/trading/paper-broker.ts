@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, lt } from 'drizzle-orm'
 import type { PositionSnapshot } from '../../shared/types/investment'
 import { addTradingDays, startOfUtcDay } from '../domain/market/calendar'
 import { checkOrderRisk, suggestQuantity, type PortfolioState } from '../domain/risk/limits'
+import { inspectBarQuality } from '../domain/market/bar-quality'
 import { paperFill } from '../domain/risk/paper-fill'
 import { avgTurnover } from '../domain/market/indicators'
 import { getInstrument, lastClose, loadCandles } from '../services/market'
@@ -262,7 +263,7 @@ async function orderHypothesis(request: {
   if (!request.hypothesisId) {
     return {
       stopLoss: null,
-      violations,
+      violations: request.side === 'buy' ? ['Покупка требует гипотезы long, поддержанной критиком и одобренной пользователем'] : violations,
     }
   }
   const [h] = await reader.select().from(schema.hypotheses).where(eq(schema.hypotheses.id, request.hypothesisId))
@@ -279,7 +280,20 @@ async function orderHypothesis(request: {
     if (h.criticVerdict !== 'supported' || !h.validation.ok) {
       violations.push('Покупка требует поддерживающего вердикта критика и успешной валидации')
     }
-    if (at.getTime() >= addTradingDays(h.evidenceTimestamp, h.entryScenario.validDays).getTime() + 86_400_000) {
+    const [instrument] = await reader.select().from(schema.instruments).where(eq(schema.instruments.id, request.instrumentId))
+    if (h.semanticVersion === 'legacy') {
+      violations.push('Legacy-гипотеза не даёт нового разрешения на покупку: требуется новый анализ')
+    }
+    let expired = true
+    try {
+      expired = at.getTime() >= addTradingDays(h.evidenceTimestamp, h.entryScenario.validDays, {
+        provider: instrument?.provider === 'mock' ? 'mock' : 'finam',
+        asOf: h.evidenceTimestamp,
+      }).getTime() + 86_400_000
+    } catch {
+      violations.push('data_quality_blocked: окно входа не подтверждено календарём')
+    }
+    if (expired) {
       violations.push(`Окно входа гипотезы (${h.entryScenario.validDays} торг. дн.) истекло — нужен новый анализ`)
     }
   }
@@ -332,7 +346,25 @@ async function tryFill(orderId: string) {
     if (!order.confirmedAt) {
       return false
     }
-    const bars = await loadCandles(order.instrumentId, { after: order.confirmedAt })
+    const instrumentForQuality = await getInstrument(order.instrumentId)
+    const rawBars = await loadCandles(order.instrumentId, {
+      after: order.confirmedAt,
+      to: new Date(),
+    })
+    const quality = inspectBarQuality(rawBars, {
+      dataSource: instrumentForQuality.provider === 'mock' ? 'mock' : 'finam',
+      board: instrumentForQuality.board,
+      asOf: new Date(),
+    })
+    if (quality.status === 'data_quality_blocked' && rawBars.length) {
+      await tx.update(schema.orders).set({
+        status: 'rejected',
+        rejectReason: `data_quality_blocked: ${quality.issues.join('; ')}`,
+        closedAt: new Date(),
+      }).where(eq(schema.orders.id, orderId))
+      return false
+    }
+    const bars = quality.completedBars
     const fill = paperFill({
       side: order.side as 'buy' | 'sell',
       type: order.type as 'market' | 'limit',

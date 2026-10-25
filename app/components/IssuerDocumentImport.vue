@@ -179,23 +179,20 @@ async function submit() {
           />
         </UFormField>
         <UFormField label="Дата публикации" required>
-          <UInput
+          <AppDatePicker
             v-model="publishedAt"
-            type="date"
             required
           />
         </UFormField>
         <UFormField label="Начало периода" required>
-          <UInput
+          <AppDatePicker
             v-model="periodStart"
-            type="date"
             required
           />
         </UFormField>
         <UFormField label="Конец периода" required>
-          <UInput
+          <AppDatePicker
             v-model="periodEnd"
-            type="date"
             required
           />
         </UFormField>

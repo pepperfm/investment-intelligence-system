@@ -1,11 +1,12 @@
 import { db, schema } from '@nuxthub/db'
-import { and, desc, eq, inArray, isNull, lte } from 'drizzle-orm'
+import { and, desc, eq, inArray, lte } from 'drizzle-orm'
 import { outcomeReviewSchema } from '../../shared/schemas/investment'
-import type { NumericRuleKey, StrategyId, StrategyRules } from '../../shared/types/investment'
+import type { CostModel, NumericRuleKey, StrategyId, StrategyRules } from '../../shared/types/investment'
 import type { OutcomePacket } from '../ai/contracts'
-import { backtest, walkForwardCompare } from '../domain/evaluations/backtest'
-import { aggregateStats, simulateOutcome } from '../domain/evaluations/outcome'
-import { canEvaluate } from '../domain/hypotheses/state'
+import { backtest, evaluationHash, walkForwardCompare } from '../domain/evaluations/backtest'
+import { aggregateStats, evaluateScenarioDecision, EVALUATION_VERSION } from '../domain/evaluations/outcome'
+import { addTradingDays, calendarVersion } from '../domain/market/calendar'
+import { inspectBarQuality } from '../domain/market/bar-quality'
 import { benchmarkInstrument, getInstrument, loadCandles } from './market'
 import { upsertDocument } from './memory'
 import { getCostModel } from './settings'
@@ -13,87 +14,135 @@ import { activeVersion, proposeVersion } from './strategies'
 
 const EVALUABLE = ['user_approved', 'user_rejected', 'watching', 'closed', 'ready_for_user', 'needs_review']
 
-/**
- * Evaluates every hypothesis whose horizon has passed in available data.
- * Every scenario is counterfactual, including approved ideas: this simulator does not replay paper executions.
- */
+/** Manual, deterministic evaluation only. Existing results and hypotheses are never rewritten. */
 export async function evaluateDue() {
-  const costs = await getCostModel()
+  return recomputeEvaluations()
+}
+
+export async function recomputeEvaluations(hypothesisIds?: string[]) {
+  const candidates = await db.select().from(schema.hypotheses).where(and(
+    inArray(schema.hypotheses.status, [...EVALUABLE, 'evaluated']),
+    lte(schema.hypotheses.evidenceTimestamp, new Date()),
+    hypothesisIds?.length ? inArray(schema.hypotheses.id, hypothesisIds) : undefined,
+  ))
   const benchmark = await benchmarkInstrument()
-  const due = await db.select({ h: schema.hypotheses }).from(schema.hypotheses)
-    .leftJoin(schema.hypothesisEvaluations, eq(schema.hypothesisEvaluations.hypothesisId, schema.hypotheses.id))
-    .where(and(isNull(schema.hypothesisEvaluations.id), inArray(schema.hypotheses.status, EVALUABLE), lte(schema.hypotheses.evidenceTimestamp, new Date())))
   const results = {
     evaluated: 0,
     pending: 0,
     reviewed: 0,
     reviewErrors: [] as string[],
+    unchanged: 0,
   }
-  for (const { h } of due) {
-    if (!canEvaluate(h.status as never)) {
-      continue
-    }
-    const future = await loadCandles(h.instrumentId, { after: h.evidenceTimestamp })
-    const benchmarkFuture = benchmark ? await loadCandles(benchmark.id, { after: h.evidenceTimestamp }) : []
-    const outcome = simulateOutcome({
-      future,
-      benchmarkFuture,
-      entry: h.entryScenario,
-      exit: h.exitScenario,
-      costs,
+  for (const h of candidates) {
+    const instrument = await getInstrument(h.instrumentId)
+    const [snapshot] = h.snapshotId ? await db.select().from(schema.sourceSnapshots).where(eq(schema.sourceSnapshots.id, h.snapshotId)) : []
+    const packet = snapshot?.payload as {
+      execution?: { costs?: CostModel }
+      calendarVersion?: string
+      marketData?: { calendarVersion?: string }
+    } | undefined
+    const scenario = h.marketScenario
+    const costs = scenario?.costs ?? packet?.execution?.costs
+    const pinnedCalendar = scenario?.calendarVersion ?? packet?.calendarVersion ?? packet?.marketData?.calendarVersion
+    const provider = instrument.provider === 'mock' ? 'mock' : 'finam'
+    const currentCalendar = calendarVersion({
+      provider,
+      asOf: h.evidenceTimestamp,
     })
-    if (!outcome.complete) {
-      results.pending++
-      continue
-    }
-    const decision = await userDecision(h.id)
-    const isCounterfactual = true
-    const [evaluation] = await db.transaction(async (tx) => {
-      const inserted = await tx.insert(schema.hypothesisEvaluations).values({
-        hypothesisId: h.id,
-        isCounterfactual,
-        entered: outcome.entered,
-        entryAt: outcome.entryAt ? new Date(outcome.entryAt) : null,
-        exitAt: outcome.exitAt ? new Date(outcome.exitAt) : null,
-        entryPrice: outcome.entryPrice,
-        exitPrice: outcome.exitPrice,
-        exitReason: outcome.exitReason,
-        grossReturn: outcome.grossReturn,
-        netReturn: outcome.netReturn,
-        benchmarkReturn: outcome.benchmarkReturn,
-        excessReturn: outcome.excessReturn,
-        maxDrawdown: outcome.maxDrawdown,
-        maxFavorable: outcome.maxFavorable,
-        outcome: outcome.outcome,
-        costs: outcome.costs,
-      }).onConflictDoNothing().returning()
-      await tx.update(schema.hypotheses).set({
-        status: 'evaluated',
-        updatedAt: new Date(),
-      }).where(eq(schema.hypotheses.id, h.id))
-      await tx.insert(schema.hypothesisEvents).values({
-        hypothesisId: h.id,
-        type: 'evaluated',
-        fromStatus: h.status,
-        toStatus: 'evaluated',
-        actor: 'system',
-        payload: {
-          netReturn: outcome.netReturn,
-          outcome: outcome.outcome,
-          isCounterfactual,
-          userDecision: decision,
-        },
-      })
-      return inserted
+    const horizonBars = (scenario?.entry ?? h.entryScenario).validDays + (scenario?.exit ?? h.exitScenario).timeExitDays - 1
+    const future = (await loadCandles(h.instrumentId, { after: h.evidenceTimestamp })).slice(0, horizonBars)
+    const benchmarkFuture = benchmark && future.length
+      ? await loadCandles(benchmark.id, {
+          after: h.evidenceTimestamp,
+          to: new Date(future.at(-1)!.ts),
+        })
+      : []
+    const quality = inspectBarQuality(future, {
+      dataSource: provider,
+      board: instrument.board,
+      asOf: new Date(),
     })
-    results.evaluated++
-    if (evaluation) {
+    const issues = quality.issues.filter(issue => issue !== 'missing_candles')
+    // Counting rows as trading days is only safe on a contiguous confirmed calendar.
+    let previous = h.evidenceTimestamp
+    for (const candle of quality.completedBars) {
       try {
-        await reviewOutcome(h.id)
-        results.reviewed++
-      } catch (error) {
-        results.reviewErrors.push(`${h.id.slice(0, 8)}: ${(error as Error).message}`)
+        const expected = addTradingDays(previous, 1, {
+          provider,
+          board: instrument.board,
+        }).toISOString().slice(0, 10)
+        if (candle.ts.slice(0, 10) !== expected) {
+          issues.push(`missing_trading_period:${expected}`)
+        }
+      } catch {
+        issues.push('evaluation_calendar_range_unverified')
       }
+      previous = new Date(candle.ts)
+    }
+    if (!costs) {
+      issues.push('legacy_cost_model_not_pinned')
+    }
+    if (!pinnedCalendar) {
+      issues.push('legacy_calendar_not_pinned')
+    } else if (pinnedCalendar !== currentCalendar) {
+      issues.push('calendar_version_mismatch')
+    }
+    const result = {
+      ...evaluateScenarioDecision({
+        future: quality.completedBars,
+        benchmarkFuture,
+        entry: scenario?.entry ?? h.entryScenario,
+        exit: scenario?.exit ?? h.exitScenario,
+        // Missing historical costs block evaluation above; zero is never reported as a historical cost model.
+        costs: costs ?? {
+          commissionPct: 0,
+          spreadPct: 0,
+          slippagePct: 0,
+        },
+        recommendation: h.direction === 'no_trade' ? 'no_trade' : 'long',
+        evidenceQuality: {
+          validationOk: h.validation.ok,
+          decisionVerdict: h.criticVerdict,
+          semantics: h.semanticVersion === 'legacy' ? 'legacy' as const : 'explicit' as const,
+        },
+        qualityIssues: issues,
+      }),
+      futureDataHash: evaluationHash({
+        future,
+        benchmarkFuture,
+      }),
+      futureData: {
+        candles: future,
+        benchmarkCandles: benchmarkFuture,
+        provider,
+        board: instrument.board,
+      },
+      originalSnapshotId: h.snapshotId,
+    }
+    const identity = {
+      evaluationVersion: EVALUATION_VERSION,
+      calendarVersion: pinnedCalendar ?? 'legacy_unknown',
+      costModelHash: evaluationHash(costs ?? { legacy: 'unknown' }),
+      sourceSnapshotHash: snapshot?.sha256 ?? 'legacy_unknown',
+    }
+    const [latest] = await db.select().from(schema.hypothesisEvaluationRevisions)
+      .where(eq(schema.hypothesisEvaluationRevisions.hypothesisId, h.id))
+      .orderBy(desc(schema.hypothesisEvaluationRevisions.computedAt)).limit(1)
+    if (latest && latest.evaluationVersion === identity.evaluationVersion && latest.calendarVersion === identity.calendarVersion
+      && latest.costModelHash === identity.costModelHash && latest.sourceSnapshotHash === identity.sourceSnapshotHash
+      && evaluationHash(latest.result) === evaluationHash(result)) {
+      results.unchanged++
+      continue
+    }
+    await db.insert(schema.hypothesisEvaluationRevisions).values({
+      hypothesisId: h.id,
+      ...identity,
+      result,
+    })
+    if (result.status === 'evaluated' || result.status === 'not_entered') {
+      results.evaluated++
+    } else {
+      results.pending++
     }
   }
   return results
@@ -109,13 +158,22 @@ async function userDecision(hypothesisId: string) {
 /** outcome_reviewer: retrospective notes only. Never changes strategies by itself. */
 export async function reviewOutcome(hypothesisId: string) {
   const [h] = await db.select().from(schema.hypotheses).where(eq(schema.hypotheses.id, hypothesisId))
-  const [evaluation] = await db.select().from(schema.hypothesisEvaluations).where(eq(schema.hypothesisEvaluations.hypothesisId, hypothesisId))
-  if (!h || !evaluation) {
+  const [revision] = await db.select().from(schema.hypothesisEvaluationRevisions).where(eq(schema.hypothesisEvaluationRevisions.hypothesisId, hypothesisId))
+    .orderBy(desc(schema.hypothesisEvaluationRevisions.computedAt)).limit(1)
+  if (!h || !revision) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Evaluation not found',
     })
   }
+  const resultData = revision.result as unknown as ReturnType<typeof evaluateScenarioDecision>
+  if (resultData.status !== 'evaluated') {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'A completed, versioned scenario is required for retrospective review',
+    })
+  }
+  const evaluation = resultData.scenarioEvaluation
   const instrument = await getInstrument(h.instrumentId)
   const stats = await strategyStats(h.strategyId as StrategyId)
   const packet: OutcomePacket = {
@@ -134,21 +192,24 @@ export async function reviewOutcome(hypothesisId: string) {
     },
     evaluation: {
       ...evaluation,
-      evaluatedAt: undefined,
+      decisionEvaluation: resultData.decisionEvaluation,
+      evaluationVersion: revision.evaluationVersion,
+      calendarVersion: revision.calendarVersion,
     },
     strategyStats: stats,
   }
   const result = await (await agentProvider('analyst')).run({
     role: 'outcome_reviewer',
-    task: 'Разбери завершившуюся гипотезу: прогноз против факта, издержки, просадка, сравнение с индексом, уроки. Предложения по правилам — только как предложения.',
+    task: 'Разбери условную покупку отдельно от рекомендации. При no_trade сравни деньги 0%, избежанный убыток и упущенный рост; исход одной сделки не доказывает правильность решения. Не придумывай ценовой прогноз. Предложения по правилам — только как предложения.',
     packet,
     schema: outcomeReviewSchema,
   })
-  await db.insert(schema.hypothesisReviews).values({
+  const [storedReview] = await db.insert(schema.hypothesisReviews).values({
     hypothesisId,
     role: 'outcome',
+    verdictTarget: 'scenario_and_decision',
     provider: result.provider,
-    verdict: evaluation.outcome,
+    verdict: evaluation.outcome!,
     summary: result.output.summary,
     findings: [
       ...result.output.lessons.map(l => ({
@@ -167,13 +228,22 @@ export async function reviewOutcome(hypothesisId: string) {
     missingChecks: [],
     raw: result.output,
     durationMs: result.durationMs,
+  }).returning({ id: schema.hypothesisReviews.id })
+  await db.insert(schema.hypothesisEvents).values({
+    hypothesisId,
+    type: 'outcome_reviewed',
+    actor: 'agent',
+    payload: {
+      reviewId: storedReview!.id,
+      evaluationRevisionId: revision.id,
+    },
   })
   await upsertDocument({
     kind: 'retrospective',
-    refId: `retro:${hypothesisId}`,
+    refId: `retro:${hypothesisId}:${revision.id}:${storedReview!.id}`,
     instrumentId: h.instrumentId,
     strategyId: h.strategyId,
-    title: `Ретроспектива ${instrument.ticker} ${h.strategyId}: ${evaluation.outcome} ${(evaluation.netReturn * 100).toFixed(1)}%`,
+    title: `Ретроспектива ${instrument.ticker} ${h.strategyId}: ${evaluation.outcome} ${(evaluation.netReturn! * 100).toFixed(1)}%`,
     content: [result.output.summary, result.output.forecastVsActual, ...result.output.lessons].join('\n'),
     availableAt: new Date(),
   })
@@ -188,41 +258,102 @@ export async function listEvaluations() {
     direction: schema.hypotheses.direction,
     thesis: schema.hypotheses.thesis,
     criticVerdict: schema.hypotheses.criticVerdict,
+    verdictTarget: schema.hypotheses.verdictTarget,
+    semanticVersion: schema.hypotheses.semanticVersion,
     versionId: schema.hypotheses.strategyVersionId,
     symbol: schema.instruments.symbol,
   }).from(schema.hypothesisEvaluations)
     .innerJoin(schema.hypotheses, eq(schema.hypotheses.id, schema.hypothesisEvaluations.hypothesisId))
     .innerJoin(schema.instruments, eq(schema.instruments.id, schema.hypotheses.instrumentId))
     .orderBy(desc(schema.hypothesisEvaluations.evaluatedAt))
+  const revisions = await db.select({
+    revision: schema.hypothesisEvaluationRevisions,
+    hypothesisId: schema.hypotheses.id,
+    strategyId: schema.hypotheses.strategyId,
+    direction: schema.hypotheses.direction,
+    thesis: schema.hypotheses.thesis,
+    criticVerdict: schema.hypotheses.criticVerdict,
+    verdictTarget: schema.hypotheses.verdictTarget,
+    semanticVersion: schema.hypotheses.semanticVersion,
+    versionId: schema.hypotheses.strategyVersionId,
+    symbol: schema.instruments.symbol,
+  }).from(schema.hypothesisEvaluationRevisions)
+    .innerJoin(schema.hypotheses, eq(schema.hypotheses.id, schema.hypothesisEvaluationRevisions.hypothesisId))
+    .innerJoin(schema.instruments, eq(schema.instruments.id, schema.hypotheses.instrumentId))
+    .orderBy(desc(schema.hypothesisEvaluationRevisions.computedAt))
   const decisions = await db.select({
     hypothesisId: schema.hypothesisEvents.hypothesisId,
     toStatus: schema.hypothesisEvents.toStatus,
   }).from(schema.hypothesisEvents)
     .where(and(eq(schema.hypothesisEvents.actor, 'user'), inArray(schema.hypothesisEvents.type, ['user_approve', 'user_reject', 'user_watch'])))
     .orderBy(desc(schema.hypothesisEvents.createdAt))
-  const latest = new Map<string, string | null>()
+  const latestDecision = new Map<string, string | null>()
   for (const decision of decisions) {
-    if (!latest.has(decision.hypothesisId)) {
-      latest.set(decision.hypothesisId, decision.toStatus)
+    if (!latestDecision.has(decision.hypothesisId)) {
+      latestDecision.set(decision.hypothesisId, decision.toStatus)
     }
   }
-  // Historical evaluations used approval as a proxy for execution. They are
-  // scenario simulations too; present them correctly without rewriting history.
-  return rows.map(row => ({
+  const seen = new Set<string>()
+  const current = revisions.map(({ revision, ...row }) => {
+    const result = revision.result as unknown as ReturnType<typeof evaluateScenarioDecision>
+    const isLatest = !seen.has(row.hypothesisId)
+    seen.add(row.hypothesisId)
+    return {
+      ...row,
+      userApproved: latestDecision.get(row.hypothesisId) === 'user_approved',
+      isLatest,
+      evaluationVersion: revision.evaluationVersion,
+      calendarVersion: revision.calendarVersion,
+      costModelHash: revision.costModelHash,
+      sourceSnapshotHash: revision.sourceSnapshotHash,
+      status: result.status,
+      issues: result.issues,
+      decisionEvaluation: result.decisionEvaluation,
+      evaluation: {
+        ...result.scenarioEvaluation,
+        id: revision.id,
+        hypothesisId: row.hypothesisId,
+        evaluatedAt: revision.computedAt,
+      },
+    }
+  })
+  return [...current, ...rows.map(row => ({
     ...row,
-    userApproved: latest.get(row.hypothesisId) === 'user_approved',
+    userApproved: latestDecision.get(row.hypothesisId) === 'user_approved',
+    isLatest: !seen.has(row.hypothesisId),
+    evaluationVersion: 'legacy',
+    calendarVersion: 'legacy_unknown',
+    costModelHash: 'legacy_unknown',
+    sourceSnapshotHash: 'legacy_unknown',
+    status: 'legacy' as const,
+    issues: ['Historical mechanics are not versioned; preserved for audit, excluded from new statistics.'],
+    decisionEvaluation: null,
     evaluation: {
       ...row.evaluation,
-      isCounterfactual: true,
+      recordedIsCounterfactual: row.evaluation.isCounterfactual,
+      isCounterfactual: true as const,
     },
-  }))
+  }))]
 }
 
 /** Scenario statistics: approval is a decision label, never evidence of execution. */
 export async function strategyStats(strategyId?: StrategyId) {
-  const rows = (await listEvaluations()).filter(r => !strategyId || r.strategyId === strategyId)
-  const toStats = (list: typeof rows) => aggregateStats(list.map(r => r.evaluation))
+  const rows = (await listEvaluations()).filter(r => r.isLatest && r.status === 'evaluated' && (!strategyId || r.strategyId === strategyId))
+  const toStats = (list: typeof rows) => {
+    const benchmarkReturns = list.map(r => r.evaluation.benchmarkReturn).filter((value): value is number => value !== null)
+    return {
+      ...aggregateStats(list.map(r => ({
+        netReturn: r.evaluation.netReturn!,
+        excessReturn: r.evaluation.excessReturn ?? 0,
+        maxDrawdown: r.evaluation.maxDrawdown!,
+        outcome: r.evaluation.outcome!,
+      }))),
+      benchmarkCount: benchmarkReturns.length,
+      avgBenchmarkReturn: benchmarkReturns.length ? benchmarkReturns.reduce((sum, value) => sum + value, 0) / benchmarkReturns.length : null,
+    }
+  }
   const longs = rows.filter(r => r.direction === 'long')
+  const benchmarkReturns = longs.map(r => r.evaluation.benchmarkReturn).filter((value): value is number => value !== null)
   return {
     all: toStats(longs),
     approved: toStats(longs.filter(r => r.userApproved)),
@@ -230,38 +361,108 @@ export async function strategyStats(strategyId?: StrategyId) {
     criticSupported: toStats(longs.filter(r => r.criticVerdict === 'supported')),
     criticDisputed: toStats(longs.filter(r => r.criticVerdict !== 'supported')),
     whyNotBuy: toStats(rows.filter(r => r.direction === 'no_trade')),
-    benchmarkAvg: longs.length ? longs.reduce((s, r) => s + r.evaluation.benchmarkReturn, 0) / longs.length : 0,
+    benchmarkAvg: benchmarkReturns.length ? benchmarkReturns.reduce((sum, value) => sum + value, 0) / benchmarkReturns.length : null,
   }
 }
 
 /** With asOf, every series is truncated there: trades that had not closed by then simply do not exist. */
-async function backtestUniverse(asOf?: Date) {
+async function backtestUniverse(asOf = new Date()) {
   const benchmark = await benchmarkInstrument()
   const equities = await db.select().from(schema.instruments).where(and(eq(schema.instruments.kind, 'equity'), eq(schema.instruments.active, true)))
-  const series = await Promise.all(equities.map(async i => ({
+  const rawSeries = await Promise.all(equities.map(async i => ({
     symbol: i.symbol,
     candles: await loadCandles(i.id, { to: asOf }),
+    instrument: i,
   })))
+  const issues: string[] = []
+  const series = rawSeries.map((row) => {
+    const checked = inspectBarQuality(row.candles, {
+      dataSource: row.instrument.provider === 'mock' ? 'mock' : 'finam',
+      board: row.instrument.board,
+      asOf,
+    })
+    issues.push(...checked.issues.map(issue => `${row.symbol}:${issue}`))
+    return {
+      symbol: row.symbol,
+      candles: checked.completedBars,
+    }
+  })
+  const rawBenchmark = benchmark ? await loadCandles(benchmark.id, { to: asOf }) : []
+  const checkedBenchmark = benchmark
+    ? inspectBarQuality(rawBenchmark, {
+        dataSource: benchmark.provider === 'mock' ? 'mock' : 'finam',
+        board: benchmark.board,
+        asOf,
+      })
+    : null
+  if (checkedBenchmark) {
+    issues.push(...checkedBenchmark.issues.map(issue => `benchmark:${issue}`))
+  }
   return {
-    series,
-    benchmarkCandles: benchmark ? await loadCandles(benchmark.id, { to: asOf }) : [],
+    // A partial universe would bias comparison; block the entire replay if any required feed is ambiguous.
+    series: issues.length ? [] : series,
+    benchmarkCandles: issues.length ? [] : checkedBenchmark?.completedBars ?? [],
+    dataQuality: {
+      status: issues.length ? 'data_quality_blocked' : 'verified',
+      issues,
+    },
+    rawInput: {
+      series: rawSeries.map(({ symbol, candles }) => ({
+        symbol,
+        candles,
+      })),
+      benchmark: rawBenchmark,
+    },
   }
 }
 
-const trackRecordCache = new Map<string, Promise<ReturnType<typeof backtest>>>()
+type UniverseInput = Awaited<ReturnType<typeof backtestUniverse>>
+type TrackRecordResult = ReturnType<typeof backtest> & {
+  dataQuality: UniverseInput['dataQuality']
+  audit: ReturnType<typeof backtest>['audit'] & {
+    dataQuality: UniverseInput['dataQuality']
+    rawInput: UniverseInput['rawInput']
+    rawInputHash: string
+    strategyVersionId: string
+    asOf: string
+  }
+}
+const trackRecordCache = new Map<string, Promise<TrackRecordResult>>()
 
 /** Point-in-time track record of a rule version: used as evidence for analyst and critic, no future data. */
-export function trackRecord(strategyId: StrategyId, versionId: string, rules: StrategyRules, asOf: Date) {
-  const key = `${strategyId}:${versionId}:${asOf.toISOString()}`
+export async function trackRecord(strategyId: StrategyId, versionId: string, rules: StrategyRules, asOf: Date, pinnedCosts?: CostModel) {
+  const costs = pinnedCosts ?? await getCostModel()
+  const { series, benchmarkCandles, dataQuality, rawInput } = await backtestUniverse(asOf)
+  const key = evaluationHash({
+    strategyId,
+    versionId,
+    rules,
+    asOf: asOf.toISOString(),
+    costs,
+    series,
+    benchmarkCandles,
+    dataQuality,
+    rawInput,
+  })
   let result = trackRecordCache.get(key)
   if (!result) {
     if (trackRecordCache.size > 20) {
       trackRecordCache.clear()
     }
     result = (async () => {
-      const costs = await getCostModel()
-      const { series, benchmarkCandles } = await backtestUniverse(asOf)
-      return backtest(strategyId, rules, series, benchmarkCandles, costs)
+      const computed = backtest(strategyId, rules, series, benchmarkCandles, costs)
+      return {
+        ...computed,
+        dataQuality,
+        audit: {
+          ...computed.audit,
+          dataQuality,
+          rawInput,
+          rawInputHash: evaluationHash(rawInput),
+          strategyVersionId: versionId,
+          asOf: asOf.toISOString(),
+        },
+      }
     })()
     trackRecordCache.set(key, result)
     result.catch(() => trackRecordCache.delete(key))
@@ -272,22 +473,27 @@ export function trackRecord(strategyId: StrategyId, versionId: string, rules: St
 export async function backtestStrategy(strategyId: StrategyId, rules?: StrategyRules) {
   const version = await activeVersion(strategyId)
   const costs = await getCostModel()
-  const { series, benchmarkCandles } = await backtestUniverse()
+  const { series, benchmarkCandles, dataQuality } = await backtestUniverse()
   const result = backtest(strategyId, rules ?? version.rules, series, benchmarkCandles, costs)
   return {
+    dataQuality,
     stats: result.stats,
     trades: result.trades.slice(-200),
+    audit: result.audit,
   }
 }
 
 export async function compareVersions(strategyId: StrategyId, versionIds: string[]) {
   const versions = await db.select().from(schema.strategyVersions).where(and(eq(schema.strategyVersions.strategyId, strategyId), inArray(schema.strategyVersions.id, versionIds)))
   const costs = await getCostModel()
-  const { series, benchmarkCandles } = await backtestUniverse()
-  return walkForwardCompare(strategyId, versions.map(v => ({
-    label: `v${v.version} (${v.status})`,
-    rules: v.rules,
-  })), series, benchmarkCandles, costs)
+  const { series, benchmarkCandles, dataQuality } = await backtestUniverse()
+  return {
+    dataQuality,
+    ...walkForwardCompare(strategyId, versions.map(v => ({
+      label: `v${v.version} (${v.status})`,
+      rules: v.rules,
+    })), series, benchmarkCandles, costs),
+  }
 }
 
 const STEP = 0.15

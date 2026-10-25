@@ -12,6 +12,16 @@ export type RunStatus = 'queued' | 'running' | 'completed' | 'failed'
 export type Direction = 'long' | 'no_trade'
 
 export interface Candle {
+  sessionDate?: string
+  tradingDate?: string
+  sessionType?: 'regular' | 'weekend_additional' | 'holiday' | 'unknown'
+  completedAt?: string
+  availableAt?: string
+  dataSource?: string
+  board?: string
+  adjustmentPolicy?: string
+  normalizationVersion?: string
+  contractVerified?: boolean
   ts: string
   open: number
   high: number
@@ -139,3 +149,27 @@ export interface RunLogEntry {
 }
 
 export type MetricValues = Record<string, number | null>
+
+export const DECISION_BASES = ['negative_historical_edge', 'missing_material_evidence', 'risk_limit', 'contradictory_signals', 'positive_evidence', 'other'] as const
+export type DecisionBasis = typeof DECISION_BASES[number]
+export type ForecastVerdict = CriticVerdict | 'not_applicable'
+export interface PriceForecast {
+  criterion: 'take_profit_before_stop' | 'stop_before_take_profit' | 'positive_net_return' | 'non_positive_net_return'
+  windowTradingDays: number
+  rationale: string
+  sourceIds: string[]
+}
+/** Constructed by domain code, never proposed by an agent. */
+export interface MarketScenario {
+  entry: EntryScenario
+  exit: ExitScenario
+  horizonTradingDays: number
+  strategyVersionId: string
+  version: number
+  rulesHash: string
+  calendarVersion: string
+  normalizationVersion: string
+  costs: CostModel
+}
+/** Legacy content is labelled rather than retroactively reinterpreted. */
+export type HypothesisSemantics = 'legacy' | 'decision_v2'
