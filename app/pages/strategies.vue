@@ -18,7 +18,7 @@ type Stats = {
   traded: number
   winRate: number
   avgNetReturn: number
-  avgExcessReturn: number
+  avgExcessReturn: number | null
   worstDrawdown: number
   profitFactor: number | null
 }

@@ -11,6 +11,9 @@ export interface BacktestSeries {
 export interface BacktestTrade extends StatsRow {
   symbol: string
   signalAt: string
+  signalBarAt: string
+  signalEligibleAt: string
+  entrySessionStartsAt: string | null
   entryAt: string
   exitAt: string
   setupType: string
@@ -18,46 +21,62 @@ export interface BacktestTrade extends StatsRow {
   entryPrice: number
   exitPrice: number
   grossReturn: number
+  benchmarkReturn: number | null
+  benchmarkStatus: 'available' | 'benchmark_unavailable'
 }
 
 const WARMUP = 210
+
+const physical = (bar: Candle) => bar.barPolicyId === 'physical_session_v1'
+const eligibleAt = (bar: Candle) => Date.parse(physical(bar) ? bar.earliestUseAt ?? '' : bar.ts)
+const sessionStart = (bar: Candle) => physical(bar)
+  ? Date.parse(`${bar.physicalSessionDate ?? bar.sessionDate ?? ''}T00:00:00+03:00`)
+  : Date.parse(bar.ts)
 
 /** Point-in-time replay: each signal sees only candles up to its own bar. */
 export function backtest(strategy: StrategyId, rules: StrategyRules, series: BacktestSeries[], benchmark: Candle[], costs: CostModel, from?: string, to?: string) {
   series = series.map(s => ({
     ...s,
-    candles: s.candles.filter(c => !to || c.ts < to),
+    candles: s.candles.filter(c => !to || (c.ts < to && (!physical(c) || eligibleAt(c) < Date.parse(to)))),
   }))
-  benchmark = benchmark.filter(c => !to || c.ts < to)
+  benchmark = benchmark.filter(c => !to || (c.ts < to && (!physical(c) || eligibleAt(c) < Date.parse(to))))
   const trades: BacktestTrade[] = []
   const benchmarkIndex = new Map(benchmark.map((c, i) => [c.ts, i]))
-  const benchmarkUpTo = (ts: string) => {
+  const benchmarkUpTo = (ts: string, signalEligibleAt: number) => {
     if (!rules.regimeSma) {
       return []
     }
-    let idx = benchmarkIndex.get(ts)
+    const idx = benchmarkIndex.get(ts)
     if (idx === undefined) {
-      idx = benchmark.findLastIndex(c => c.ts <= ts)
+      return []
     }
-    return idx < 0 ? [] : benchmark.slice(Math.max(0, idx - 260), idx + 1)
+    return benchmark.slice(Math.max(0, idx - 260), idx + 1).filter(row => !physical(row) || eligibleAt(row) <= signalEligibleAt)
   }
+  const timingIssues: string[] = []
   for (const { symbol, candles } of series) {
+    if (candles.some(bar => physical(bar) !== physical(candles[0]!)) || candles.some(bar => physical(bar) && (!Number.isFinite(eligibleAt(bar)) || !Number.isFinite(sessionStart(bar))))) {
+      timingIssues.push(`${symbol}:physical_replay_missing_or_mixed_eligibility_clock`)
+      continue
+    }
     let i = WARMUP
     while (i < candles.length - 1) {
       const bar = candles[i]!
-      if ((from && bar.ts < from) || (to && bar.ts >= to)) {
+      const history = candles.slice(Math.max(0, i - 260), i + 1)
+      // A physical date labels a session, not the instant at which its complete OHLC was usable.
+      const signalClock = physical(bar) ? Math.max(...history.map(eligibleAt)) : Date.parse(bar.ts)
+      const signalAt = new Date(signalClock).toISOString()
+      if ((from && signalAt < from) || (to && signalAt >= to)) {
         i++
         continue
       }
-      const history = candles.slice(Math.max(0, i - 260), i + 1)
-      const signal = evaluateSignal(strategy, rules, history, benchmarkUpTo(bar.ts))
+      const signal = evaluateSignal(strategy, rules, history, benchmarkUpTo(bar.ts, signalClock))
       if (!signal.setup || signal.stopLoss === null || signal.takeProfit === null) {
         i++
         continue
       }
       // `to` is exclusive for both signals and executions, so in-sample
       // cannot see outcomes from the holdout period.
-      const future = candles.slice(i + 1).filter(c => !to || c.ts < to)
+      const future = candles.slice(i + 1).filter(c => (!physical(bar) || sessionStart(c) >= signalClock) && (!to || c.ts < to))
       const result = simulateOutcome({
         future,
         benchmarkFuture: benchmark.filter(c => c.ts > bar.ts && (!to || c.ts < to)),
@@ -80,7 +99,10 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
       }
       trades.push({
         symbol,
-        signalAt: bar.ts,
+        signalAt,
+        signalBarAt: bar.ts,
+        signalEligibleAt: signalAt,
+        entrySessionStartsAt: physical(bar) ? new Date(sessionStart(future.find(c => c.ts === result.entryAt)!)).toISOString() : null,
         entryAt: result.entryAt!,
         exitAt: result.exitAt,
         setupType: signal.setupType,
@@ -90,6 +112,8 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
         grossReturn: result.grossReturn,
         netReturn: result.netReturn,
         excessReturn: result.excessReturn,
+        benchmarkReturn: result.benchmarkReturn,
+        benchmarkStatus: result.benchmarkStatus,
         maxDrawdown: result.maxDrawdown,
         outcome: result.outcome,
       })
@@ -101,6 +125,8 @@ export function backtest(strategy: StrategyId, rules: StrategyRules, series: Bac
     trades,
     stats: aggregateStats(trades),
     audit: {
+      timingPolicy: 'physical_signal_at_earliest_use_then_whole_future_session_v1',
+      timingIssues,
       strategy,
       rules,
       rulesHash: evaluationHash(rules),

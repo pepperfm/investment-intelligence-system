@@ -4,7 +4,10 @@ interface Stats {
   traded: number
   winRate: number
   avgNetReturn: number
-  avgExcessReturn: number
+  avgExcessReturn: number | null
+  n_abs?: number
+  n_relative?: number
+  benchmarkStatus?: string
   worstDrawdown: number
   profitFactor: number | null
   benchmarkCount?: number
@@ -80,6 +83,9 @@ defineProps<{
               :digits="2"
               :arrow="false"
             />
+            <p v-if="r.stats.n_relative !== undefined" class="mt-1 text-[10px] text-muted">
+              {{ r.stats.n_relative }}/{{ r.stats.n_abs ?? r.stats.traded }} сравн.
+            </p>
           </td>
           <td class="num px-3 py-2 text-right text-muted">
             {{ r.stats.traded ? fmtPct(r.stats.worstDrawdown) : '—' }}

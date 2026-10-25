@@ -1,0 +1,25 @@
+{
+  "source": "configured Finam MCP get_quote",
+  "observedAt": "2026-10-25T20:17:14.128Z",
+  "items": [
+    {
+      "symbol": "TATN@MISX",
+      "as_of": "2026-10-23T20:49:46Z",
+      "last": 632.4,
+      "name": "Татнфт 3ао"
+    },
+    {
+      "symbol": "SBER@MISX",
+      "as_of": "2026-10-23T20:49:57Z",
+      "last": 292.32,
+      "name": "Сбербанк"
+    }
+  ],
+  "status": "not_ready_for_paper_execution",
+  "reasons": [
+    "Observed timestamps are from October23, while this probe was performed October25.",
+    "No bid or ask was returned for these snapshots.",
+    "Provider is_delayed=false does not establish quote freshness or after-confirmation executability."
+  ],
+  "noOrders": true
+}

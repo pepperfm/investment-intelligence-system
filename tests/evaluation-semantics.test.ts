@@ -125,3 +125,38 @@ describe('audit input hashes', () => {
     }))
   })
 })
+
+describe('relative scenario outputs require the full comparable axis', () => {
+  it('keeps absolute return but marks a missing interior index session unavailable', () => {
+    const future = [0, 1, 2].map(day => ({
+      ...input.future[0]!,
+      ts: `2026-09-${28 + day}T00:00:00Z`,
+      high: 105,
+      low: 99,
+      close: 104,
+    }))
+    const benchmarkFuture = [future[0]!, future[2]!].map(bar => ({
+      ...bar,
+      open: 1000,
+      high: 1000,
+      low: 1000,
+      close: 1000,
+    }))
+    const result = evaluateScenarioDecision({
+      ...input,
+      future,
+      benchmarkFuture,
+      exit: {
+        ...input.exit,
+        takeProfit: 120,
+      },
+    })
+    expect(result.status).toBe('evaluated')
+    expect(result.scenarioEvaluation.netReturn).toBeCloseTo(0.0365)
+    expect(result.scenarioEvaluation.benchmarkReturn).toBeNull()
+    expect(result.scenarioEvaluation.excessReturn).toBeNull()
+    expect(result.scenarioEvaluation.benchmarkStatus).toBe('benchmark_unavailable')
+    expect(result.scenarioEvaluation.benchmarkUnavailableReason).toMatch(/not comparable/)
+    expect(result.decisionEvaluation.benchmarkReturn).toBeNull()
+  })
+})

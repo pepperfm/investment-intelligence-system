@@ -448,3 +448,39 @@ smoke использовал те же реальные цены и не счи�
 
 Таким образом, исторический real-data pipeline работает на согласованных периодах, но
 универсальная разблокировка всех источников/дат не заявляется.
+
+
+## Research / optional benchmark / observed paper — 25.10.2026, baseline628b46f
+
+- [x] P0-A/D: dependency contract по pinned rules; regimeSma0 optional, >0 mandatory.
+  instrumentQuality, benchmarkQuality, signalEligibility и contextLimitations разделены.
+  Общий loadSignalInputs применяется в research и API инструментов; обязательный индекс
+  проверяется на полном соответствующем окне, а не по nearest/current котировке.
+- [x] P0-B: periodReturn/simulateOutcome/backtest/агрегаты распространяют null; n_abs/n_relative
+  и отдельные absolute/relative stats. Реальный0 отличим от отсутствия данных. Long absolute
+  history gate не зависит от optional benchmark. Quarantine/pending/непривязываемые даты
+  не заменяются старыми хорошими свечами. Physical backtest использует earliestUseAt,
+  не входит раньше целой следующей сессии и сохраняет clock audit; IS/OOS leakage закрыт.
+- [x] P0-C: TATN, неизменённая активная Swingv1, setup=true, kind=research прошёл все3CLIроли.
+  Изолированный финальный run077b7199-6598-4c05-833e-4b5b0ebd1c49: no_trade/supported.
+  Required control0bbb1ecf-7a6e-4c6c-a599-976456fcc1c6: blocked,0AIcalls. Контроль явно
+  предложенная версия10001 только в копииБД, не активирована и не используется для
+  подбора прибыльности. Плохой ряд акции также блокирует агентов.
+- [x] Browser acceptance на основной локальной системе: ручной run
+  fd2af79c-cb65-4913-820f-6e27d42f69ec, гипотеза7a873804-f4f1-458b-94db-7e9883050f5b.
+  Код показывает optional-index warning и отдельный допуск сигнала; счётчик/список гипотез
+  используют один поллируемый run-ответ (закрыт обнаруженный stale-list cache).
+- [x] P1-E: отдельный observed execution contract. Даже research verified daily не даёт real fill;
+  not_ready_for_paper_execution и suspended_data_quality, ручной risk/critic gate, идемпотентность.
+  Read-only реальные quotes устарели, bid/ask отсутствует; заявки не создавались.
+- [ ] Реальное paper-исполнение READY: не доказано; нужен принятый timely observed quote контракт.
+- [x] P1-F/G:217tests/31files, оба typecheck, lint, build, diffcheck; прежний nonfatal Volarwarning.
+  Backup tmp/pre-research-benchmark-20261025.dump(0600), миграций нет. Все прежние
+  primary rows/counts/SHA неизменны; добавлен только новый manual run/hypothesis/review/snapshots.
+  Старый docs/market-data/acceptance.json не изменён; новый датированный отчёт:
+  docs/market-data/research-benchmark-paper-acceptance-2026-10-26.json.
+
+P0 принят конкретными реальными сценариями и негативной матрицей; universal verified не заявлен.
+Paper safety принят как not_ready, реальное исполнение не заявляется. Production startup не
+проверялся: сгенерированный entry с Sonar secret finding удалён без чтения значения; перед
+bun run start нужна пересборка. Исходная конфигурация и работающий local dev не изменены.

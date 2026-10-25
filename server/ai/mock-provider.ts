@@ -267,7 +267,7 @@ function critique(p: EvidencePacket, claims: CriticClaims): CriticOutput {
 function review(p: OutcomePacket): OutcomeReviewOutput {
   const e = p.evaluation as {
     netReturn?: number
-    excessReturn?: number
+    excessReturn?: number | null
     exitReason?: string
     maxDrawdown?: number
     isCounterfactual?: boolean

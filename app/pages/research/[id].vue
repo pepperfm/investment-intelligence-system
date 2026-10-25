@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
 const { data: run, refresh } = await useFetch<ApiResponse<'/api/runs/:id'>>(() => `/api/runs/${route.params.id}`)
-const { data: allHypotheses } = await useFetch('/api/hypotheses')
 const preview = ref<string | null>(null)
 
 const active = computed(() => run.value?.status === 'queued' || run.value?.status === 'running')
@@ -14,6 +13,10 @@ const summary = computed(() => run.value?.summary as null | {
     strategy: string
     reasons: string[]
   }[]
+  dependencyChecks?: ({
+    symbol: string
+    strategy: string
+  } & import('#shared/types/market-data').SignalDependencyQuality)[]
   candidates: number
   screenedOut: {
     symbol: string
@@ -26,10 +29,8 @@ const summary = computed(() => run.value?.summary as null | {
     error: string
   }[]
 })
-const rows = computed(() => {
-  const ids = new Set(run.value?.hypotheses.map(h => h.id))
-  return (allHypotheses.value ?? []).filter(h => ids.has(h.id))
-})
+// Count and visible rows come from the same polled response; no stale global-list cache.
+const rows = computed(() => run.value?.hypotheses ?? [])
 const isLegacyDataBlock = (row: { reasons: string[] }) => row.reasons.some(reason => reason.startsWith('data_quality_blocked:'))
 const screenedByStrategy = computed(() => summary.value?.screenedOut.filter(row => !isLegacyDataBlock(row)) ?? [])
 const blockedCandidates = computed(() => [...(summary.value?.blockedByDataQuality ?? []), ...(summary.value?.screenedOut.filter(isLegacyDataBlock) ?? [])])
@@ -155,6 +156,24 @@ useHead({ title: 'Исследование · IIS' })
           />
         </UCard>
 
+        <UCard v-if="run.dependencyChecks?.length" class="mb-4">
+          <template #header>
+            Качество бумаги и зависимости сигнала
+          </template>
+          <div
+            v-for="item in run.dependencyChecks"
+            :key="`${item.symbol}:${item.strategy}`"
+            class="py-2 text-sm"
+          >
+            <p>{{ item.symbol }} · {{ item.strategy }} · бумага: {{ item.instrumentQuality }} · сигнал: {{ item.signalEligibility.status === 'eligible' ? 'допущен' : 'заблокирован' }}</p>
+            <p class="text-xs text-muted">
+              IMOEX: {{ item.benchmarkNeed === 'required_for_signal' ? 'обязателен для сигнала' : 'необязательный контекст' }} · {{ item.benchmarkQuality }}
+            </p>
+            <p v-if="item.benchmarkUnavailableReason" class="text-xs text-muted">
+              {{ item.benchmarkUnavailableReason }}. Индексные сравнения недоступны.
+            </p>
+          </div>
+        </UCard>
         <UCard v-if="blockedCandidates.length" class="mb-4">
           <template #header>
             Заблокированы качеством данных · {{ blockedCandidates.length }}

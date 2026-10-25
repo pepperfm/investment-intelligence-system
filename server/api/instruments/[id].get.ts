@@ -5,7 +5,8 @@ import { db, schema } from '@nuxthub/db'
 import { and, desc, eq } from 'drizzle-orm'
 import { STRATEGY_IDS } from '../../../shared/types/investment'
 import { evaluateSignal } from '../../domain/strategies/rules'
-import { benchmarkInstrument, getInstrument, loadCandles, loadResearchBars } from '../../services/market'
+import { benchmarkInstrument, getInstrument, loadCandles, loadResearchBars, freezeResearchSelection, researchBarSelection } from '../../services/market'
+import { loadSignalInputs } from '../../services/signal-inputs'
 import { activeVersion } from '../../services/strategies'
 
 export default defineEventHandler(async (event) => {
@@ -14,29 +15,34 @@ export default defineEventHandler(async (event) => {
   const instrument = await getInstrument(id)
   const candles = await loadCandles(id, { limit: 400 })
   const benchmark = await benchmarkInstrument()
+  const asOf = new Date()
+  const selection = await freezeResearchSelection(researchBarSelection())
   const research = await loadResearchBars({
     instrumentId: id,
-    asOf: new Date(),
+    asOf,
     purpose: 'signal',
-    limit: 400,
+    limit: selection.policyId === 'physical_session_v1' ? 210 : 400,
+    selection,
   })
-  const benchmarkResearch = benchmark
-    ? await loadResearchBars({
-        instrumentId: benchmark.id,
-        asOf: new Date(),
-        purpose: 'signal',
-        limit: 300,
-      })
-    : null
   const quality = research.quality
-  const benchmarkQuality = benchmarkResearch?.quality
-  const verified = quality.status !== 'data_quality_blocked' && !!benchmarkResearch && benchmarkQuality?.status !== 'data_quality_blocked'
   const signals = await Promise.all(STRATEGY_IDS.map(async (strategy) => {
     const version = await activeVersion(strategy)
+    const input = await loadSignalInputs({
+      instrumentId: id,
+      benchmarkId: benchmark?.id ?? null,
+      rules: version.rules,
+      asOf,
+      selection,
+    })
+    const eligible = input.dependencies.signalEligibility.status === 'eligible'
+    const signal = evaluateSignal(strategy, version.rules, eligible ? input.research.bars : [], input.benchmarkCandles)
     return {
       strategy,
       version: version.version,
-      ...evaluateSignal(strategy, version.rules, verified ? quality.completedBars : [], verified ? (benchmarkQuality?.completedBars ?? []) : []),
+      ...signal,
+      setup: eligible && signal.setup,
+      failures: eligible ? signal.failures : input.dependencies.signalEligibility.issues,
+      dependencyQuality: input.dependencies,
     }
   }))
   const [events, reports] = await Promise.all([
@@ -46,8 +52,8 @@ export default defineEventHandler(async (event) => {
   const issuerFundamentals = await loadIssuerFacts(id, new Date())
   return {
     dataQuality: {
-      status: verified ? quality.status : 'data_quality_blocked',
-      issues: [...quality.issues, ...(benchmarkQuality?.issues ?? ['benchmark_missing'])].slice(0, 10),
+      status: quality.status,
+      issues: quality.issues.slice(0, 10),
     },
     issuerFundamentals,
     financialComparisons: compareFinancialFacts(issuerFundamentals),
@@ -55,7 +61,9 @@ export default defineEventHandler(async (event) => {
     bankEvidence: await bankEvidence(id),
     instrument,
     marketData: research.provenance,
-    candles: (verified ? research.bars : candles).slice(-250),
+    candles: research.bars.slice(-250),
+    rawCandles: candles,
+    rawCandlesNote: 'Separate broker-provider history for inspection only; never substituted into the selected research series.',
     signals,
     events,
     reports,

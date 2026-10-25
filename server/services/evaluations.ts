@@ -5,6 +5,7 @@ import type { Candle, CostModel, NumericRuleKey, StrategyId, StrategyRules } fro
 import type { ResearchBarSelection } from '../../shared/types/market-data'
 import type { OutcomePacket } from '../ai/contracts'
 import { backtest, evaluationHash, walkForwardCompare } from '../domain/evaluations/backtest'
+import { benchmarkNeed } from '../domain/market/dependencies'
 import { aggregateStats, evaluateScenarioDecision, EVALUATION_VERSION } from '../domain/evaluations/outcome'
 import { addTradingDays, calendarVersion } from '../domain/market/calendar'
 import { inspectBarQuality } from '../domain/market/bar-quality'
@@ -428,7 +429,7 @@ export async function strategyStats(strategyId?: StrategyId) {
     return {
       ...aggregateStats(list.map(r => ({
         netReturn: r.evaluation.netReturn!,
-        excessReturn: r.evaluation.excessReturn ?? 0,
+        excessReturn: r.evaluation.excessReturn,
         maxDrawdown: r.evaluation.maxDrawdown!,
         outcome: r.evaluation.outcome!,
       }))),
@@ -454,7 +455,7 @@ export async function strategyStats(strategyId?: StrategyId) {
 }
 
 /** A bounded, source-pinned replay can disclose partial universe coverage without fabricating completeness. */
-export async function backtestUniverse(asOf = new Date(), selection: ResearchBarSelection = researchBarSelection()) {
+export async function backtestUniverse(asOf = new Date(), selection: ResearchBarSelection = researchBarSelection(), rules?: StrategyRules) {
   selection = selection.auditIds ? selection : await freezeResearchSelection(selection)
   const benchmark = await benchmarkInstrument()
   const equities = await db.select().from(schema.instruments).where(and(eq(schema.instruments.kind, 'equity'), eq(schema.instruments.active, true)))
@@ -496,16 +497,22 @@ export async function backtestUniverse(asOf = new Date(), selection: ResearchBar
   if (excludedSymbols.length) {
     issues.push(`partial_universe_excluded:${excludedSymbols.join(',')}`)
   }
+  const requiredBenchmarkBlocked = rules && benchmarkNeed(rules) === 'required_for_signal' && !benchmarkUsable
   const allVerified = !excludedSymbols.length && !!benchmarkUsable && usable.every(row => row.quality?.status === 'verified') && checkedBenchmark?.quality?.status === 'verified'
   return {
-    series: usable.map(row => ({
+    series: (requiredBenchmarkBlocked ? [] : usable).map(row => ({
       symbol: row.symbol,
       candles: row.bars,
     })),
     benchmarkCandles: benchmarkUsable ? checkedBenchmark.bars : [],
     dataQuality: {
-      status: !usable.length ? 'data_quality_blocked' as const : allVerified ? 'verified' as const : 'research_usable_with_limits' as const,
+      status: !usable.length || requiredBenchmarkBlocked ? 'data_quality_blocked' as const : allVerified ? 'verified' as const : 'research_usable_with_limits' as const,
       issues: [...new Set(issues)],
+      absoluteInputVerified: usable.length > 0 && usable.every(row => row.quality?.status === 'verified'),
+      benchmarkRelativeVerified: !!benchmarkUsable && checkedBenchmark.quality?.status === 'verified',
+      benchmarkQuality: benchmarkUsable ? checkedBenchmark.quality!.status : 'benchmark_unavailable',
+      benchmarkUnavailableReason: benchmarkUsable ? null : checkedBenchmark?.quality?.issues.join('; ') ?? 'benchmark_missing',
+      signalEligibility: requiredBenchmarkBlocked ? 'blocked' : 'eligible',
       excludedSymbols,
       includedSymbols: usable.map(row => row.symbol),
       selection,
@@ -541,7 +548,7 @@ const trackRecordCache = new Map<string, Promise<TrackRecordResult>>()
 /** Point-in-time track record of a rule version: used as evidence for analyst and critic, no future data. */
 export async function trackRecord(strategyId: StrategyId, versionId: string, rules: StrategyRules, asOf: Date, pinnedCosts?: CostModel, selection?: ResearchBarSelection) {
   const costs = pinnedCosts ?? await getCostModel()
-  const { series, benchmarkCandles, dataQuality, rawInput } = await backtestUniverse(asOf, selection)
+  const { series, benchmarkCandles, dataQuality, rawInput } = await backtestUniverse(asOf, selection, rules)
   const key = evaluationHash({
     strategyId,
     versionId,
@@ -582,7 +589,7 @@ export async function trackRecord(strategyId: StrategyId, versionId: string, rul
 export async function backtestStrategy(strategyId: StrategyId, rules?: StrategyRules) {
   const version = await activeVersion(strategyId)
   const costs = await getCostModel()
-  const { series, benchmarkCandles, dataQuality } = await backtestUniverse()
+  const { series, benchmarkCandles, dataQuality } = await backtestUniverse(new Date(), researchBarSelection(), rules ?? version.rules)
   const result = backtest(strategyId, rules ?? version.rules, series, benchmarkCandles, costs)
   return {
     dataQuality,

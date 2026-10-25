@@ -7,7 +7,10 @@ export interface TrackStats {
   trades: number
   winRate: number
   avgNetReturn: number
-  avgExcessReturn: number
+  avgExcessReturn: number | null
+  n_abs?: number
+  n_relative?: number
+  benchmarkStatus?: string
   profitFactor: number | null
   worstDrawdown: number
   /** Share of trades by exit: take_profit = target hit before stop. */
@@ -21,9 +24,12 @@ export interface TrackStats {
 export type AgentRole = 'market_researcher' | 'hypothesis_analyst' | 'hypothesis_critic' | 'outcome_reviewer'
 
 export interface EvidencePacket {
+  dependencies?: import('../../shared/types/market-data').SignalDependencyQuality
   marketData?: import('../../shared/types/market-data').ResearchProvenance
   benchmarkData?: import('../../shared/types/market-data').ResearchProvenance
   backtestQuality?: {
+    absoluteInputVerified?: boolean
+    benchmarkRelativeVerified?: boolean
     status: string
     issues: string[]
   }
@@ -47,6 +53,10 @@ export interface EvidencePacket {
   signal: Omit<Signal, 'metrics'>
   metrics: Record<string, number | null>
   benchmark: {
+    need?: 'required_for_signal' | 'optional_for_context'
+    status?: string
+    unavailableReason?: string | null
+    usage?: string
     symbol: string
     momentum20: number | null
     momentum60: number | null
@@ -68,6 +78,7 @@ export interface EvidencePacket {
       inputSeriesHash: string
     }
     validity?: string
+    statsValidity?: string
     note: string
     universe: number
     all: TrackStats

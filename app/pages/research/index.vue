@@ -22,12 +22,16 @@ const barSources = [{
 
 const equities = computed(() => (overview.value ?? []).filter(i => i.kind === 'equity').sort((a, b) => a.ticker.localeCompare(b.ticker)))
 const versionOf = (s: StrategyId) => equities.value[0]?.signals.find(x => x.strategy === s)?.version
-const hasSetup = (i: (typeof equities.value)[number], s?: StrategyId) => i.signals.some(x => x.setup && (s ? x.strategy === s : strategies.value.includes(x.strategy as StrategyId)))
+const setupsCalculated = computed(() => !asOf.value && researchBarsProvider.value === 'configured')
+const hasSetup = (i: (typeof equities.value)[number], s?: StrategyId) => setupsCalculated.value && i.signals.some(x => x.setup && (s ? x.strategy === s : strategies.value.includes(x.strategy as StrategyId)))
 
 function toggle(id: string) {
   selected.value = selected.value.includes(id) ? selected.value.filter(x => x !== id) : [...selected.value, id]
 }
 function pickSetups() {
+  if (!setupsCalculated.value) {
+    return
+  }
   selected.value = equities.value.filter(i => hasSetup(i)).map(i => i.id)
 }
 function toggleStrategy(s: StrategyId) {
@@ -39,7 +43,7 @@ const estimate = computed(() => {
   const candidates = selected.value.length * strategies.value.length
   const live = !asOf.value && researchBarsProvider.value === 'configured'
   const withSetup = equities.value.filter(i => selected.value.includes(i.id)).reduce((n, i) => n + i.signals.filter(s => s.setup && strategies.value.includes(s.strategy as StrategyId)).length, 0)
-  const toAgents = kind.value === 'why_not_buy' ? candidates : live ? withSetup : null
+  const toAgents = live ? kind.value === 'why_not_buy' ? equities.value.filter(i => selected.value.includes(i.id) && i.dataQuality.status !== 'data_quality_blocked').length * strategies.value.length : withSetup : null
   const perCall = status.value?.analyst.id === 'mock' ? 0.05 : 14
   return {
     candidates,
@@ -153,6 +157,8 @@ useHead({ title: 'Исследования · IIS' })
                   size="xs"
                   variant="soft"
                   icon="i-lucide-radar"
+                  :disabled="!setupsCalculated"
+                  :title="setupsCalculated ? undefined : 'Не рассчитано для выбранного источника/даты; выполните ручное исследование'"
                   @click="pickSetups"
                 >
                   С сетапами сейчас

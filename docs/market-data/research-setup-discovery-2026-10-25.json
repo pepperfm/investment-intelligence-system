@@ -1,0 +1,735 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-25T20:19:31.853Z",
+  "method": "Latest immutable MOEX audit per symbol; unchanged active rules; each candidate requires last N eligible assessments with no quarantines removed. Newest three positive dates per symbol/version, selected only to test routing, not profitability.",
+  "database": "iis_finam",
+  "readOnlyTransaction": true,
+  "checkedWindows": 1256,
+  "positiveCount": 36,
+  "rulesChanged": false,
+  "aiCallsByThisScript": 0,
+  "ordersCreated": 0,
+  "candidate": {
+    "ticker": "TATN",
+    "board": "TQBR",
+    "instrumentId": "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8",
+    "asOf": "2026-10-25T20:19:31.853Z",
+    "lastPhysicalDate": "2026-10-23",
+    "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+    "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+    "observedAt": "2026-10-25T19:29:43.943Z",
+    "policyId": "physical_session_v1",
+    "inputHash": "ef159592163de3cf70fcfecad6edb40fe72b70d3219ca7afeb10349e6a0d43fc",
+    "requiredBars": 210,
+    "bars": 210,
+    "strategy": "swing",
+    "strategyVersionId": "58fa53ba-9312-4845-8945-951f75e55f8e",
+    "version": 1,
+    "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+    "rules": {
+      "rsiMax": 62,
+      "rsiMin": 38,
+      "slowSma": 200,
+      "stopAtr": 2,
+      "trendSma": 50,
+      "atrPeriod": 14,
+      "regimeSma": 0,
+      "rsiPeriod": 14,
+      "targetAtr": 3,
+      "horizonDays": 10,
+      "minMomentum": -0.05,
+      "allowPullback": true,
+      "maxVolatility": 0.6,
+      "minRewardRisk": 1.2,
+      "entryValidDays": 3,
+      "minAvgTurnover": 50000000,
+      "breakoutLookback": 20,
+      "momentumLookback": 20
+    },
+    "benchmarkRequired": false,
+    "benchmarkAuditId": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+    "benchmarkIssues": [
+      "2026-02-16:daily_intraday_mismatch:low",
+      "2026-06-11:daily_intraday_mismatch:high",
+      "2026-09-16:daily_intraday_mismatch:high",
+      "2026-10-05:daily_intraday_mismatch:low",
+      "2026-10-12:daily_intraday_mismatch:high"
+    ],
+    "qualityIssues": [],
+    "setup": true,
+    "setupType": "pullback",
+    "reasons": [
+      "Моментум -1.4% за 20 дн.",
+      "Цена выше SMA50",
+      "RSI14 49.3 в зоне отката 38–62"
+    ],
+    "failures": [],
+    "metrics": {
+      "close": 632.4,
+      "sma20": 643.095,
+      "sma50": 629.636,
+      "sma200": 576.1545,
+      "ema20": 635.291742398658,
+      "rsi14": 49.26257047100676,
+      "atr14": 16.05512087091512,
+      "atrPct": 0.025387604160207335,
+      "volatility60": 0.2892722436652129,
+      "momentum20": -0.014185502727981358,
+      "momentum60": 0.19704713231118687,
+      "momentum120": 0.16464088397790055,
+      "high20": 693.4,
+      "high55": 693.4,
+      "avgTurnover20": 1544422306.395,
+      "drawdown250": -0.3948717948717949,
+      "bars": 210
+    }
+  },
+  "latestSetupResults": [
+    {
+      "ticker": "TATN",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Нет долгосрочного тренда: цена/SMA50 ниже SMA200"
+      ]
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Нет долгосрочного тренда: цена/SMA50 ниже SMA200",
+        "RSI14 74.3 вне 40–72 (перегрев или слабость)"
+      ]
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": true,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": []
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Нет долгосрочного тренда: цена/SMA50 ниже SMA200"
+      ]
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Нет сетапа: RSI14 67.1 вне 38–62 и нет пробоя"
+      ]
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "position",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Моментум -8.4% за 120 дн. ниже порога 3.0%",
+        "Нет долгосрочного тренда: цена/SMA50 ниже SMA200"
+      ]
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "swing",
+      "version": 1,
+      "benchmarkRequired": false,
+      "setup": false,
+      "qualityIssues": [],
+      "benchmarkIssues": [
+        "2026-02-16:daily_intraday_mismatch:low",
+        "2026-06-11:daily_intraday_mismatch:high",
+        "2026-09-16:daily_intraday_mismatch:high",
+        "2026-10-05:daily_intraday_mismatch:low",
+        "2026-10-12:daily_intraday_mismatch:high"
+      ],
+      "failures": [
+        "Нет сетапа: RSI14 65.4 вне 38–62 и нет пробоя"
+      ]
+    }
+  ],
+  "positiveExamples": [
+    {
+      "ticker": "TATN",
+      "strategy": "position",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "ef159592163de3cf70fcfecad6edb40fe72b70d3219ca7afeb10349e6a0d43fc",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "position",
+      "asOf": "2026-10-24T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-22",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "5325a2178082ec49653583ef4665bc73dbe3cb221d35ce278b26792ac51eeb2f",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "position",
+      "asOf": "2026-10-23T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-21",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "1bbdf5fe6b1b380bbf0c79d8e8189c8d60e7ee6dad2397454cdde3cde09bf85f",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "swing",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "ef159592163de3cf70fcfecad6edb40fe72b70d3219ca7afeb10349e6a0d43fc",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "swing",
+      "asOf": "2026-10-22T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-20",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "5d683e92de1251376c48db02c544ab9e5473c656e5be95461770832749c6adc4",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "TATN",
+      "strategy": "swing",
+      "asOf": "2026-10-20T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-18",
+      "auditId": "22c89b4f-0e23-470e-806a-363556df8ce8",
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "inputHash": "911aebba7dc25393eb6da5155cbb5d978bd405435c48130c6b0b4711d95ae9b5",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "position",
+      "asOf": "2025-03-23T20:59:59.000Z",
+      "lastPhysicalDate": "2025-03-21",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "9c1fde46b799a299d94c760b4bcb6bf31b96449b49a9171a965015442599377d",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "position",
+      "asOf": "2025-03-22T20:59:59.000Z",
+      "lastPhysicalDate": "2025-03-20",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "bc0602b38d3825d74f1b0fb07436b820cfb64505bf2b0a25282db5951cd0957d",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "position",
+      "asOf": "2025-03-21T20:59:59.000Z",
+      "lastPhysicalDate": "2025-03-19",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "1688bccf5ac991b933088b9136edd37d4d80b97e1290832cefd2e5e17e648a04",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "swing",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "57555ec6d8a6dfdae48aecd8f031dc72bc59fedafb1c1739239b6051e7145ebb",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "swing",
+      "asOf": "2026-10-24T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-22",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "9b8c7f85213d342caad8607aab5832b0a60514fbb1159df7adbbb6ee4937ade3",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "CHMF",
+      "strategy": "swing",
+      "asOf": "2026-10-23T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-21",
+      "auditId": "2827408a-e090-4098-9214-8b1aeaa855e3",
+      "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+      "inputHash": "0d3f6ccf93e066da16963a5e1ae7a7f6ab4c27fbb032bbd4f3a7eeb5de5b4a51",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "position",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "06daa8d769934936d7bd5a1de3f2dd3008a7140f65b3cd3a167ea82438c954c3",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "position",
+      "asOf": "2026-04-23T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-21",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "46d13bd9dfc065250b2d1d645e824c42e70dc17ea5522fefd42881bfad0eb97e",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "position",
+      "asOf": "2026-04-10T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-08",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "f6dabcdeea143279adc92379c51364534503f525e05e0d2888de40a37ecae22c",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "swing",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "06daa8d769934936d7bd5a1de3f2dd3008a7140f65b3cd3a167ea82438c954c3",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "swing",
+      "asOf": "2026-10-24T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-22",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "4cc2be4d8e8441af8537d1fd9c5a3cef858dc249b216cdc67cfa07f6c396a821",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "NVTK",
+      "strategy": "swing",
+      "asOf": "2026-10-20T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-18",
+      "auditId": "21b8c56d-67ad-445f-add8-b965bc019275",
+      "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+      "inputHash": "7eb9759b6dbea185cc274eff3324559b160d75b03724187c47a24ab13732a56b",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "position",
+      "asOf": "2026-04-14T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-12",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "fdf6d48f820f07e2d583375b2d9fa4bbc0d7f2518f663550a369c6fe348eb56e",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "position",
+      "asOf": "2026-04-10T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-08",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "35f598eaa3611f75dff48ed47c3f05a31e79d33e2a9658466611eccd7a83deeb",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "position",
+      "asOf": "2026-04-09T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-07",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "05f6686d7c2d02bb406f0bb984ea6a34556a3b6cf9803223a706c20e50537c2c",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "swing",
+      "asOf": "2026-10-25T20:19:31.853Z",
+      "lastPhysicalDate": "2026-10-23",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "60317b152f25f31282c58d5d1dbea3da24d7d12b05acc090de66a8c9f9b858d1",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "swing",
+      "asOf": "2026-10-20T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-18",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "1ecb09087d85db298df7ba6b380ec89d3c7a4c36fd6839fcc20e59f0085697e9",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "GAZP",
+      "strategy": "swing",
+      "asOf": "2026-10-19T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-17",
+      "auditId": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+      "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+      "inputHash": "bc5bebd4439750525993dfd08f43bc00b96ee63c933f845d5c24da8a20c8d7d8",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "position",
+      "asOf": "2026-04-29T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-27",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "6e37d2727ac28780599d65db6176d63c9f37666aaa6c065ee295fe81b8a2bf03",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "position",
+      "asOf": "2026-04-28T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-26",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "91972e4d477b6d7de5d3562ee7d21b12be50ac5502cc37dba1b5fc1c605310d6",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "position",
+      "asOf": "2026-04-27T20:59:59.000Z",
+      "lastPhysicalDate": "2026-04-25",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "eecf0f7a2cecfa254054ade9699ffda5a92458e54182041b76908064818aea63",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "swing",
+      "asOf": "2026-10-17T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-15",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "c7c90995ba7083b87cd37f99fba8c1231b5bf95c3f7bf7b3be9e01037ec1322c",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "swing",
+      "asOf": "2026-10-11T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-09",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "7aac287d2a42a78ee3d0aa242b687758946b1e3a025f897310f90343eda52b2c",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "ROSN",
+      "strategy": "swing",
+      "asOf": "2026-10-10T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-08",
+      "auditId": "61195f70-5a8c-4fb7-af78-940159536f56",
+      "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+      "inputHash": "71902cd8c50a1568215a321216b4ee9f9c30ddb9b14cbaf27db451588911d0da",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "position",
+      "asOf": "2026-06-19T20:59:59.000Z",
+      "lastPhysicalDate": "2026-06-17",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "9a35d64b9d5fb919a822902aee0b509d91f5ccec9f2f8ff33b8adfff5977352c",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "position",
+      "asOf": "2026-06-18T20:59:59.000Z",
+      "lastPhysicalDate": "2026-06-16",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "8a9b38deafc9eef756e8f6d890453447a55b71661b59101439e261adb4c6e1b1",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "position",
+      "asOf": "2026-06-17T20:59:59.000Z",
+      "lastPhysicalDate": "2026-06-15",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "f44a715dac0ff542ea6db2a464d7798744a2e1d8c2c9f493fc7496e3b5b7dbe7",
+      "rulesHash": "392fc604a7a2569f5dac3fd502521414887cbef78bb2f72a2552fde737492440",
+      "setup": true,
+      "setupType": "trend"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "swing",
+      "asOf": "2026-10-22T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-20",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "6e3f02a7d15e6ad314b0e254d37acdc03ac536487153fda5aa51ee89cbc922f6",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "swing",
+      "asOf": "2026-10-21T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-19",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "b13cadfa71ba37c5ff63ab80e3cd63b101bbf7d2bb001c19b4d7ab0718b5a736",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "breakout"
+    },
+    {
+      "ticker": "SBER",
+      "strategy": "swing",
+      "asOf": "2026-10-20T20:59:59.000Z",
+      "lastPhysicalDate": "2026-10-18",
+      "auditId": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+      "sourceRevision": "113d2b1507b9687462f607121ed574ddf3fb1448177c70b0abd35b6a6ac40fa8",
+      "inputHash": "8d0dff5cbc9718dab2808dcc09bb0ac3fbdeed95dfcc1b82d3d7e78140737a4e",
+      "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+      "setup": true,
+      "setupType": "pullback"
+    }
+  ],
+  "pipelineAcceptance": "Candidate discovery only; root end-to-end acceptance records actual run IDs and model calls separately.",
+  "paperExecutionStatus": "not_ready_for_paper_execution",
+  "paperEvidence": [
+    "paper-execution-probe-2026-10-25.json",
+    "paper-execution-mcp-2026-10-25.json"
+  ]
+}

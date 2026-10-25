@@ -89,6 +89,7 @@ export async function getHypothesis(id: string) {
     marketProvider: payload?.marketData?.source ?? instrument?.provider ?? 'unknown',
     marketData: payload?.marketData ?? null,
     backtestQuality: payload?.backtestQuality ?? null,
+    dependencies: payload?.dependencies ?? null,
     chartCandles: payload?.marketData?.barPolicy === 'physical_session_v1'
       ? (payload.recentCandles ?? []).map(c => ({
           ts: `${c.d}T00:00:00.000Z`,

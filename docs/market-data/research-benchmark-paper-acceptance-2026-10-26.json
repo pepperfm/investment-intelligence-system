@@ -1,0 +1,1369 @@
+{
+  "date": "2026-10-26",
+  "baseline": "628b46f3ed2f33ff16be28b33eb36537c7ed7988",
+  "scope": "Personal local IIS; no strategy optimization, no live orders, immutable previous records",
+  "p0Status": "demonstrated_real_research_setup_true",
+  "paperStatus": "not_ready_for_paper_execution",
+  "originalReport": "docs/market-data/acceptance.json (unchanged)",
+  "primaryBrowserRun": {
+    "runId": "fd2af79c-cb65-4913-820f-6e27d42f69ec",
+    "kind": "research",
+    "asOf": "2026-10-25T20:48:37.801Z",
+    "status": "completed",
+    "rulesVersions": {
+      "swing": 1
+    },
+    "pinnedStrategies": {
+      "swing": {
+        "rules": {
+          "rsiMax": 62,
+          "rsiMin": 38,
+          "slowSma": 200,
+          "stopAtr": 2,
+          "trendSma": 50,
+          "atrPeriod": 14,
+          "regimeSma": 0,
+          "rsiPeriod": 14,
+          "targetAtr": 3,
+          "horizonDays": 10,
+          "minMomentum": -0.05,
+          "allowPullback": true,
+          "maxVolatility": 0.6,
+          "minRewardRisk": 1.2,
+          "entryValidDays": 3,
+          "minAvgTurnover": 50000000,
+          "breakoutLookback": 20,
+          "momentumLookback": 20
+        },
+        "version": 1,
+        "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+        "strategyVersionId": "58fa53ba-9312-4845-8945-951f75e55f8e"
+      }
+    },
+    "selection": {
+      "auditIds": {
+        "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+        "39e41989-9d75-462a-9e4e-71b406f752be": null,
+        "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+        "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+        "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+        "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+        "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+        "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+        "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+        "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+        "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+        "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+        "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+        "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+        "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+        "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+      },
+      "policyId": "physical_session_v1",
+      "provider": "moex_iss",
+      "revisionCutoff": "2026-10-25T20:48:37.863Z",
+      "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+    },
+    "provider": "codex",
+    "criticProvider": "codex",
+    "log": [
+      {
+        "at": "2026-10-25T20:48:37.955Z",
+        "level": "info",
+        "message": "Анализ на дату 2026-10-25: используются только данные, доступные к этому моменту"
+      },
+      {
+        "at": "2026-10-25T20:48:38.391Z",
+        "level": "info",
+        "message": "TATN@MISX/swing: market_researcher (codex)"
+      },
+      {
+        "at": "2026-10-25T20:48:55.830Z",
+        "level": "info",
+        "message": "TATN@MISX/swing: корневой аналитик формулирует гипотезу"
+      },
+      {
+        "at": "2026-10-25T20:50:10.188Z",
+        "level": "info",
+        "message": "TATN@MISX/swing: гипотеза 7a873804 → hypothesis_critic"
+      },
+      {
+        "at": "2026-10-25T20:51:22.137Z",
+        "level": "info",
+        "message": "TATN@MISX/swing: критик → supported, статус ready_for_user"
+      },
+      {
+        "at": "2026-10-25T20:51:22.140Z",
+        "level": "info",
+        "message": "Готово: гипотез 1, отсеяно 0, блокировано данными 0, ошибок 0"
+      }
+    ],
+    "summary": {
+      "failures": [],
+      "candidates": 1,
+      "hypotheses": [
+        {
+          "id": "7a873804-f4f1-458b-94db-7e9883050f5b",
+          "status": "ready_for_user",
+          "symbol": "TATN@MISX",
+          "strategy": "swing"
+        }
+      ],
+      "screenedOut": [],
+      "dependencyChecks": [
+        {
+          "symbol": "TATN@MISX",
+          "strategy": "swing",
+          "benchmarkNeed": "optional_for_context",
+          "benchmarkQuality": "blocked",
+          "instrumentQuality": "research_usable_with_limits",
+          "signalEligibility": {
+            "issues": [],
+            "status": "eligible"
+          },
+          "contextLimitations": [
+            "historical_availability_unknown:explicit_market_reconstruction",
+            "source_adjustment_policy_unknown:backtest_not_verified",
+            "benchmark_context_unavailable:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+            "benchmark_context_unavailable:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+            "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+            "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+            "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+            "benchmark_context_unavailable:insufficient_required_window:IMOEX:205/210"
+          ],
+          "benchmarkUnavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210"
+        }
+      ],
+      "blockedByDataQuality": []
+    },
+    "hypotheses": [
+      {
+        "id": "7a873804-f4f1-458b-94db-7e9883050f5b",
+        "direction": "no_trade",
+        "status": "ready_for_user",
+        "critic_verdict": "supported",
+        "validation": {
+          "ok": true,
+          "issues": []
+        },
+        "snapshot_id": "5cff3c80-81f0-4c3c-b2b7-40cbc09b8ad5",
+        "analyst_version": "decision-v3-benchmark-dependencies"
+      }
+    ],
+    "snapshotHash": "72487ae203fe76dd0bf0fceed4282fe3c0ef7a6eec3f3fff2f126aa3de983eca",
+    "signal": {
+      "entry": 632.4,
+      "setup": true,
+      "reasons": [
+        "Моментум -1.4% за 20 дн.",
+        "Цена выше SMA50",
+        "RSI14 49.3 в зоне отката 38–62"
+      ],
+      "failures": [],
+      "stopLoss": 600.2898,
+      "setupType": "pullback",
+      "rewardRisk": 1.5,
+      "takeProfit": 680.5654
+    },
+    "dependencies": {
+      "benchmarkNeed": "optional_for_context",
+      "benchmarkQuality": "blocked",
+      "instrumentQuality": "research_usable_with_limits",
+      "signalEligibility": {
+        "issues": [],
+        "status": "eligible"
+      },
+      "contextLimitations": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified",
+        "benchmark_context_unavailable:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+        "benchmark_context_unavailable:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+        "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+        "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+        "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+        "benchmark_context_unavailable:insufficient_required_window:IMOEX:205/210"
+      ],
+      "benchmarkUnavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210"
+    },
+    "marketData": {
+      "board": "TQBR",
+      "market": "shares",
+      "source": "moex_iss",
+      "coverage": {
+        "to": "2026-10-25",
+        "from": "2023-10-26",
+        "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "observedAt": "2026-10-25T19:29:43.943Z"
+      },
+      "barPolicy": "physical_session_v1",
+      "inputHash": "ef159592163de3cf70fcfecad6edb40fe72b70d3219ca7afeb10349e6a0d43fc",
+      "selection": {
+        "auditIds": {
+          "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+          "39e41989-9d75-462a-9e4e-71b406f752be": null,
+          "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+          "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+          "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+          "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+          "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+          "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+          "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+          "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+          "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+          "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+          "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+          "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+          "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+          "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+        },
+        "policyId": "physical_session_v1",
+        "provider": "moex_iss",
+        "revisionCutoff": "2026-10-25T20:48:37.863Z",
+        "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+      },
+      "instrument": "TATN@MISX",
+      "observedAt": "2026-10-25T19:29:43.943Z",
+      "reconstruction": true,
+      "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+      "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+      "adjustmentPolicy": "source_native_adjustment_unknown",
+      "confirmedSessionAge": 0,
+      "historicalAvailability": "unknown"
+    },
+    "benchmark": {
+      "need": "optional_for_context",
+      "usage": "Индексный контекст недоступен; нельзя ссылаться на momentum/SMA/превосходство над IMOEX. Абсолютный сигнал акции имеет отдельное качество.",
+      "status": "blocked",
+      "symbol": "IMOEX@MISX",
+      "momentum20": null,
+      "momentum60": null,
+      "unavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210"
+    },
+    "backtestQuality": {
+      "issues": [
+        "MGNT@MISX:MGNT:missing_source_revision:manual_sync_required",
+        "MGNT@MISX:MGNT:missing_completed_reconciled_bars",
+        "MGNT@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "MGNT@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "MTSS@MISX:MTSS:missing_source_revision:manual_sync_required",
+        "MTSS@MISX:MTSS:missing_completed_reconciled_bars",
+        "MTSS@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "MTSS@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "NVTK@MISX:NVTK/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "NVTK@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "NVTK@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "PHOR@MISX:PHOR:missing_source_revision:manual_sync_required",
+        "PHOR@MISX:PHOR:missing_completed_reconciled_bars",
+        "PHOR@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "PHOR@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "PLZL@MISX:PLZL:missing_source_revision:manual_sync_required",
+        "PLZL@MISX:PLZL:missing_completed_reconciled_bars",
+        "PLZL@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "PLZL@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "ROSN@MISX:ROSN/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "ROSN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "ROSN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "SBER@MISX:SBER/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "SBER@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "SBER@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "TATN@MISX:TATN/2025-04-10:daily_intraday_mismatch:high,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "TATN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "TATN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "YDEX@MISX:YDEX:missing_source_revision:manual_sync_required",
+        "YDEX@MISX:YDEX:missing_completed_reconciled_bars",
+        "YDEX@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "YDEX@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "AFLT@MISX:AFLT:missing_source_revision:manual_sync_required",
+        "AFLT@MISX:AFLT:missing_completed_reconciled_bars",
+        "AFLT@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "AFLT@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "ALRS@MISX:ALRS:missing_source_revision:manual_sync_required",
+        "ALRS@MISX:ALRS:missing_completed_reconciled_bars",
+        "ALRS@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "ALRS@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "CHMF@MISX:CHMF/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "CHMF@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "CHMF@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "GAZP@MISX:GAZP/2025-04-10:daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+        "GAZP@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "GAZP@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "GMKN@MISX:GMKN:missing_source_revision:manual_sync_required",
+        "GMKN@MISX:GMKN:missing_completed_reconciled_bars",
+        "GMKN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "GMKN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "LKOH@MISX:LKOH:missing_source_revision:manual_sync_required",
+        "LKOH@MISX:LKOH:missing_completed_reconciled_bars",
+        "LKOH@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "LKOH@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "benchmark:IMOEX/2025-01-27:daily_intraday_mismatch:open",
+        "benchmark:IMOEX/2025-01-29:daily_intraday_mismatch:open",
+        "benchmark:IMOEX/2025-01-30:daily_intraday_mismatch:open",
+        "benchmark:IMOEX/2025-07-24:daily_intraday_mismatch:close",
+        "benchmark:IMOEX/2025-09-01:daily_intraday_mismatch:low,daily_intraday_mismatch:close",
+        "benchmark:IMOEX/2025-10-17:daily_intraday_mismatch:close",
+        "benchmark:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+        "benchmark:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+        "benchmark:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+        "benchmark:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+        "benchmark:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+        "benchmark:historical_availability_unknown:explicit_market_reconstruction",
+        "benchmark:source_adjustment_policy_unknown:backtest_not_verified",
+        "partial_universe_excluded:MGNT@MISX,MTSS@MISX,NVTK@MISX,PHOR@MISX,PLZL@MISX,ROSN@MISX,SBER@MISX,TATN@MISX,YDEX@MISX,AFLT@MISX,ALRS@MISX,CHMF@MISX,GAZP@MISX,GMKN@MISX,LKOH@MISX"
+      ],
+      "status": "data_quality_blocked",
+      "selection": {
+        "auditIds": {
+          "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+          "39e41989-9d75-462a-9e4e-71b406f752be": null,
+          "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+          "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+          "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+          "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+          "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+          "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+          "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+          "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+          "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+          "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+          "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+          "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+          "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+          "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+        },
+        "policyId": "physical_session_v1",
+        "provider": "moex_iss",
+        "revisionCutoff": "2026-10-25T20:48:37.863Z",
+        "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+      },
+      "excludedSymbols": [
+        "MGNT@MISX",
+        "MTSS@MISX",
+        "NVTK@MISX",
+        "PHOR@MISX",
+        "PLZL@MISX",
+        "ROSN@MISX",
+        "SBER@MISX",
+        "TATN@MISX",
+        "YDEX@MISX",
+        "AFLT@MISX",
+        "ALRS@MISX",
+        "CHMF@MISX",
+        "GAZP@MISX",
+        "GMKN@MISX",
+        "LKOH@MISX"
+      ],
+      "includedSymbols": [],
+      "benchmarkQuality": "benchmark_unavailable",
+      "signalEligibility": "eligible",
+      "statisticsMeaning": "Exploratory reconstruction/partial-universe statistics, not verified profitable-strategy evidence.",
+      "absoluteInputVerified": false,
+      "benchmarkRelativeVerified": false,
+      "benchmarkUnavailableReason": "IMOEX/2025-01-27:daily_intraday_mismatch:open; IMOEX/2025-01-29:daily_intraday_mismatch:open; IMOEX/2025-01-30:daily_intraday_mismatch:open; IMOEX/2025-07-24:daily_intraday_mismatch:close; IMOEX/2025-09-01:daily_intraday_mismatch:low,daily_intraday_mismatch:close; IMOEX/2025-10-17:daily_intraday_mismatch:close; IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; historical_availability_unknown:explicit_market_reconstruction; source_adjustment_policy_unknown:backtest_not_verified"
+    },
+    "trackRecord": {
+      "all": {
+        "exits": {
+          "stopLoss": 0,
+          "timeExit": 0,
+          "takeProfit": 0
+        },
+        "n_abs": 0,
+        "trades": 0,
+        "winRate": 0,
+        "n_relative": 0,
+        "avgNetReturn": 0,
+        "profitFactor": 0,
+        "worstDrawdown": 0,
+        "avgExcessReturn": null,
+        "benchmarkStatus": "benchmark_unavailable"
+      },
+      "note": "Бэктест закреплённой версии правил по текущей вселенной; состав/делистинги исторически не подтверждены; выборки all/sameSetup/sameSymbol пересекаются. На дату до 2026-10-25: только сделки, закрытые до этой даты; издержки вычтены. Прошлое не гарантирует будущего.",
+      "audit": {
+        "id": "b52ff9b7-0660-48e9-aaeb-57cb136c2ff9",
+        "hash": "2a65a40576808e871c9efa11b9a3cb7f26e961c96822350d61beb4eee1b07809",
+        "inputSeriesHash": "668de359c0fd021c85b1560e874e5133d41e9c7b198db0fd4e4ce297a592bacb"
+      },
+      "universe": 0,
+      "validity": "data_quality_blocked",
+      "sameSetup": {
+        "exits": {
+          "stopLoss": 0,
+          "timeExit": 0,
+          "takeProfit": 0
+        },
+        "n_abs": 0,
+        "trades": 0,
+        "winRate": 0,
+        "n_relative": 0,
+        "avgNetReturn": 0,
+        "profitFactor": 0,
+        "worstDrawdown": 0,
+        "avgExcessReturn": null,
+        "benchmarkStatus": "benchmark_unavailable"
+      },
+      "sameSymbol": {
+        "exits": {
+          "stopLoss": 0,
+          "timeExit": 0,
+          "takeProfit": 0
+        },
+        "n_abs": 0,
+        "trades": 0,
+        "winRate": 0,
+        "n_relative": 0,
+        "avgNetReturn": 0,
+        "profitFactor": 0,
+        "worstDrawdown": 0,
+        "avgExcessReturn": null,
+        "benchmarkStatus": "benchmark_unavailable"
+      },
+      "statsValidity": "data_quality_blocked"
+    }
+  },
+  "isolatedAcceptance": {
+    "database": "iis_research_benchmark_verify_20261025",
+    "asOf": "2026-10-25T20:33:29.813Z",
+    "optional": {
+      "run": {
+        "id": "077b7199-6598-4c05-833e-4b5b0ebd1c49",
+        "userId": "research-benchmark-acceptance",
+        "kind": "research",
+        "strategies": [
+          "swing"
+        ],
+        "instrumentIds": [
+          "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8"
+        ],
+        "asOf": "2026-10-25T20:33:29.813Z",
+        "status": "completed",
+        "provider": "codex",
+        "criticProvider": "codex",
+        "pinnedStrategies": {
+          "swing": {
+            "rules": {
+              "rsiMax": 62,
+              "rsiMin": 38,
+              "slowSma": 200,
+              "stopAtr": 2,
+              "trendSma": 50,
+              "atrPeriod": 14,
+              "regimeSma": 0,
+              "rsiPeriod": 14,
+              "targetAtr": 3,
+              "horizonDays": 10,
+              "minMomentum": -0.05,
+              "allowPullback": true,
+              "maxVolatility": 0.6,
+              "minRewardRisk": 1.2,
+              "entryValidDays": 3,
+              "minAvgTurnover": 50000000,
+              "breakoutLookback": 20,
+              "momentumLookback": 20
+            },
+            "version": 1,
+            "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+            "strategyVersionId": "58fa53ba-9312-4845-8945-951f75e55f8e"
+          }
+        },
+        "researchSelection": {
+          "auditIds": {
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+          },
+          "policyId": "physical_session_v1",
+          "provider": "moex_iss",
+          "revisionCutoff": "2026-10-25T20:33:29.813Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+        },
+        "executionCosts": {
+          "spreadPct": 0.05,
+          "slippagePct": 0.1,
+          "commissionPct": 0.05
+        },
+        "rulesVersions": {
+          "swing": 1
+        },
+        "log": [
+          {
+            "at": "2026-10-25T20:33:30.192Z",
+            "level": "info",
+            "message": "Анализ на дату 2026-10-25: используются только данные, доступные к этому моменту"
+          },
+          {
+            "at": "2026-10-25T20:33:30.409Z",
+            "level": "info",
+            "message": "TATN@MISX/swing: market_researcher (codex)"
+          },
+          {
+            "at": "2026-10-25T20:34:10.577Z",
+            "level": "info",
+            "message": "TATN@MISX/swing: корневой аналитик формулирует гипотезу"
+          },
+          {
+            "at": "2026-10-25T20:34:52.089Z",
+            "level": "info",
+            "message": "TATN@MISX/swing: гипотеза d8a2f1aa → hypothesis_critic"
+          },
+          {
+            "at": "2026-10-25T20:35:31.730Z",
+            "level": "info",
+            "message": "TATN@MISX/swing: критик → supported, статус ready_for_user"
+          },
+          {
+            "at": "2026-10-25T20:35:31.735Z",
+            "level": "info",
+            "message": "Готово: гипотез 1, отсеяно 0, блокировано данными 0, ошибок 0"
+          }
+        ],
+        "summary": {
+          "failures": [],
+          "candidates": 1,
+          "hypotheses": [
+            {
+              "id": "d8a2f1aa-44ba-43dd-ad72-1052d13fa19d",
+              "status": "ready_for_user",
+              "symbol": "TATN@MISX",
+              "strategy": "swing"
+            }
+          ],
+          "screenedOut": [],
+          "dependencyChecks": [
+            {
+              "symbol": "TATN@MISX",
+              "strategy": "swing",
+              "benchmarkNeed": "optional_for_context",
+              "benchmarkQuality": "blocked",
+              "instrumentQuality": "research_usable_with_limits",
+              "signalEligibility": {
+                "issues": [],
+                "status": "eligible"
+              },
+              "contextLimitations": [
+                "historical_availability_unknown:explicit_market_reconstruction",
+                "source_adjustment_policy_unknown:backtest_not_verified",
+                "benchmark_context_unavailable:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+                "benchmark_context_unavailable:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+                "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:insufficient_required_window:IMOEX:205/210"
+              ],
+              "benchmarkUnavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210"
+            }
+          ],
+          "blockedByDataQuality": []
+        },
+        "error": null,
+        "createdAt": "2026-10-25T20:33:29.859Z",
+        "startedAt": "2026-10-25T20:33:30.189Z",
+        "finishedAt": "2026-10-25T20:35:31.737Z"
+      },
+      "signal": {
+        "setup": true,
+        "setupType": "pullback",
+        "reasons": [
+          "Моментум -1.4% за 20 дн.",
+          "Цена выше SMA50",
+          "RSI14 49.3 в зоне отката 38–62"
+        ],
+        "failures": [],
+        "entry": 632.4,
+        "stopLoss": 600.2898,
+        "takeProfit": 680.5654,
+        "rewardRisk": 1.5,
+        "metrics": {
+          "close": 632.4,
+          "sma20": 643.095,
+          "sma50": 629.636,
+          "sma200": 576.1545,
+          "ema20": 635.291742398658,
+          "rsi14": 49.26257047100676,
+          "atr14": 16.05512087091512,
+          "atrPct": 0.025387604160207335,
+          "volatility60": 0.2892722436652129,
+          "momentum20": -0.014185502727981358,
+          "momentum60": 0.19704713231118687,
+          "momentum120": 0.16464088397790055,
+          "high20": 693.4,
+          "high55": 693.4,
+          "avgTurnover20": 1544422306.395,
+          "drawdown250": -0.3948717948717949,
+          "bars": 210
+        }
+      },
+      "dependencies": {
+        "benchmarkNeed": "optional_for_context",
+        "instrumentQuality": "research_usable_with_limits",
+        "benchmarkQuality": "blocked",
+        "benchmarkUnavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210",
+        "signalEligibility": {
+          "status": "eligible",
+          "issues": []
+        },
+        "contextLimitations": [
+          "historical_availability_unknown:explicit_market_reconstruction",
+          "source_adjustment_policy_unknown:backtest_not_verified",
+          "benchmark_context_unavailable:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+          "benchmark_context_unavailable:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+          "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:insufficient_required_window:IMOEX:205/210"
+        ]
+      },
+      "marketData": {
+        "selection": {
+          "auditIds": {
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+          },
+          "policyId": "physical_session_v1",
+          "provider": "moex_iss",
+          "revisionCutoff": "2026-10-25T20:33:29.813Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:29:43.943Z",
+        "inputHash": "ef159592163de3cf70fcfecad6edb40fe72b70d3219ca7afeb10349e6a0d43fc",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:29:43.943Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        },
+        "confirmedSessionAge": 0
+      },
+      "benchmarkData": {
+        "selection": {
+          "auditIds": {
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+          },
+          "policyId": "physical_session_v1",
+          "provider": "moex_iss",
+          "revisionCutoff": "2026-10-25T20:33:29.813Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:29:59.422Z",
+        "inputHash": "7e2e3b4de4721626a9e04d4deedde7c71778d5f735aa1464e25ff7dc0592fdd7",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:29:59.422Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      },
+      "benchmark": {
+        "need": "optional_for_context",
+        "status": "blocked",
+        "unavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210",
+        "usage": "Индексный контекст недоступен; нельзя ссылаться на momentum/SMA/превосходство над IMOEX. Абсолютный сигнал акции имеет отдельное качество.",
+        "symbol": "IMOEX@MISX",
+        "momentum20": null,
+        "momentum60": null
+      },
+      "trackRecord": {
+        "note": "Бэктест закреплённой версии правил по текущей вселенной; состав/делистинги исторически не подтверждены; выборки all/sameSetup/sameSymbol пересекаются. На дату до 2026-10-25: только сделки, закрытые до этой даты; издержки вычтены. Прошлое не гарантирует будущего.",
+        "audit": {
+          "id": "68154635-1132-4e5c-8f83-19743b9d9b8f",
+          "hash": "ada125ba346b94d0590be7aa5cf982d794207d6fb16772897204b6779eb98554",
+          "inputSeriesHash": "668de359c0fd021c85b1560e874e5133d41e9c7b198db0fd4e4ce297a592bacb"
+        },
+        "validity": "data_quality_blocked",
+        "statsValidity": "data_quality_blocked",
+        "universe": 0,
+        "all": {
+          "trades": 0,
+          "winRate": 0,
+          "avgNetReturn": 0,
+          "avgExcessReturn": null,
+          "n_abs": 0,
+          "n_relative": 0,
+          "benchmarkStatus": "benchmark_unavailable",
+          "profitFactor": 0,
+          "worstDrawdown": 0,
+          "exits": {
+            "takeProfit": 0,
+            "stopLoss": 0,
+            "timeExit": 0
+          }
+        },
+        "sameSetup": {
+          "trades": 0,
+          "winRate": 0,
+          "avgNetReturn": 0,
+          "avgExcessReturn": null,
+          "n_abs": 0,
+          "n_relative": 0,
+          "benchmarkStatus": "benchmark_unavailable",
+          "profitFactor": 0,
+          "worstDrawdown": 0,
+          "exits": {
+            "takeProfit": 0,
+            "stopLoss": 0,
+            "timeExit": 0
+          }
+        },
+        "sameSymbol": {
+          "trades": 0,
+          "winRate": 0,
+          "avgNetReturn": 0,
+          "avgExcessReturn": null,
+          "n_abs": 0,
+          "n_relative": 0,
+          "benchmarkStatus": "benchmark_unavailable",
+          "profitFactor": 0,
+          "worstDrawdown": 0,
+          "exits": {
+            "takeProfit": 0,
+            "stopLoss": 0,
+            "timeExit": 0
+          }
+        }
+      },
+      "hypotheses": [
+        {
+          "id": "d8a2f1aa-44ba-43dd-ad72-1052d13fa19d",
+          "direction": "no_trade",
+          "status": "ready_for_user",
+          "criticVerdict": "supported",
+          "validation": {
+            "ok": true,
+            "issues": []
+          },
+          "analystVersion": "decision-v3-benchmark-dependencies",
+          "snapshotId": "f364b0ea-767a-431a-87a2-41905d207df8"
+        }
+      ],
+      "calls": [
+        {
+          "role": "market_researcher"
+        },
+        {
+          "role": "hypothesis_analyst"
+        },
+        {
+          "role": "hypothesis_critic"
+        }
+      ]
+    },
+    "required": {
+      "run": {
+        "id": "0bbb1ecf-7a6e-4c6c-a599-976456fcc1c6",
+        "userId": "research-benchmark-acceptance",
+        "kind": "research",
+        "strategies": [
+          "swing"
+        ],
+        "instrumentIds": [
+          "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8"
+        ],
+        "asOf": "2026-10-25T20:33:29.813Z",
+        "status": "blocked",
+        "provider": "codex",
+        "criticProvider": "codex",
+        "pinnedStrategies": {
+          "swing": {
+            "rules": {
+              "rsiMax": 62,
+              "rsiMin": 38,
+              "slowSma": 200,
+              "stopAtr": 2,
+              "trendSma": 50,
+              "atrPeriod": 14,
+              "regimeSma": 50,
+              "rsiPeriod": 14,
+              "targetAtr": 3,
+              "horizonDays": 10,
+              "minMomentum": -0.05,
+              "allowPullback": true,
+              "maxVolatility": 0.6,
+              "minRewardRisk": 1.2,
+              "entryValidDays": 3,
+              "minAvgTurnover": 50000000,
+              "breakoutLookback": 20,
+              "momentumLookback": 20
+            },
+            "version": 10001,
+            "rulesHash": "1dc29cfaef7d86c9940405dd78a4cf796139b54687578b5110b437f67a6817f3",
+            "strategyVersionId": "66dc1d17-b290-4ccc-b411-4a6e4fa6bb07"
+          }
+        },
+        "researchSelection": {
+          "auditIds": {
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+          },
+          "policyId": "physical_session_v1",
+          "provider": "moex_iss",
+          "revisionCutoff": "2026-10-25T20:33:29.813Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+        },
+        "executionCosts": {
+          "spreadPct": 0.05,
+          "slippagePct": 0.1,
+          "commissionPct": 0.05
+        },
+        "rulesVersions": {
+          "swing": 10001
+        },
+        "log": [
+          {
+            "at": "2026-10-25T20:35:31.755Z",
+            "level": "info",
+            "message": "Анализ на дату 2026-10-25: используются только данные, доступные к этому моменту"
+          },
+          {
+            "at": "2026-10-25T20:35:31.946Z",
+            "level": "info",
+            "message": "TATN@MISX/swing: data_quality_blocked — Недостаточно истории котировок для расчёта индикаторов; benchmark:IMOEX/2026-09-16:daily_intraday_mismatch:high; benchmark:IMOEX/2026-10-05:daily_intraday_mismatch:low; benchmark:IMOEX/2026-10-12:daily_intraday_mismatch:high; benchmark:insufficient_required_window:IMOEX:47/50; historical_availability_unknown:explicit_market_reconstruction; source_adjustment_policy_unknown:backtest_not_verified; benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high; benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low; benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high; benchmark_context_unavailable:insufficient_required_window:IMOEX:47/50"
+          },
+          {
+            "at": "2026-10-25T20:35:31.947Z",
+            "level": "info",
+            "message": "Готово: гипотез 0, отсеяно 0, блокировано данными 1, ошибок 0"
+          }
+        ],
+        "summary": {
+          "failures": [],
+          "candidates": 1,
+          "hypotheses": [],
+          "screenedOut": [],
+          "dependencyChecks": [
+            {
+              "symbol": "TATN@MISX",
+              "strategy": "swing",
+              "benchmarkNeed": "required_for_signal",
+              "benchmarkQuality": "blocked",
+              "instrumentQuality": "research_usable_with_limits",
+              "signalEligibility": {
+                "issues": [
+                  "benchmark:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+                  "benchmark:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+                  "benchmark:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+                  "benchmark:insufficient_required_window:IMOEX:47/50"
+                ],
+                "status": "blocked"
+              },
+              "contextLimitations": [
+                "historical_availability_unknown:explicit_market_reconstruction",
+                "source_adjustment_policy_unknown:backtest_not_verified",
+                "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+                "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:insufficient_required_window:IMOEX:47/50"
+              ],
+              "benchmarkUnavailableReason": "IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:47/50"
+            }
+          ],
+          "blockedByDataQuality": [
+            {
+              "symbol": "TATN@MISX",
+              "reasons": [
+                "data_quality_blocked: контракт дневных свечей или календаря не подтверждён; новый вывод не сформирован",
+                "Недостаточно истории котировок для расчёта индикаторов",
+                "benchmark:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+                "benchmark:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+                "benchmark:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+                "benchmark:insufficient_required_window:IMOEX:47/50",
+                "historical_availability_unknown:explicit_market_reconstruction",
+                "source_adjustment_policy_unknown:backtest_not_verified",
+                "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+                "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+                "benchmark_context_unavailable:insufficient_required_window:IMOEX:47/50"
+              ],
+              "strategy": "swing"
+            }
+          ]
+        },
+        "error": null,
+        "createdAt": "2026-10-25T20:35:31.750Z",
+        "startedAt": "2026-10-25T20:35:31.753Z",
+        "finishedAt": "2026-10-25T20:35:31.948Z"
+      },
+      "controlVersion": {
+        "id": "66dc1d17-b290-4ccc-b411-4a6e4fa6bb07",
+        "strategyId": "swing",
+        "version": 10001,
+        "rules": {
+          "rsiMax": 62,
+          "rsiMin": 38,
+          "slowSma": 200,
+          "stopAtr": 2,
+          "trendSma": 50,
+          "atrPeriod": 14,
+          "regimeSma": 50,
+          "rsiPeriod": 14,
+          "targetAtr": 3,
+          "horizonDays": 10,
+          "minMomentum": -0.05,
+          "allowPullback": true,
+          "maxVolatility": 0.6,
+          "minRewardRisk": 1.2,
+          "entryValidDays": 3,
+          "minAvgTurnover": 50000000,
+          "breakoutLookback": 20,
+          "momentumLookback": 20
+        },
+        "status": "proposed",
+        "notes": "Isolated dependency-control fixture only: mandatory benchmark50. No activation, no strategy-performance claim.",
+        "proposedBy": "user",
+        "createdAt": "2026-10-25T20:24:32.514Z",
+        "activatedAt": null
+      },
+      "additionalAiCalls": 0
+    },
+    "selection": {
+      "provider": "moex_iss",
+      "policyId": "physical_session_v1",
+      "revisionCutoff": "2026-10-25T20:33:29.813Z",
+      "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+      "auditIds": {
+        "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+        "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+        "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+        "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+        "39e41989-9d75-462a-9e4e-71b406f752be": null,
+        "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+        "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+        "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+        "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+        "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+        "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+        "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+        "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+        "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+        "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+        "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+      }
+    },
+    "replay": {
+      "inputHashEqual": true,
+      "screenEqual": true
+    }
+  },
+  "requiredControlDisclosure": "Only in isolated DB: explicit proposed version10001 copies active Swing v1 and changes regimeSma to50 to test dependency enforcement. Never activated; no rules changed in main DB; not a performance comparison.",
+  "additionalMatrix": {
+    "database": "iis_research_benchmark_verify_20261025",
+    "finalCodeReplay": {
+      "inputHashEqual": true,
+      "screenEqual": true,
+      "dependencies": {
+        "benchmarkNeed": "optional_for_context",
+        "instrumentQuality": "research_usable_with_limits",
+        "benchmarkQuality": "blocked",
+        "benchmarkUnavailableReason": "IMOEX/2026-02-16:daily_intraday_mismatch:low; IMOEX/2026-06-11:daily_intraday_mismatch:high; IMOEX/2026-09-16:daily_intraday_mismatch:high; IMOEX/2026-10-05:daily_intraday_mismatch:low; IMOEX/2026-10-12:daily_intraday_mismatch:high; insufficient_required_window:IMOEX:205/210",
+        "signalEligibility": {
+          "status": "eligible",
+          "issues": []
+        },
+        "contextLimitations": [
+          "historical_availability_unknown:explicit_market_reconstruction",
+          "source_adjustment_policy_unknown:backtest_not_verified",
+          "benchmark_context_unavailable:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+          "benchmark_context_unavailable:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+          "benchmark_context_unavailable:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+          "benchmark_context_unavailable:insufficient_required_window:IMOEX:205/210"
+        ]
+      }
+    },
+    "badStock": {
+      "runId": "5776a72f-65bf-4cbb-98e6-1e325e60da1c",
+      "status": "blocked",
+      "aiCalls": 0,
+      "summary": {
+        "failures": [],
+        "candidates": 1,
+        "hypotheses": [],
+        "screenedOut": [],
+        "dependencyChecks": [
+          {
+            "symbol": "ROSN@MISX",
+            "strategy": "swing",
+            "benchmarkNeed": "optional_for_context",
+            "benchmarkQuality": "blocked",
+            "instrumentQuality": "data_quality_blocked",
+            "signalEligibility": {
+              "issues": [
+                "instrument:ROSN/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+                "instrument:insufficient_required_window:ROSN:209/210"
+              ],
+              "status": "blocked"
+            },
+            "contextLimitations": [
+              "ROSN/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+              "insufficient_required_window:ROSN:209/210",
+              "historical_availability_unknown:explicit_market_reconstruction",
+              "source_adjustment_policy_unknown:backtest_not_verified",
+              "benchmark_context_unavailable:IMOEX/2025-01-27:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:IMOEX/2025-01-29:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:IMOEX/2025-01-30:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:insufficient_required_window:IMOEX:207/210"
+            ],
+            "benchmarkUnavailableReason": "IMOEX/2025-01-27:daily_intraday_mismatch:open; IMOEX/2025-01-29:daily_intraday_mismatch:open; IMOEX/2025-01-30:daily_intraday_mismatch:open; insufficient_required_window:IMOEX:207/210"
+          }
+        ],
+        "blockedByDataQuality": [
+          {
+            "symbol": "ROSN@MISX",
+            "reasons": [
+              "data_quality_blocked: контракт дневных свечей или календаря не подтверждён; новый вывод не сформирован",
+              "Недостаточно истории котировок для расчёта индикаторов",
+              "instrument:ROSN/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+              "instrument:insufficient_required_window:ROSN:209/210",
+              "ROSN/2025-04-10:daily_intraday_mismatch:low,daily_intraday_mismatch:close,daily_intraday_mismatch:volume",
+              "insufficient_required_window:ROSN:209/210",
+              "historical_availability_unknown:explicit_market_reconstruction",
+              "source_adjustment_policy_unknown:backtest_not_verified",
+              "benchmark_context_unavailable:IMOEX/2025-01-27:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:IMOEX/2025-01-29:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:IMOEX/2025-01-30:daily_intraday_mismatch:open",
+              "benchmark_context_unavailable:insufficient_required_window:IMOEX:207/210"
+            ],
+            "strategy": "swing"
+          }
+        ]
+      }
+    },
+    "absoluteVsRelative": {
+      "label": "Separate deterministic reconstruction diagnostic, not original legacy outcome",
+      "ticker": "TATN",
+      "asOf": "2026-09-25T20:59:59.000Z",
+      "instrumentProvenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T20:28:02.223Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:29:43.943Z",
+        "inputHash": "40044282418b36be9f30c77fe180673eb8ca359f76e58eebfe92b9ed37238e0c",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:29:43.943Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        }
+      },
+      "benchmarkProvenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T20:28:02.223Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "21b8c56d-67ad-445f-add8-b965bc019275",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "61195f70-5a8c-4fb7-af78-940159536f56",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "5d6ae9d3-8c96-40f2-a55e-b911adda0a4c",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "22c89b4f-0e23-470e-806a-363556df8ce8",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "2827408a-e090-4098-9214-8b1aeaa855e3",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "b88edaf3-282d-47fa-9cca-b8b6f334f8d1",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "ca67d227-c06b-40db-b407-0a90fa5e4430",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:29:59.422Z",
+        "inputHash": "413d0efe1743e5f0300344f33ed5f2cf6097dfebfc81d19cd75498041c7a7241",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:29:59.422Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      },
+      "benchmarkQuality": "data_quality_blocked",
+      "outcome": {
+        "evaluationVersion": "scenario-decision-v3-nullable-benchmark",
+        "status": "evaluated",
+        "issues": [],
+        "scenarioEvaluation": {
+          "isCounterfactual": true,
+          "status": "evaluated",
+          "entered": true,
+          "entryAt": "2026-09-26T00:00:00.000Z",
+          "exitAt": "2026-10-05T00:00:00.000Z",
+          "entryPrice": 628.2,
+          "exitPrice": 638.4,
+          "exitReason": "time_exit",
+          "grossReturn": 0.01623686723973239,
+          "netReturn": 0.012736867239732389,
+          "benchmarkReturn": null,
+          "benchmarkStatus": "benchmark_unavailable",
+          "benchmarkUnavailableReason": "Benchmark observations are missing, incomplete or not comparable to the held session axis.",
+          "excessReturn": null,
+          "maxDrawdown": -0.013371537726838745,
+          "maxFavorable": 0.028971665074816855,
+          "outcome": "win",
+          "costs": {
+            "commission": 0.001,
+            "spread": 0.0005,
+            "slippage": 0.002,
+            "totalPct": 0.0035000000000000005
+          }
+        },
+        "decisionEvaluation": {
+          "recommendation": "no_trade",
+          "evidenceQuality": {
+            "semantics": "explicit",
+            "decisionVerdict": null,
+            "validationOk": true
+          },
+          "cashReturn": 0,
+          "benchmarkReturn": null,
+          "benchmarkNote": "IMOEX is an index, not an investable return; fees, tracking and dividends may differ.",
+          "avoidedLoss": 0,
+          "missedGain": 0.012736867239732389,
+          "conclusion": "Single counterfactual trade does not establish decision correctness or forecast accuracy."
+        }
+      },
+      "stats": {
+        "absoluteTradeStats": {
+          "n": 1,
+          "avgNetReturn": 0.012736867239732389
+        },
+        "benchmarkRelativeStats": {
+          "n": 0,
+          "status": "benchmark_unavailable",
+          "avgExcessReturn": null
+        },
+        "count": 1,
+        "traded": 1,
+        "n_abs": 1,
+        "n_relative": 0,
+        "benchmarkStatus": "benchmark_unavailable",
+        "winRate": 1,
+        "avgNetReturn": 0.012736867239732389,
+        "avgExcessReturn": null,
+        "worstDrawdown": -0.013371537726838745,
+        "profitFactor": null
+      }
+    },
+    "realOrders": 0
+  },
+  "paperProbe": "docs/market-data/paper-execution-probe-2026-10-25.json",
+  "paperMcpProbe": "docs/market-data/paper-execution-mcp-2026-10-25.json",
+  "setupDiscovery": "docs/market-data/research-setup-discovery-2026-10-25.json",
+  "selectionBias": "Positive case selected solely to exercise technical pipeline, not as independent evidence of profitable strategy.",
+  "originalPrimaryRecords": {
+    "candles": {
+      "count": 14131,
+      "hash": "a879d6b690918427ca7aca6c212762007b5914bffa80501cb6510db7fa446131",
+      "added": 0
+    },
+    "hypotheses": {
+      "count": 5,
+      "hash": "903578a7a2eb11b89d3e95af227634e6f2ca36a9a5265ec4cbd9bd945422f8f2",
+      "added": 1
+    },
+    "source_snapshots": {
+      "count": 43,
+      "hash": "8d284708aabd46998a6a613c1b7bd2af4f98b2d3e1cb5950f82a97e87ded330a",
+      "added": 2
+    },
+    "hypothesis_reviews": {
+      "count": 5,
+      "hash": "868dd349d206fee749259c183abec6ee21e46b40227e8882cf1542d23c9e887a",
+      "added": 1
+    },
+    "analysis_runs": {
+      "count": 2,
+      "hash": "7fcec48db38dc5a2a3b50a0566d2d632fb04ce58bb0c59f2f2ae67259e19b453",
+      "added": 1
+    },
+    "strategy_versions": {
+      "count": 2,
+      "hash": "e4a3ca8a00bc922d39f5dbd3a26ee8031f5f619d76450e617d364213e48441e3",
+      "added": 0
+    },
+    "orders": {
+      "count": 0,
+      "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "added": 0
+    },
+    "hypothesis_evaluation_revisions": {
+      "count": 0,
+      "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "added": 0
+    }
+  },
+  "backup": "tmp/pre-research-benchmark-20261025.dump;0600; no migrations needed",
+  "browser": {
+    "host": "http://localhost:3000",
+    "runId": "fd2af79c-cb65-4913-820f-6e27d42f69ec",
+    "hypothesisId": "7a873804-f4f1-458b-94db-7e9883050f5b",
+    "sourceSelectionHonestUnknown": true,
+    "sameResponseCountAndRows": true,
+    "benchmarkWarningVisible": true,
+    "paperNotReadyVisible": true,
+    "consoleErrors": 0,
+    "screenshots": [
+      "tmp/research-final-run.png",
+      "tmp/research-final-hypothesis.png",
+      "tmp/research-final-paper.png"
+    ]
+  },
+  "verification": {
+    "typecheck": "passed (existing nonfatal Volar warning)",
+    "worker": "passed",
+    "lint": "passed",
+    "tests": {
+      "files": 31,
+      "passed": 217
+    },
+    "build": "passed; generated entry discarded after mandatory secrets check; no production startup verification",
+    "diffCheck": "passed"
+  },
+  "secretsGate": {
+    "rule": "New user AGENTS.md pre-read deterministic sonar scanner",
+    "finding": "Generated build entry only; masked finding; value never viewed or logged by assistant",
+    "resolution": "Generated entry and temporary copy removed; source configuration unchanged. Rebuild before production start; running dev app was verified."
+  },
+  "billing": "Local Codex CLI calls; billing not measured. No direct API-key HTTP model provider requests.",
+  "limits": [
+    "MOEX historical publication and adjustment remain unknown; accepted prices are explicitly reconstructed research_usable_with_limits.",
+    "No observed execution source contract has been independently accepted; daily OHLCV can never grant real paper fills, even if research quality is verified.",
+    "Benchmark comparison requires exact complete held-session axis/policy. Missing comparisons are null with n_relative=0; actual0% remains numeric0 when proven.",
+    "Original reports/runs/hypotheses not reinterpreted. New evaluation version scenario-decision-v3-nullable-benchmark and backtest eligibility-clock audit distinguish corrected calculations."
+  ],
+  "startedDate": "2026-10-25",
+  "agentProvenance": {
+    "observedUiDefaultModel": "gpt-6.1-sol",
+    "rolePromptSha256": {
+      "market_researcher": "51e983c8d255d9e908c161fee5ed9342e821b9bda099c289ceb873862360b952",
+      "hypothesis_analyst": "b2c94ae2516e712fb47c5b35405b11e98f9e4591a0200c25c7d4e07b4b924bb4",
+      "hypothesis_critic": "98ea10d7937b152d660be14a86331d9ff4501f84d876033fca65ad090f587975"
+    },
+    "runtimeModelConfig": {
+      "NUXT_CODEX_MODEL": "inherits_configured_default",
+      "NUXT_CODEX_RESEARCHER_MODEL": "gpt-6-luna",
+      "NUXT_CODEX_ANALYST_MODEL": "gpt-6.1-sol",
+      "NUXT_CODEX_CRITIC_MODEL": "gpt-6-astra"
+    },
+    "analystVersion": "decision-v3-benchmark-dependencies",
+    "note": "Role files unchanged during acceptance; CLI output itself is nondeterministic. Runtime model metadata captured without reading/exporting credential fields."
+  }
+}

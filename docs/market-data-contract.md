@@ -155,3 +155,36 @@ The two calls completed without HTTP/rate errors; that is an observation, not a 
 of future availability. No paid model calls were made by these probes. End-to-end runs,
 DB migration preservation and user-visible acceptance are tracked separately in
 `docs/market-data/acceptance.json`.
+
+
+## Research/benchmark/paper correction (25 October 2026)
+
+Benchmark necessity is defined by pinned rules in `benchmarkNeed`: regimeSma>0 is required,
+otherwise optional context. `loadSignalInputs` is shared by research and instrument screening.
+Instrument/benchmark quality, signal eligibility and context limitations are separate dimensions.
+A quarantined optional index never invalidates a good instrument; a required index must cover
+its exact complete session axis. An instrument quarantine or unassignable corrupted period
+cannot be dropped to obtain "the last210good bars". Eligible pending periods also block.
+
+Absolute and relative samples are distinct: n_abs/n_relative, absoluteTradeStats and
+benchmarkRelativeStats. Missing benchmark boundaries/interior dates, duplicate periods or
+mixed policies produce null, never0. Genuine calculated0 remains0. The index remains a
+non-investable reference; dividend, tracking and execution costs are not silently comparable.
+Optional relative-data gaps do not fail the absolute-history long gate; reconstruction and
+mandatory financial/critic/risk gates remain unchanged.
+
+Physical backtests use each signal window's earliestUseAt, and may enter only a whole physical
+session starting after eligibility. Index observations obey their own eligibility clock. The
+IS boundary excludes OHLC only available in OOS. Audit trades retain signalBarAt,
+signalEligibleAt and entrySessionStartsAt; previous results are not rewritten.
+
+Real paper is not ready. A separate observed execution contract must prove after-confirmation
+bid/ask, source timestamps/availability, maxAge, board and an open session. A caller's verified
+flag and even a verified daily research bar cannot certify that contract. Mock remains explicitly
+synthetic replay. Read-only Finam/MOEX probes on25October found stale23October quotes, absent
+bid/ask and MOEX TRADINGSTATUS=N. Request latency is not proof of feed latency or availability.
+
+Dated evidence: [research/paper acceptance](market-data/research-benchmark-paper-acceptance-2026-10-26.json),
+[discovery](market-data/research-setup-discovery-2026-10-25.json),
+[execution probe](market-data/paper-execution-probe-2026-10-25.json).
+The earlier acceptance.json remains a historical record, not the current completion verdict.

@@ -1,4 +1,5 @@
 import type { Candle, CostModel, EntryScenario, EvaluationCosts, ExitScenario } from '../../../shared/types/investment'
+import { benchmarkWindowIssues } from '../market/dependencies'
 
 export interface OutcomeInput {
   /** Candles strictly after the evidence timestamp, chronological. */
@@ -19,8 +20,9 @@ export interface OutcomeResult {
   exitReason: 'stop_loss' | 'take_profit' | 'time_exit' | 'not_entered' | 'pending'
   grossReturn: number
   netReturn: number
-  benchmarkReturn: number
-  excessReturn: number
+  benchmarkReturn: number | null
+  excessReturn: number | null
+  benchmarkStatus: 'available' | 'benchmark_unavailable'
   maxDrawdown: number
   maxFavorable: number
   outcome: 'win' | 'loss' | 'flat' | 'no_entry'
@@ -51,8 +53,9 @@ export function simulateOutcome({ future, benchmarkFuture, entry, exit, costs }:
     exitReason: 'pending',
     grossReturn: 0,
     netReturn: 0,
-    benchmarkReturn: 0,
-    excessReturn: 0,
+    benchmarkReturn: null,
+    excessReturn: null,
+    benchmarkStatus: 'benchmark_unavailable',
     maxDrawdown: 0,
     maxFavorable: 0,
     outcome: 'no_entry',
@@ -135,7 +138,7 @@ export function simulateOutcome({ future, benchmarkFuture, entry, exit, costs }:
   }
   const grossReturn = exitPrice / entryPrice - 1
   const netReturn = grossReturn - totalCostPct
-  const benchmarkReturn = periodReturn(benchmarkFuture, future[entryIndex]!.ts, future[exitIndex]!.ts)
+  const benchmarkReturn = periodReturn(benchmarkFuture, future[entryIndex]!.ts, future[exitIndex]!.ts, future.slice(entryIndex, exitIndex + 1))
   return {
     complete: true,
     entered: true,
@@ -147,7 +150,8 @@ export function simulateOutcome({ future, benchmarkFuture, entry, exit, costs }:
     grossReturn,
     netReturn,
     benchmarkReturn,
-    excessReturn: netReturn - benchmarkReturn,
+    excessReturn: benchmarkReturn === null ? null : netReturn - benchmarkReturn,
+    benchmarkStatus: benchmarkReturn === null ? 'benchmark_unavailable' : 'available',
     maxDrawdown: worst,
     maxFavorable: best,
     outcome: netReturn > FLAT_BAND ? 'win' : netReturn < -FLAT_BAND ? 'loss' : 'flat',
@@ -155,41 +159,67 @@ export function simulateOutcome({ future, benchmarkFuture, entry, exit, costs }:
   }
 }
 
-/** Open of the entry day to close of the exit day. */
-export function periodReturn(candles: Candle[], fromTs: string, toTs: string) {
-  const from = candles.find(c => c.ts >= fromTs)
-  const to = [...candles].reverse().find(c => c.ts <= toTs)
-  if (!from || !to) {
-    return 0
+/** Exact open-to-close comparison on the entire held axis. Missing observations are not 0% returns. */
+export function periodReturn(candles: readonly Candle[], fromTs: string, toTs: string, referenceAxis: readonly Candle[]): number | null {
+  if (!Number.isFinite(Date.parse(fromTs)) || !Number.isFinite(Date.parse(toTs)) || fromTs > toTs) {
+    return null
   }
-  return to.close / from.open - 1
+  const axis = referenceAxis.filter(bar => bar.ts >= fromTs && bar.ts <= toTs)
+  const rows = candles.filter(bar => bar.ts >= fromTs && bar.ts <= toTs)
+  if (!axis.length || rows.length !== axis.length || axis[0]!.ts !== fromTs || axis.at(-1)!.ts !== toTs) {
+    return null
+  }
+  if (benchmarkWindowIssues(axis, rows, axis.length).length) {
+    return null
+  }
+  if (rows.some(benchmark => ![benchmark.open, benchmark.high, benchmark.low, benchmark.close].every(value => Number.isFinite(value) && value > 0)
+    || benchmark.low > Math.min(benchmark.open, benchmark.close) || benchmark.high < Math.max(benchmark.open, benchmark.close))) {
+    return null
+  }
+  return rows.at(-1)!.close / rows[0]!.open - 1
 }
 
 export interface StatsRow {
   netReturn: number
-  excessReturn: number
+  excessReturn: number | null
   maxDrawdown: number
   outcome: string
 }
 
 export function aggregateStats(rows: StatsRow[]) {
   const traded = rows.filter(r => r.outcome !== 'no_entry')
+  const relative = traded.filter((row): row is StatsRow & { excessReturn: number } => row.excessReturn !== null && Number.isFinite(row.excessReturn))
   const wins = traded.filter(r => r.outcome === 'win').length
   const avg = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
   const grossWins = traded.filter(r => r.netReturn > 0).reduce((s, r) => s + r.netReturn, 0)
   const grossLosses = -traded.filter(r => r.netReturn < 0).reduce((s, r) => s + r.netReturn, 0)
+  const relativeStatus = !relative.length ? 'benchmark_unavailable' as const : relative.length === traded.length ? 'available' as const : 'partial' as const
+  const absoluteTradeStats = {
+    n: traded.length,
+    avgNetReturn: traded.length ? avg(traded.map(r => r.netReturn)) : null,
+  }
+  const benchmarkRelativeStats = {
+    n: relative.length,
+    status: relativeStatus,
+    avgExcessReturn: relative.length ? avg(relative.map(r => r.excessReturn)) : null,
+  }
   return {
+    absoluteTradeStats,
+    benchmarkRelativeStats,
     count: rows.length,
     traded: traded.length,
+    n_abs: traded.length,
+    n_relative: relative.length,
+    benchmarkStatus: relativeStatus,
     winRate: traded.length ? wins / traded.length : 0,
     avgNetReturn: avg(traded.map(r => r.netReturn)),
-    avgExcessReturn: avg(traded.map(r => r.excessReturn)),
+    avgExcessReturn: relative.length ? avg(relative.map(r => r.excessReturn)) : null,
     worstDrawdown: traded.length ? Math.min(...traded.map(r => r.maxDrawdown)) : 0,
     profitFactor: grossLosses > 0 ? grossWins / grossLosses : grossWins > 0 ? Infinity : 0,
   }
 }
 
-export const EVALUATION_VERSION = 'scenario-decision-v2'
+export const EVALUATION_VERSION = 'scenario-decision-v3-nullable-benchmark'
 export type EvaluationStatus = 'not_entered' | 'missing_future_data' | 'ambiguous_session' | 'incomplete_horizon' | 'evaluated'
 
 export interface ScenarioDecisionInput extends OutcomeInput {
@@ -218,9 +248,7 @@ export function evaluateScenarioDecision(input: ScenarioDecisionInput) {
     status = outcome.entered ? 'evaluated' : 'not_entered'
   }
   const hasReturn = status === 'evaluated' && outcome !== null
-  const benchmarkAvailable = hasReturn && outcome.entryAt !== null && outcome.exitAt !== null
-    && input.benchmarkFuture.some(c => c.ts === outcome.entryAt)
-    && input.benchmarkFuture.some(c => c.ts === outcome.exitAt)
+  const benchmarkAvailable = hasReturn && outcome.benchmarkReturn !== null
   return {
     evaluationVersion: EVALUATION_VERSION,
     status,
@@ -237,6 +265,8 @@ export function evaluateScenarioDecision(input: ScenarioDecisionInput) {
       grossReturn: hasReturn ? outcome.grossReturn : null,
       netReturn: hasReturn ? outcome.netReturn : null,
       benchmarkReturn: benchmarkAvailable ? outcome.benchmarkReturn : null,
+      benchmarkStatus: benchmarkAvailable ? 'available' as const : 'benchmark_unavailable' as const,
+      benchmarkUnavailableReason: benchmarkAvailable ? null : 'Benchmark observations are missing, incomplete or not comparable to the held session axis.',
       excessReturn: benchmarkAvailable ? outcome.excessReturn : null,
       maxDrawdown: hasReturn ? outcome.maxDrawdown : null,
       maxFavorable: hasReturn ? outcome.maxFavorable : null,

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { db, schema } from '@nuxthub/db'
-import { and, desc, eq, gte, inArray, lte } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { analystOutputSchema, criticOutputSchema, researchOutputSchema, type AnalystOutput, type StartRunInput } from '../../shared/schemas/investment'
 import { DEFAULT_MIN_REWARD_RISK, type EntryScenario, type ExitScenario, type HypothesisStatus, type RunLogEntry, type SourceRef, type StrategyId, type StrategyRules } from '../../shared/types/investment'
 import { redactForCritic, type CriticClaims, type EvidencePacket, type TrackStats } from '../ai/contracts'
@@ -9,11 +9,12 @@ import { balanceByOutcome, dedupeEvents, retrospectiveRef } from '../domain/memo
 import { addTradingDays, startOfUtcDay, calendarVersion } from '../domain/market/calendar'
 import { researchSessionClock } from '../domain/market/physical-session-clock'
 import { scenarioDeadline } from '../domain/market/scenario-deadline'
+import { loadSignalInputs } from './signal-inputs'
 import { computeMetrics } from '../domain/market/indicators'
 import { gateStatus } from '../domain/hypotheses/state'
 import { validateHypothesis, validateCriticOutput } from '../domain/hypotheses/validation'
 import { STRATEGY_INFO, evaluateSignal } from '../domain/strategies/rules'
-import { benchmarkInstrument, getInstrument, loadResearchBars, researchBarSelection, freezeResearchSelection, syncResearchBars, syncFundamentals } from './market'
+import { benchmarkInstrument, getInstrument, researchBarSelection, freezeResearchSelection, syncResearchBars, syncFundamentals } from './market'
 import { searchMemory, upsertDocument } from './memory'
 import { trackRecord } from './evaluations'
 import { getCostModel } from './settings'
@@ -22,7 +23,7 @@ import { withSourceLease } from './source-lock'
 import { loadEvidenceContext } from './evidence-packet'
 
 const MAX_STALE_DAYS = 5
-const ANALYST_VERSION = 'decision-v2'
+const ANALYST_VERSION = 'decision-v3-benchmark-dependencies'
 const CONCURRENCY = 2
 
 export async function startRun(userId: string, input: StartRunInput) {
@@ -51,7 +52,12 @@ export async function startRun(userId: string, input: StartRunInput) {
   if (researchSelection.provider === 'moex_iss') {
     const benchmark = await benchmarkInstrument()
     for (const id of [...new Set([...input.instrumentIds, ...(benchmark ? [benchmark.id] : [])])]) {
-      await syncResearchBars(id, researchSelection)
+      try {
+        await syncResearchBars(id, researchSelection)
+      } catch {
+        // A failed source leaves an audited missing revision; mandatory dependencies decide the gate.
+        console.warn('[FIX:research-dependencies] source sync unavailable', id)
+      }
     }
     researchSelection = {
       ...researchSelection,
@@ -108,6 +114,10 @@ export async function executeRun(runId: string) {
     startedAt: new Date(),
   }).where(eq(schema.analysisRuns.id, runId))
   const summary = {
+    dependencyChecks: [] as ({
+      symbol: string
+      strategy: string
+    } & import('../../shared/types/market-data').SignalDependencyQuality)[],
     candidates: 0,
     blockedByDataQuality: [] as {
       symbol: string
@@ -154,6 +164,13 @@ export async function executeRun(runId: string) {
         const task = tasks[cursor++]!
         try {
           const result = await analyseCandidate(run, task.instrumentId, task.strategy, benchmark?.id ?? null, logger)
+          if (result.dependencies) {
+            summary.dependencyChecks.push({
+              symbol: result.entry.symbol,
+              strategy: task.strategy,
+              ...result.dependencies,
+            })
+          }
           if (result.kind === 'blocked') {
             summary.blockedByDataQuality.push(result.entry)
           } else if (result.kind === 'screened') {
@@ -215,39 +232,28 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
     inputSetVersion: `${provider}-legacy-input-v1`,
     revisionCutoff: run.asOf.toISOString(),
   }
-  const requiredBars = Math.max(210, version.rules.slowSma, version.rules.trendSma, version.rules.momentumLookback + 1, version.rules.breakoutLookback + 1, version.rules.regimeSma ?? 0)
-  const research = await loadResearchBars({
+  const { research, benchmarkResearch, dependencies, benchmarkCandles } = await loadSignalInputs({
     instrumentId,
+    benchmarkId,
+    rules: version.rules,
     asOf: run.asOf,
-    purpose: 'signal',
-    limit: selection.policyId === 'physical_session_v1' ? requiredBars : 400,
     selection,
   })
-  const benchmarkResearch = benchmarkId
-    ? await loadResearchBars({
-        instrumentId: benchmarkId,
-        asOf: run.asOf,
-        purpose: 'signal',
-        limit: selection.policyId === 'physical_session_v1' ? requiredBars : 300,
-        selection,
-      })
-    : null
   const quality = research.quality
   const candles = research.bars
-  const benchmarkCandles = benchmarkResearch?.bars ?? []
   const physical = selection.policyId === 'physical_session_v1'
   const age = physical ? researchSessionClock(candles, research.provenance, run.asOf).stale(candles.at(-1)?.earliestUseAt) : null
   if (physical) {
     research.provenance.confirmedSessionAge = age?.status === 'known' ? age.sessions : null
   }
   const dataQuality = {
-    status: quality.status === 'data_quality_blocked' || !benchmarkResearch || benchmarkResearch.quality.status === 'data_quality_blocked' ? 'data_quality_blocked' : physical ? 'research_usable_with_limits' : 'verified',
-    issues: [...quality.issues, ...(benchmarkResearch?.quality.issues.map(issue => `benchmark:${issue}`) ?? ['benchmark_missing'])].slice(0, 30),
+    status: dependencies.signalEligibility.status === 'blocked' ? 'data_quality_blocked' : physical || dependencies.benchmarkUnavailableReason ? 'research_usable_with_limits' : quality.status,
+    issues: [...dependencies.signalEligibility.issues, ...dependencies.contextLimitations].slice(0, 30),
     calendarVersion: physical ? quality.calendarVersion : calendarVersion(calendar),
     normalizationVersion: quality.normalizationVersion,
   }
   const benchmarkMetrics = computeMetrics(benchmarkCandles)
-  const signal = evaluateSignal(strategy, version.rules, candles, benchmarkCandles)
+  const signal = evaluateSignal(strategy, version.rules, dependencies.signalEligibility.status === 'eligible' ? candles : [], benchmarkCandles)
   const windowStart = new Date(run.asOf.getTime() - 90 * 86_400_000)
   const rawEvents = await db.select().from(schema.marketEvents).where(and(eq(schema.marketEvents.instrumentId, instrumentId), lte(schema.marketEvents.publishedAt, run.asOf), lte(schema.marketEvents.retrievedAt, run.asOf), gte(schema.marketEvents.publishedAt, windowStart))).orderBy(desc(schema.marketEvents.publishedAt)).limit(40)
   const events = dedupeEvents(rawEvents).slice(0, 10)
@@ -434,6 +440,7 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   }
   const packet: EvidencePacket = {
     ...context,
+    dependencies,
     marketData: research.provenance,
     benchmarkData: benchmarkResearch?.provenance,
     backtestQuality: record.dataQuality,
@@ -461,6 +468,10 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
     signal: signalRest,
     metrics: roundMetrics(metrics),
     benchmark: {
+      need: dependencies.benchmarkNeed,
+      status: dependencies.benchmarkQuality,
+      unavailableReason: dependencies.benchmarkUnavailableReason,
+      usage: dependencies.benchmarkUnavailableReason ? 'Индексный контекст недоступен; нельзя ссылаться на momentum/SMA/превосходство над IMOEX. Абсолютный сигнал акции имеет отдельное качество.' : 'IMOEX — индекс, не исполнимая доходность фонда; отдельные издержки и дивиденды не учтены.',
       symbol: marketProvider().benchmarkSymbol,
       momentum20: benchmarkMetrics.momentum20,
       momentum60: benchmarkMetrics.momentum60,
@@ -474,6 +485,7 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
         inputSeriesHash: record.audit.inputSeriesHash,
       },
       validity: record.dataQuality.status,
+      statsValidity: record.dataQuality.status,
       universe: new Set(usableTrades.map(t => t.symbol)).size,
       all: trackStats(usableTrades),
       sameSetup: trackStats(sameSetup),
@@ -541,7 +553,7 @@ function activeRuleSet(strategy: StrategyId, rules: StrategyRules): StrategyRule
 
 function trackStats(trades: {
   netReturn: number
-  excessReturn: number
+  excessReturn: number | null
   maxDrawdown: number
   outcome: string
   exitReason: string
@@ -553,7 +565,10 @@ function trackStats(trades: {
     trades: stats.traded,
     winRate: r(stats.winRate),
     avgNetReturn: r(stats.avgNetReturn),
-    avgExcessReturn: r(stats.avgExcessReturn),
+    avgExcessReturn: stats.avgExcessReturn === null ? null : r(stats.avgExcessReturn),
+    n_abs: stats.n_abs,
+    n_relative: stats.n_relative,
+    benchmarkStatus: stats.benchmarkStatus,
     profitFactor: Number.isFinite(stats.profitFactor) ? r(stats.profitFactor) : null,
     worstDrawdown: r(stats.worstDrawdown),
     exits: {
@@ -587,6 +602,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
     await logger.log('info', `${label}: ${packet.dataQuality?.status ?? 'screened'} — ${[...signal.failures, ...(packet.dataQuality?.issues ?? [])].join('; ')}`)
     return {
       kind: packet.dataQuality?.status === 'data_quality_blocked' || !packet.marketScenario ? 'blocked' as const : 'screened' as const,
+      dependencies: packet.dependencies,
       entry: {
         symbol: instrument.symbol,
         strategy,
@@ -628,7 +644,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
       asOf: run.asOf,
     },
     confirmedSessionAge: packet.marketData?.barPolicy === 'physical_session_v1' ? packet.marketData.confirmedSessionAge ?? Infinity : undefined,
-    backtestVerified: packet.backtestQuality?.status === 'verified',
+    absoluteHistoryVerified: packet.dependencies ? packet.dependencies.instrumentQuality === 'verified' : packet.backtestQuality?.status === 'verified',
     coverage: packet.evidenceCoverage,
     lastCandleTs,
     asOf: run.asOf,
@@ -653,6 +669,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
   const status = await runCritic(hypothesis.id, logger, run.criticProvider)
   return {
     kind: 'hypothesis' as const,
+    dependencies: packet.dependencies,
     entry: {
       id: hypothesis.id,
       symbol: instrument.symbol,
@@ -921,6 +938,14 @@ export async function getRun(id: string) {
     criticVerdict: schema.hypotheses.criticVerdict,
     symbol: schema.instruments.symbol,
     name: schema.instruments.name,
+    semanticVersion: schema.hypotheses.semanticVersion,
+    recommendation: schema.hypotheses.recommendation,
+    decisionThesis: schema.hypotheses.decisionThesis,
+    decisionConfidence: schema.hypotheses.decisionConfidence,
+    verdictTarget: schema.hypotheses.verdictTarget,
+    createdAt: schema.hypotheses.createdAt,
+    entry: schema.hypotheses.entryScenario,
+    exit: schema.hypotheses.exitScenario,
   }).from(schema.hypotheses).innerJoin(schema.instruments, eq(schema.instruments.id, schema.hypotheses.instrumentId)).where(eq(schema.hypotheses.runId, id))
   const instruments = run.instrumentIds.length
     ? await db.select({
@@ -928,8 +953,18 @@ export async function getRun(id: string) {
         symbol: schema.instruments.symbol,
       }).from(schema.instruments).where(inArray(schema.instruments.id, run.instrumentIds))
     : []
+  const dependencyChecks = await db.select({
+    instrumentId: schema.sourceSnapshots.instrumentId,
+    strategy: sql<string>`${schema.sourceSnapshots.payload}->'strategy'->>'id'`,
+    dependencies: sql<import('../../shared/types/market-data').SignalDependencyQuality | null>`${schema.sourceSnapshots.payload}->'dependencies'`,
+  }).from(schema.sourceSnapshots).where(and(eq(schema.sourceSnapshots.runId, id), eq(schema.sourceSnapshots.kind, 'evidence_packet')))
   return {
     ...run,
+    dependencyChecks: dependencyChecks.filter(row => row.dependencies).map(row => ({
+      symbol: instruments.find(i => i.id === row.instrumentId)?.symbol ?? row.instrumentId ?? '',
+      strategy: row.strategy,
+      ...row.dependencies!,
+    })),
     hypotheses,
     instruments,
   }

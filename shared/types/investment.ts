@@ -129,6 +129,8 @@ export interface RiskCheckResult {
     selection?: import('./market-data').ResearchBarSelection
     provenance: import('./market-data').ResearchProvenance | null
     status: string
+    executionReadiness?: 'not_ready_for_paper_execution' | 'mock_replay_only'
+    executionModel?: string
     issues: string[]
     assessedAt: string
   }

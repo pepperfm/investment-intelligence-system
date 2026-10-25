@@ -1,4 +1,5 @@
 import { DEFAULT_MIN_REWARD_RISK, type Candle, type StrategyId, type StrategyRules } from '../../../shared/types/investment'
+import { benchmarkNeed, benchmarkWindowIssues } from '../market/dependencies'
 import { computeMetrics, type MarketMetrics } from '../market/indicators'
 
 export const DEFAULT_RULES: Record<StrategyId, StrategyRules> = {
@@ -102,12 +103,15 @@ export function evaluateSignal(strategy: StrategyId, rules: StrategyRules, candl
       metrics,
     }
   }
-  if (rules.regimeSma) {
+  if (benchmarkNeed(rules) === 'required_for_signal') {
     // Point-in-time: never look at index bars after the instrument's last bar.
     const lastTs = candles.at(-1)!.ts
     const index = benchmark.filter(c => c.ts <= lastTs).map(c => c.close)
-    const regime = smaOf(index, rules.regimeSma)
-    if (regime === null) {
+    const regime = smaOf(index, rules.regimeSma!)
+    const dependencyIssues = benchmarkWindowIssues(candles, benchmark, rules.regimeSma!)
+    if (dependencyIssues.length) {
+      failures.push(`Нет данных индекса на полной сопоставимой оси фильтра режима: ${dependencyIssues.join('; ')}`)
+    } else if (regime === null) {
       failures.push(`Нет данных индекса для фильтра режима (нужно ${rules.regimeSma} дн.)`)
     } else if (index.at(-1)! <= regime) {
       failures.push(`Рыночный режим: индекс ${fmt(index.at(-1))} не выше SMA${rules.regimeSma} ${fmt(regime)}`)

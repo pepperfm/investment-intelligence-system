@@ -38,3 +38,15 @@ export interface ResearchQuality {
   contractVersion: string | null
   completedBars: Candle[]
 }
+
+export interface SignalDependencyQuality {
+  benchmarkNeed: 'required_for_signal' | 'optional_for_context'
+  instrumentQuality: ResearchQuality['status']
+  benchmarkQuality: ResearchQuality['status'] | 'missing' | 'blocked' | 'not_requested'
+  benchmarkUnavailableReason: string | null
+  signalEligibility: {
+    status: 'eligible' | 'blocked'
+    issues: string[]
+  }
+  contextLimitations: string[]
+}

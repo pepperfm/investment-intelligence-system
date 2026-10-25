@@ -190,3 +190,12 @@ describe('evaluation future observations get fresh exact audit pins', () => {
     expect(state.calls.every(call => call.selection.auditIds === future.auditIds)).toBe(true)
   })
 })
+
+// Missing optional comparative data never invalidates verified absolute input history.
+it('separates absolute input verification from a missing optional benchmark', async () => {
+  state.unusable.add('IMOEX')
+  const result = await backtestUniverse(new Date('2026-10-25T00:00:00Z'))
+  expect(result.dataQuality.absoluteInputVerified).toBe(true)
+  expect(result.dataQuality.benchmarkRelativeVerified).toBe(false)
+  expect(result.dataQuality.status).toBe('research_usable_with_limits')
+})

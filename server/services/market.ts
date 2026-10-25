@@ -4,6 +4,7 @@ import { and, asc, desc, eq, gt, gte, lte } from 'drizzle-orm'
 import type { Candle } from '../../shared/types/investment'
 import { MoexIssResearchProvider } from '../adapters/market/moex-iss'
 import { PHYSICAL_POLICY_VERSION, marketHash } from '../domain/market/source-policy'
+import { selectResearchWindow } from '../domain/market/research-window'
 import { inspectBarQuality } from '../domain/market/bar-quality'
 import { upsertDocument } from './memory'
 
@@ -462,14 +463,13 @@ export async function loadResearchBars(options: {
     }
     const rows = await db.select().from(schema.normalizedMarketBars).where(eq(schema.normalizedMarketBars.auditId, audit.id))
     const byDate = new Map(rows.map(r => [r.sessionDate, r]))
-    selected = audit.payload.assessments.filter(a => Date.parse(`${a.date}T00:00:00+03:00`) + 2 * 86_400_000 <= options.asOf.getTime() && (!options.from || a.date >= options.from.toISOString().slice(0, 10)) && (!options.after || a.date > options.after.toISOString().slice(0, 10)))
-    if (options.limit) {
-      selected = options.after ? selected.slice(0, options.limit) : selected.slice(-options.limit)
-    }
+    const window = selectResearchWindow(audit.payload.assessments, options)
+    selected = window.selected
+    issues.push(...window.issues)
     for (const assessment of selected) {
       const row = byDate.get(assessment.date)
-      if (assessment.status === 'quarantined' || !row || marketHash(row.candle) !== marketHash(assessment.candle)) {
-        issues.push(`${instrument.ticker}/${assessment.date}:${assessment.issues.join(',') || 'normalized_revision_hash_mismatch'}`)
+      if (assessment.status !== 'research_usable_with_limits' || !row || marketHash(row.candle) !== marketHash(assessment.candle)) {
+        issues.push(`${instrument.ticker}/${assessment.date}:${assessment.issues.join(',') || (assessment.status === 'pending_confirmation' ? 'pending_confirmation' : 'normalized_revision_hash_mismatch')}`)
       }
     }
     const requiredFrom = options.from?.toISOString().slice(0, 10)

@@ -8,6 +8,8 @@ import { staleDays, type CalendarOptions } from '../market/calendar'
 export interface ValidationInput {
   calendar?: CalendarOptions
   confirmedSessionAge?: number
+  /** Absolute instrument history only; optional comparisons are not mandatory evidence. */
+  absoluteHistoryVerified?: boolean
   backtestVerified?: boolean
   strategy?: string
   coverage?: EvidenceCoverage
@@ -48,8 +50,8 @@ export function validateHypothesis(input: ValidationInput) {
     issues.push(`Утверждений без источников: ${uncited}`)
   }
   if (input.draft.direction === 'long') {
-    if (input.backtestVerified === false) {
-      issues.push('История/корректировки не подтверждены для long; реконструкция не разрешает покупку')
+    if ((input.absoluteHistoryVerified ?? input.backtestVerified) === false) {
+      issues.push('Абсолютная история/корректировки акции не подтверждены для long; реконструкция не разрешает покупку')
     }
     if (input.strategy === 'position' && (!input.coverage?.issuerFundamentals || !input.coverage.macro)) {
       issues.push('Position: недостаточно проверенной отчётности или макроконтекста для фундаментальной гипотезы')

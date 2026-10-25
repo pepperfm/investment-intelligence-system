@@ -138,6 +138,13 @@ useHead({ title: 'Paper-портфель · IIS' })
     </template>
     <template #body>
       <UAlert
+        v-if="data?.executionReadiness && !data.executionReadiness.ready"
+        color="warning"
+        title="Paper-исполнение не готово"
+        :description="`Нет подтверждённого observed execution source: ${data.executionReadiness.issues.join('; ')}. Дневные исследовательские свечи и историческая реконструкция не исполняют заявки.`"
+        class="mb-4"
+      />
+      <UAlert
         v-if="data?.dataQualityIssues.length"
         color="warning"
         title="Часть цен портфеля не подтверждена"

@@ -129,6 +129,12 @@ const gapLabels: Record<string, string> = {
         </p>
       </div>
     </div>
+    <UAlert
+      v-if="h.audit?.dependencies?.benchmarkUnavailableReason"
+      color="warning"
+      :title="h.audit.dependencies.benchmarkNeed === 'required_for_signal' ? 'Обязательный IMOEX недоступен' : 'Необязательный IMOEX недоступен'"
+      :description="`Качество акции: ${h.audit.dependencies.instrumentQuality}. Индексные momentum/SMA и сравнительная доходность не рассчитаны: ${h.audit.dependencies.benchmarkUnavailableReason}`"
+    />
     <dl class="grid gap-2 text-xs text-muted sm:grid-cols-2">
       <div><dt>Данные на · МСК</dt><dd>{{ moscowTime(h.evidenceTimestamp) }}</dd></div>
       <div><dt>Создана · МСК</dt><dd>{{ moscowTime(h.createdAt) }}</dd></div>

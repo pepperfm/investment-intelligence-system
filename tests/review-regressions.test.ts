@@ -13,6 +13,7 @@ const store = vi.hoisted(() => ({
   locks: [] as string[],
   provider: 'mock' as 'mock' | 'finam',
   barsVerified: false,
+  blockResearch: false,
   nextBarAt: '2026-10-21T00:00:00Z',
 }))
 
@@ -175,7 +176,7 @@ vi.mock('@nuxthub/db', async () => {
 
 vi.mock('../server/services/market', () => ({
   loadResearchBars: async (options: { after?: Date }) => {
-    const ready = store.provider === 'mock' || store.barsVerified
+    const ready = !store.blockResearch && (store.provider === 'mock' || store.barsVerified)
     const bars = options.after
       ? [{
           ts: store.nextBarAt,
@@ -255,6 +256,7 @@ beforeEach(() => {
   store.locks = []
   store.provider = 'mock'
   store.barsVerified = false
+  store.blockResearch = false
   store.nextBarAt = '2026-10-21T00:00:00Z'
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-10-20T12:00:00Z'))
@@ -404,6 +406,41 @@ describe('review regressions', () => {
     expect(String(store.rows.orders[0]!.rejectReason)).toContain('data_quality_blocked')
     expect(store.rows.executions).toHaveLength(0)
   })
+  it('never executes real tickets from daily OHLC even if research quality is marked verified', async () => {
+    account()
+    store.provider = 'finam'
+    store.barsVerified = true
+    vi.setSystemTime(new Date('2026-10-22T12:00:00Z'))
+    store.rows.orders = [order('verified-daily-not-executable', {
+      side: 'buy',
+      quantity: 10,
+      hypothesisId: 'approved-h',
+      riskCheck: {
+        paperData: {
+          selection: {
+            provider: 'finam',
+            policyId: 'legacy_daily',
+            revisionCutoff: new Date().toISOString(),
+            inputSetVersion: 'test',
+          },
+        },
+      },
+    })]
+    const cash = store.rows.accounts[0]!.cash
+    expect((await processWorkingOrders()).filled).toBe(0)
+    expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
+    expect(String(store.rows.orders[0]!.rejectReason)).toContain('not_ready_for_paper_execution')
+    expect(store.rows.accounts[0]!.cash).toBe(cash)
+    expect(store.rows.executions).toHaveLength(0)
+    const originalConfirmedAt = store.rows.orders[0]!.confirmedAt
+    await confirmOrder('verified-daily-not-executable')
+    await confirmOrder('verified-daily-not-executable')
+    await Promise.all([processWorkingOrders(), processWorkingOrders()])
+    expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
+    expect(store.rows.orders[0]!.confirmedAt).toEqual(originalConfirmedAt)
+    expect(store.rows.accounts[0]!.cash).toBe(cash)
+    expect(store.rows.executions).toHaveLength(0)
+  })
   it('creates a durable suspended ticket when data is unavailable without filling or closing it', async () => {
     account()
     store.provider = 'finam'
@@ -444,9 +481,9 @@ describe('review regressions', () => {
     expect(result.closedAt).toBeNull()
     expect(store.rows.executions).toHaveLength(0)
   })
-  it('requires manual reconfirmation after data recovery and never fills an old bar', async () => {
+  it('mock replay fixture: requires manual reconfirmation and never fills an old bar', async () => {
     account()
-    store.provider = 'finam'
+    store.blockResearch = true
     store.rows.orders = [order('suspended', {
       side: 'buy',
       quantity: 10,
@@ -454,7 +491,7 @@ describe('review regressions', () => {
     })]
     await processWorkingOrders()
     expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
-    store.barsVerified = true
+    store.blockResearch = false
     vi.setSystemTime(new Date('2026-10-22T12:00:00Z'))
     await processWorkingOrders()
     expect(store.rows.executions).toHaveLength(0)
@@ -470,6 +507,15 @@ describe('review regressions', () => {
     expect((await processWorkingOrders()).filled).toBe(1)
     expect((await processWorkingOrders()).filled).toBe(0)
     expect(store.rows.executions).toHaveLength(1)
+    expect((store.rows.orders[0]!.riskCheck as {
+      paperData: {
+        executionModel: string
+        executionReadiness: string
+      }
+    }).paperData).toMatchObject({
+      executionModel: 'mock_daily_replay_v1',
+      executionReadiness: 'mock_replay_only',
+    })
   })
   it('rechecks the critic when a suspended ticket is manually restored', async () => {
     account()

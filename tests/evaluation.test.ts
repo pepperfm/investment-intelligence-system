@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aggregateStats, simulateOutcome } from '../server/domain/evaluations/outcome'
+import { aggregateStats, simulateOutcome, periodReturn } from '../server/domain/evaluations/outcome'
 import type { Candle } from '../shared/types/investment'
 
 const NO_COSTS = {
@@ -222,5 +222,130 @@ describe('backtest point-in-time', async () => {
     }], [], NO_COSTS)
     expect(result.trades.length).toBeGreaterThan(0)
     expect(result.trades.every(t => t.signalAt < cutoff && t.setupType !== 'none')).toBe(true)
+  })
+})
+
+describe('nullable benchmark comparison', () => {
+  const future = bars([[100, 103, 99, 102], [102, 105, 101, 104], [104, 106, 103, 105]])
+  const bench = bars([[1000, 1000, 1000, 1000], [1000, 1000, 1000, 1000], [1000, 1000, 1000, 1000]])
+  it('preserves absolute outcomes while missing benchmark is null rather than zero', () => {
+    const result = simulateOutcome({
+      future,
+      benchmarkFuture: [],
+      entry,
+      exit,
+      costs: NO_COSTS,
+    })
+    expect(result.netReturn).toBeCloseTo(0.05)
+    expect(result.benchmarkReturn).toBeNull()
+    expect(result.excessReturn).toBeNull()
+    expect(result.benchmarkStatus).toBe('benchmark_unavailable')
+  })
+  it('keeps genuine flat benchmark as the number zero', () => {
+    const result = simulateOutcome({
+      future,
+      benchmarkFuture: bench,
+      entry,
+      exit,
+      costs: NO_COSTS,
+    })
+    expect(result.benchmarkReturn).toBe(0)
+    expect(result.excessReturn).toBeCloseTo(0.05)
+    expect(result.benchmarkStatus).toBe('available')
+  })
+  it('requires exact start/end and every interior date instead of nearest-date substitution', () => {
+    const [start, , end] = future
+    expect(periodReturn(bench, start!.ts, end!.ts, future)).toBe(0)
+    expect(periodReturn(bench.slice(1), start!.ts, end!.ts, future)).toBeNull()
+    expect(periodReturn(bench.slice(0, -1), start!.ts, end!.ts, future)).toBeNull()
+    expect(periodReturn([bench[0]!, bench[2]!], start!.ts, end!.ts, future)).toBeNull()
+    expect(periodReturn([bench[0]!, bench[1]!, bench[1]!, bench[2]!], start!.ts, end!.ts, future)).toBeNull()
+    expect(periodReturn([...bench].reverse(), start!.ts, end!.ts, future)).toBeNull()
+  })
+  it('rejects physical/logical or different-source axes even when dates happen to match', () => {
+    const physical = future.map(bar => ({
+      ...bar,
+      barPolicyId: 'physical_session_v1',
+      dataSource: 'moex_iss',
+      sessionDate: bar.ts.slice(0, 10),
+    }))
+    const logical = bench.map(bar => ({
+      ...bar,
+      barPolicyId: 'logical_trading_day_v1',
+      dataSource: 'moex_iss',
+    }))
+    expect(periodReturn(logical, future[0]!.ts, future[2]!.ts, physical)).toBeNull()
+    expect(periodReturn(bench, future[0]!.ts, future[2]!.ts, physical)).toBeNull()
+    const otherSource = bench.map(bar => ({
+      ...bar,
+      barPolicyId: 'physical_session_v1',
+      dataSource: 'finam',
+    }))
+    expect(periodReturn(otherSource, future[0]!.ts, future[2]!.ts, physical)).toBeNull()
+  })
+  it('counts comparable trades separately without averaging nulls as zeros', () => {
+    const stats = aggregateStats([
+      {
+        netReturn: 0.1,
+        excessReturn: null,
+        maxDrawdown: -0.1,
+        outcome: 'win',
+      },
+      {
+        netReturn: 0.2,
+        excessReturn: 0.1,
+        maxDrawdown: -0.05,
+        outcome: 'win',
+      },
+      {
+        netReturn: 0.1,
+        excessReturn: 0,
+        maxDrawdown: -0.01,
+        outcome: 'win',
+      },
+    ])
+    expect(stats.n_abs).toBe(3)
+    expect(stats.n_relative).toBe(2)
+    expect(stats.avgNetReturn).toBeCloseTo(0.4 / 3)
+    expect(stats.avgExcessReturn).toBeCloseTo(0.05)
+    expect(stats.benchmarkStatus).toBe('partial')
+    expect(aggregateStats([{
+      netReturn: 0.1,
+      excessReturn: null,
+      maxDrawdown: -0.1,
+      outcome: 'win',
+    }]).avgExcessReturn).toBeNull()
+    expect(aggregateStats([]).avgExcessReturn).toBeNull()
+  })
+})
+
+describe('walk-forward nullable comparison', () => {
+  it('keeps absolute trades and null relative means in both splits when the optional index is unavailable', async () => {
+    const { walkForwardCompare } = await import('../server/domain/evaluations/backtest')
+    const { DEFAULT_RULES } = await import('../server/domain/strategies/rules')
+    const { MockMarketDataProvider } = await import('../server/adapters/market/mock')
+    const market = new MockMarketDataProvider(() => new Date('2026-10-23T12:00:00Z'))
+    const candles = await market.getCandles('SBER@MISX', new Date('2023-01-01'), new Date('2026-10-23'))
+    const rules = {
+      ...DEFAULT_RULES.position,
+      rsiMax: 100,
+      minAvgTurnover: 0,
+    }
+    const result = walkForwardCompare('position', [{
+      label: 'unchanged test rule set',
+      rules,
+    }], [{
+      symbol: 'SBER@MISX',
+      candles,
+    }], [], NO_COSTS)
+    expect(result.splitAt).not.toBeNull()
+    expect(result.results).toHaveLength(1)
+    const stats = result.results[0]!
+    expect(stats.inSample.n_abs + stats.outOfSample.n_abs).toBeGreaterThan(0)
+    for (const sample of [stats.inSample, stats.outOfSample]) {
+      expect(sample.n_relative).toBe(0)
+      expect(sample.avgExcessReturn).toBeNull()
+      expect(sample.benchmarkStatus).toBe('benchmark_unavailable')
+    }
   })
 })

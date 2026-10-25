@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-25T20:18:00.193Z",
+  "capturedAt": "2026-10-25T20:18:02.706Z",
+  "status": "not_ready_for_paper_execution",
+  "executionPolicyVersion": null,
+  "maxAgeSecondsCandidate": 60,
+  "actualOrderCreated": false,
+  "actualFillCreated": false,
+  "results": [
+    {
+      "ticker": "TATN",
+      "board": "TQBR",
+      "finam": {
+        "endpoint": "https://api.finam.ru/v1/instruments/TATN%40MISX/quotes/latest",
+        "observedAt": "2026-10-25T20:18:00.396Z",
+        "receivedAt": "2026-10-25T20:18:01.438Z",
+        "status": 200,
+        "sourceResponseHash": "30d839bc51b6d021eeebe8b7c0598fb0c2bde927a7bebd03e4b3617304d9c487",
+        "requestElapsedMs": 1042,
+        "quote": {
+          "timestamp": "2026-10-23T20:49:46Z",
+          "last": {
+            "value": "632.4"
+          }
+        }
+      },
+      "moex": {
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/TATN.json?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,BOARDID,BID,OFFER,LAST,UPDATETIME,SYSTIME,TRADINGSTATUS,LCURRENTPRICE",
+        "observedAt": "2026-10-25T20:18:01.439Z",
+        "receivedAt": "2026-10-25T20:18:01.634Z",
+        "status": 200,
+        "sourceResponseHash": "ed2f6650aa8af1379619bf42a2f3fb345553ecb5e997968118e5ccf7ae41d707",
+        "requestElapsedMs": 195,
+        "marketdata": {
+          "columns": [
+            "SECID",
+            "BOARDID",
+            "BID",
+            "OFFER",
+            "LAST",
+            "UPDATETIME",
+            "SYSTIME",
+            "TRADINGSTATUS",
+            "LCURRENTPRICE"
+          ],
+          "data": [
+            [
+              "TATN",
+              "TQBR",
+              null,
+              null,
+              632.4,
+              "23:50:13",
+              "2026-10-23 23:50:41",
+              "N",
+              632.4
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "ticker": "SBER",
+      "board": "TQBR",
+      "finam": {
+        "endpoint": "https://api.finam.ru/v1/instruments/SBER%40MISX/quotes/latest",
+        "observedAt": "2026-10-25T20:18:01.634Z",
+        "receivedAt": "2026-10-25T20:18:02.676Z",
+        "status": 200,
+        "sourceResponseHash": "6c7e2969122f107123384dbfaf425da4b251a032376a3178c7c5797dbbda3ac7",
+        "requestElapsedMs": 1042,
+        "quote": {
+          "timestamp": "2026-10-23T20:49:57Z",
+          "last": {
+            "value": "292.32"
+          }
+        }
+      },
+      "moex": {
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/SBER.json?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,BOARDID,BID,OFFER,LAST,UPDATETIME,SYSTIME,TRADINGSTATUS,LCURRENTPRICE",
+        "observedAt": "2026-10-25T20:18:02.676Z",
+        "receivedAt": "2026-10-25T20:18:02.706Z",
+        "status": 200,
+        "sourceResponseHash": "2a82d5f2f295b1f7431e8d32a8955977807976c18d7426890adc8ed00b8946da",
+        "requestElapsedMs": 31,
+        "marketdata": {
+          "columns": [
+            "SECID",
+            "BOARDID",
+            "BID",
+            "OFFER",
+            "LAST",
+            "UPDATETIME",
+            "SYSTIME",
+            "TRADINGSTATUS",
+            "LCURRENTPRICE"
+          ],
+          "data": [
+            [
+              "SBER",
+              "TQBR",
+              null,
+              null,
+              292.32,
+              "23:50:13",
+              "2026-10-23 23:50:41",
+              "N",
+              292.29
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "reasons": [
+    "Quote observation during a no-trading weekend does not prove an executable after-confirmation price.",
+    "Single snapshots and HTTP latency do not establish exchange feed delay, quote validity or a versioned fill model.",
+    "Historical OHLC and last price remain indicative; no fallback to reconstructed fills."
+  ],
+  "requiredNextEvidence": [
+    "Repeated active-session bid/ask observations with explicit provider timestamps, session/board, freshness bound and latency policy.",
+    "Separate tested observed-quote execution policy and explicit user reconfirmation; neither research policy nor this probe authorizes a fill."
+  ]
+}

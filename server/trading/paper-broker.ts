@@ -4,6 +4,7 @@ import type { PositionSnapshot, RiskCheckResult } from '../../shared/types/inves
 import { addTradingDays, startOfUtcDay } from '../domain/market/calendar'
 import { checkOrderRisk, suggestQuantity, type PortfolioState } from '../domain/risk/limits'
 import { paperFill } from '../domain/risk/paper-fill'
+import { paperExecutionReadiness } from '../domain/risk/paper-execution-data'
 import { avgTurnover } from '../domain/market/indicators'
 import { getInstrument, loadResearchBars, freezeResearchSelection } from '../services/market'
 import type { ResearchBarSelection } from '../../shared/types/market-data'
@@ -46,17 +47,23 @@ async function paperMarketData(instrumentId: string, selection?: ResearchBarSele
       after,
       limit: after ? undefined : 20,
     })
+    const execution = paperExecutionReadiness(result.provenance.source)
     const issues = result.quality.status === 'verified' ? [] : [...result.quality.issues]
+    if (!execution.syntheticReplayAllowed) {
+      issues.push(...execution.issues)
+    }
     if (!after && !result.bars.length) {
       issues.push('Нет завершённых проверенных баров для цены и ликвидности')
     }
     return {
       bars: result.bars,
-      ok: result.quality.status === 'verified' && (Boolean(after) || result.bars.length > 0),
+      ok: execution.syntheticReplayAllowed && result.quality.status === 'verified' && (Boolean(after) || result.bars.length > 0),
       metadata: {
         selection: result.provenance.selection,
         provenance: result.provenance,
         status: result.quality.status,
+        executionReadiness: execution.status,
+        executionModel: execution.executionModel,
         issues,
         assessedAt: asOf.toISOString(),
       },
@@ -69,6 +76,8 @@ async function paperMarketData(instrumentId: string, selection?: ResearchBarSele
         selection: currentSelection,
         provenance: null,
         status: 'data_quality_blocked',
+        executionReadiness: 'not_ready_for_paper_execution' as const,
+        executionModel: 'observed_quote_v1',
         issues: [error instanceof Error ? error.message.slice(0, 500) : 'Источник котировок недоступен'],
         assessedAt: asOf.toISOString(),
       },
@@ -433,7 +442,8 @@ async function lockedTransition(orderId: string, from: string | string[], next: 
 }
 
 /**
- * Simulated execution on daily bars strictly after confirmation: market at the next
+ * Synthetic mock replay only. Real instruments require a separately accepted observed-quote execution contract.
+ * Mock execution on daily bars strictly after confirmation: market at the next
  * available open plus costs, limit only when a later bar trades through its price.
  */
 async function tryFill(orderId: string) {
@@ -441,6 +451,23 @@ async function tryFill(orderId: string) {
   return db.transaction(async (tx) => {
     const [order] = await tx.select().from(schema.orders).where(eq(schema.orders.id, orderId)).for('update')
     if (!order || order.status !== 'working') {
+      return false
+    }
+    const instrumentForExecution = await getInstrument(order.instrumentId)
+    const executionReadiness = paperExecutionReadiness(instrumentForExecution.provider)
+    if (!executionReadiness.syntheticReplayAllowed) {
+      await tx.update(schema.orders).set(suspension(executionReadiness.issues, {
+        ...order.riskCheck,
+        paperData: {
+          ...order.riskCheck?.paperData,
+          provenance: order.riskCheck?.paperData?.provenance ?? null,
+          status: 'data_quality_blocked',
+          executionReadiness: executionReadiness.status,
+          executionModel: executionReadiness.executionModel,
+          assessedAt: new Date().toISOString(),
+          issues: executionReadiness.issues,
+        },
+      })).where(eq(schema.orders.id, orderId))
       return false
     }
     const sign = order.side === 'buy' ? 1 : -1
@@ -623,6 +650,7 @@ export async function portfolioOverview() {
     dayStartEquity: state.dayStartEquity,
     positions: state.list,
     dataQualityIssues: state.dataQualityIssues,
+    executionReadiness: paperExecutionReadiness('real_market'),
     orders,
     executions,
     snapshots,
