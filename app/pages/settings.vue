@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { data } = await useFetch('/api/settings')
+const { data: sources } = await useFetch<ApiResponse<'/api/sources'>>('/api/sources')
 const { data: status, refresh: refreshStatus } = useSystemStatus()
 const profileAction = useAction()
 
@@ -63,6 +64,16 @@ useHead({ title: 'Настройки · IIS' })
       </PageNavbar>
     </template>
     <template #body>
+      <div class="mb-6 space-y-3">
+        <SourcesHealth :sources="sources?.sources" />
+        <UButton
+          to="/macro"
+          icon="i-lucide-landmark"
+          variant="outline"
+        >
+          Макро, документы и ручное обновление
+        </UButton>
+      </div>
       <div class="mx-auto w-full max-w-4xl space-y-4">
         <UCard>
           <template #header>

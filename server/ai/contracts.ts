@@ -1,3 +1,4 @@
+import type { EvidenceCoverage, EvidenceContext, EvidenceSourceHealth } from '../../shared/types/evidence'
 import { z } from 'zod'
 import type { EntryScenario, EvidenceItem, ExitScenario, SourceRef, StrategyRules } from '../../shared/types/investment'
 import type { Signal } from '../domain/strategies/rules'
@@ -97,6 +98,17 @@ export interface EvidencePacket {
     /** Outcome of the past idea (win/loss/flat/no_entry), known at asOf. */
     outcome: string | null
   }[]
+  macroContext?: EvidenceContext['macroContext']
+  issuerFundamentals?: EvidenceContext['issuerFundamentals']
+  regulatoryEvents?: EvidenceContext['regulatoryEvents']
+  sourceHealth?: EvidenceSourceHealth[]
+  issuerIndustry?: import('../domain/evidence/financials').IssuerIndustry
+  bankContext?: {
+    reports: unknown[]
+    regulatory: import('../../shared/types/evidence').RegulatoryIdentitySnapshot | null
+  }
+  financialComparisons?: ReturnType<typeof import('../domain/evidence/financials').compareFinancialFacts>
+  evidenceCoverage?: EvidenceCoverage
   sources: SourceRef[]
 }
 

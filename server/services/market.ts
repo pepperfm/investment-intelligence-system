@@ -1,3 +1,4 @@
+import { ensureSources, recordSourceResult } from './source-status'
 import { db, schema } from '@nuxthub/db'
 import { and, asc, desc, eq, gt, gte, lte, sql } from 'drizzle-orm'
 import type { Candle } from '../../shared/types/investment'
@@ -103,6 +104,13 @@ export async function syncFundamentals(instrumentId: string) {
   const errors = results.flatMap((result, index) => result.status === 'rejected'
     ? [`${instrument.ticker} · ${index === 0 ? 'новости' : 'отчётность'}: ${result.reason instanceof Error ? result.reason.message : 'Источник недоступен'}`]
     : [])
+  if (provider.id === 'finam' && instrument.kind === 'equity') {
+    await ensureSources()
+    for (const [index, sourceId] of ['finam_news_rss', 'smartlab_ifrs'].entries()) {
+      const result = results[index]!
+      await recordSourceResult(sourceId, result.status === 'rejected' ? 'legacy_source_unavailable' : null, result.status === 'fulfilled' && result.value.length > 0)
+    }
+  }
   const existing = new Set((await db.select({ externalId: schema.marketEvents.externalId }).from(schema.marketEvents).where(eq(schema.marketEvents.instrumentId, instrumentId))).map(r => r.externalId))
   for (const event of events.filter(e => !existing.has(e.externalId))) {
     const [row] = await db.insert(schema.marketEvents).values({

@@ -9,6 +9,7 @@ import { getInstrument, lastClose, loadCandles } from '../services/market'
 import { getCostModel, getRiskLimits } from '../services/settings'
 
 const PAPER_INITIAL_CASH = 1_000_000
+type TradingReader = Pick<typeof db, 'select'>
 
 /**
  * Paper broker. This module is the only place where orders change state, it is called only from
@@ -29,11 +30,11 @@ export async function paperAccount() {
   return created ?? (await db.select().from(schema.accounts).where(and(eq(schema.accounts.provider, 'paper'), eq(schema.accounts.externalId, 'default'))))[0]!
 }
 
-export async function positions(accountId: string): Promise<(PositionSnapshot & {
+export async function positions(accountId: string, reader: TradingReader = db): Promise<(PositionSnapshot & {
   sector: string
   lotSize: number
 })[]> {
-  const rows = await db.select({
+  const rows = await reader.select({
     execution: schema.executions,
     symbol: schema.instruments.symbol,
     sector: schema.instruments.sector,
@@ -85,14 +86,14 @@ export async function positions(accountId: string): Promise<(PositionSnapshot & 
   return result
 }
 
-export async function portfolioState(accountId: string): Promise<PortfolioState & {
+export async function portfolioState(accountId: string, reader: TradingReader = db): Promise<PortfolioState & {
   account: typeof schema.accounts.$inferSelect
   list: Awaited<ReturnType<typeof positions>>
 }> {
-  const [account] = await db.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
-  const list = await positions(accountId)
+  const [account] = await reader.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
+  const list = await positions(accountId, reader)
   const equity = account!.cash + list.reduce((s, p) => s + p.marketValue, 0)
-  const [dayStart] = await db.select({ equity: schema.portfolioSnapshots.equity }).from(schema.portfolioSnapshots).where(and(eq(schema.portfolioSnapshots.accountId, accountId), lt(schema.portfolioSnapshots.takenAt, startOfUtcDay(new Date())))).orderBy(desc(schema.portfolioSnapshots.takenAt)).limit(1)
+  const [dayStart] = await reader.select({ equity: schema.portfolioSnapshots.equity }).from(schema.portfolioSnapshots).where(and(eq(schema.portfolioSnapshots.accountId, accountId), lt(schema.portfolioSnapshots.takenAt, startOfUtcDay(new Date())))).orderBy(desc(schema.portfolioSnapshots.takenAt)).limit(1)
   return {
     account: account!,
     list,
@@ -126,27 +127,7 @@ async function assessOrder(request: Omit<OrderRequest, 'idempotencyKey'>) {
       statusMessage: 'Only equities can be traded',
     })
   }
-  let stopLoss: number | null = null
-  let entryWindowExpired: string | null = null
-  if (request.hypothesisId) {
-    const [h] = await db.select().from(schema.hypotheses).where(eq(schema.hypotheses.id, request.hypothesisId))
-    if (!h || h.instrumentId !== request.instrumentId) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Hypothesis does not match instrument',
-      })
-    }
-    if (request.side === 'buy' && (h.status !== 'user_approved' || h.direction !== 'long')) {
-      throw createError({
-        statusCode: 409,
-        statusMessage: 'Buy orders require a user-approved long hypothesis',
-      })
-    }
-    stopLoss = h.exitScenario.stopLoss
-    if (request.side === 'buy' && Date.now() > addTradingDays(h.evidenceTimestamp, h.entryScenario.validDays).getTime() + 86_400_000) {
-      entryWindowExpired = `Окно входа гипотезы (${h.entryScenario.validDays} торг. дн. от ${h.evidenceTimestamp.toISOString().slice(0, 10)}) истекло — нужен новый анализ`
-    }
-  }
+  const { stopLoss, violations: hypothesisViolations } = await orderHypothesis(request)
   const last = await lastClose(request.instrumentId)
   if (!last) {
     throw createError({
@@ -170,10 +151,8 @@ async function assessOrder(request: Omit<OrderRequest, 'idempotencyKey'>) {
     limits,
     costs,
   })
-  if (entryWindowExpired) {
-    riskCheck.violations.push(entryWindowExpired)
-    riskCheck.ok = false
-  }
+  riskCheck.violations.push(...hypothesisViolations)
+  riskCheck.ok = riskCheck.violations.length === 0
   const suggestedQuantity = stopLoss !== null
     ? suggestQuantity({
         equity: state.equity,
@@ -232,6 +211,7 @@ export async function confirmOrder(orderId: string) {
   const order = await lockedTransition(orderId, 'pending_confirmation', async (o) => {
     const instrument = await getInstrument(o.instrumentId)
     const [limits, costs, state, last, candles] = await Promise.all([getRiskLimits(), getCostModel(), portfolioState(o.accountId), lastClose(o.instrumentId), loadCandles(o.instrumentId, { limit: 20 })])
+    const hypothesis = await orderHypothesis(o)
     const riskCheck = checkOrderRisk({
       side: o.side as 'buy' | 'sell',
       instrumentId: o.instrumentId,
@@ -239,12 +219,20 @@ export async function confirmOrder(orderId: string) {
       quantity: o.quantity,
       lotSize: instrument.lotSize,
       price: o.limitPrice ?? last?.close ?? 0,
-      stopLoss: await hypothesisStop(o.hypothesisId),
+      stopLoss: hypothesis.stopLoss,
       avgTurnover: avgTurnover(candles, Math.min(20, candles.length)),
       portfolio: state,
       limits,
       costs,
     })
+    riskCheck.violations.push(...hypothesis.violations)
+    riskCheck.ok = riskCheck.violations.length === 0
+    if (process.env.DEBUG_FIX && !riskCheck.ok) {
+      console.info('[FIX:order-confirmation] Rejected stale ticket', {
+        orderId,
+        violations: riskCheck.violations,
+      })
+    }
     return riskCheck.ok
       ? {
           status: 'working',
@@ -264,12 +252,41 @@ export async function confirmOrder(orderId: string) {
   return (await db.select().from(schema.orders).where(eq(schema.orders.id, orderId)))[0]!
 }
 
-async function hypothesisStop(hypothesisId: string | null) {
-  if (!hypothesisId) {
-    return null
+/** Shared by ticket creation, confirmation and execution; a saved ticket is not lasting approval. */
+async function orderHypothesis(request: {
+  hypothesisId?: string | null
+  instrumentId: string
+  side: string
+}, reader: TradingReader = db, at = new Date()) {
+  const violations: string[] = []
+  if (!request.hypothesisId) {
+    return {
+      stopLoss: null,
+      violations,
+    }
   }
-  const [h] = await db.select({ exit: schema.hypotheses.exitScenario }).from(schema.hypotheses).where(eq(schema.hypotheses.id, hypothesisId))
-  return h?.exit.stopLoss ?? null
+  const [h] = await reader.select().from(schema.hypotheses).where(eq(schema.hypotheses.id, request.hypothesisId))
+  if (!h || h.instrumentId !== request.instrumentId) {
+    return {
+      stopLoss: null,
+      violations: ['Гипотеза не соответствует инструменту'],
+    }
+  }
+  if (request.side === 'buy') {
+    if (h.status !== 'user_approved' || h.direction !== 'long') {
+      violations.push('Покупка требует одобренной пользователем long-гипотезы')
+    }
+    if (h.criticVerdict !== 'supported' || !h.validation.ok) {
+      violations.push('Покупка требует поддерживающего вердикта критика и успешной валидации')
+    }
+    if (at.getTime() >= addTradingDays(h.evidenceTimestamp, h.entryScenario.validDays).getTime() + 86_400_000) {
+      violations.push(`Окно входа гипотезы (${h.entryScenario.validDays} торг. дн.) истекло — нужен новый анализ`)
+    }
+  }
+  return {
+    stopLoss: h.exitScenario.stopLoss,
+    violations,
+  }
 }
 
 export async function cancelOrder(orderId: string) {
@@ -305,7 +322,7 @@ async function lockedTransition(orderId: string, from: string | string[], next: 
  * available open plus costs, limit only when a later bar trades through its price.
  */
 async function tryFill(orderId: string) {
-  const costs = await getCostModel()
+  const [costs, limits] = await Promise.all([getCostModel(), getRiskLimits()])
   return db.transaction(async (tx) => {
     const [order] = await tx.select().from(schema.orders).where(eq(schema.orders.id, orderId)).for('update')
     if (!order || order.status !== 'working') {
@@ -329,13 +346,46 @@ async function tryFill(orderId: string) {
     const notional = price * order.quantity
     const commission = notional * costs.commissionPct / 100
     const [account] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, order.accountId)).for('update')
+    // Serialize all fills for this account, then read holdings on the same transaction.
+    // Confirmation alone cannot reserve a position until the next daily bar arrives.
+    const [state, instrument, candles, hypothesis] = await Promise.all([
+      portfolioState(order.accountId, tx),
+      getInstrument(order.instrumentId),
+      loadCandles(order.instrumentId, { limit: 20 }),
+      orderHypothesis(order, tx, executedAt),
+    ])
+    const riskCheck = checkOrderRisk({
+      side: order.side as 'buy' | 'sell',
+      instrumentId: order.instrumentId,
+      sector: instrument.sector,
+      quantity: order.quantity,
+      lotSize: instrument.lotSize,
+      price,
+      stopLoss: hypothesis.stopLoss,
+      avgTurnover: avgTurnover(candles, Math.min(20, candles.length)),
+      portfolio: state,
+      limits,
+      costs,
+    })
+    riskCheck.violations.push(...hypothesis.violations)
     const cashAfter = account!.cash - sign * notional - commission
     if (cashAfter < 0) {
+      riskCheck.violations.push('Недостаточно средств на момент исполнения')
+    }
+    riskCheck.ok = riskCheck.violations.length === 0
+    if (!riskCheck.ok) {
       await tx.update(schema.orders).set({
         status: 'rejected',
-        rejectReason: 'Недостаточно средств на момент исполнения',
+        riskCheck,
+        rejectReason: `Проверка при исполнении: ${riskCheck.violations.join('; ')}`,
         closedAt: new Date(),
       }).where(eq(schema.orders.id, orderId))
+      if (process.env.DEBUG_FIX) {
+        console.info('[FIX:paper-fill] Rejected stale order', {
+          orderId,
+          violations: riskCheck.violations,
+        })
+      }
       return false
     }
     await tx.insert(schema.executions).values({
@@ -351,6 +401,7 @@ async function tryFill(orderId: string) {
     await tx.update(schema.accounts).set({ cash: cashAfter }).where(eq(schema.accounts.id, order.accountId))
     await tx.update(schema.orders).set({
       status: 'filled',
+      riskCheck,
       closedAt: new Date(),
     }).where(eq(schema.orders.id, orderId))
     if (order.hypothesisId && order.side === 'buy') {

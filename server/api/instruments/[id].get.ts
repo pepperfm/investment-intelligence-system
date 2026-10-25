@@ -1,3 +1,6 @@
+import { bankEvidence } from '../../services/bank-evidence'
+import { compareFinancialFacts, issuerIndustry } from '../../domain/evidence/financials'
+import { loadIssuerFacts } from '../../services/issuer-fundamentals'
 import { db, schema } from '@nuxthub/db'
 import { and, desc, eq } from 'drizzle-orm'
 import { STRATEGY_IDS } from '../../../shared/types/investment'
@@ -24,7 +27,12 @@ export default defineEventHandler(async (event) => {
     db.select().from(schema.marketEvents).where(eq(schema.marketEvents.instrumentId, id)).orderBy(desc(schema.marketEvents.publishedAt)).limit(30),
     db.select().from(schema.issuerReports).where(and(eq(schema.issuerReports.instrumentId, id))).orderBy(desc(schema.issuerReports.publishedAt)).limit(8),
   ])
+  const issuerFundamentals = await loadIssuerFacts(id, new Date())
   return {
+    issuerFundamentals,
+    financialComparisons: compareFinancialFacts(issuerFundamentals),
+    issuerIndustry: issuerIndustry(instrument.isin, instrument.sector),
+    bankEvidence: await bankEvidence(id),
     instrument,
     candles: candles.slice(-250),
     signals,

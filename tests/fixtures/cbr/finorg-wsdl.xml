@@ -1,0 +1,1239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://web.cbr.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://web.cbr.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Финансовые организации ver: 06.05.2025</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://web.cbr.ru/">
+      <s:element name="GetLastUpdate">
+        <s:complexType />
+      </s:element>
+      <s:element name="GetLastUpdateResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="GetLastUpdateResult" type="s:dateTime" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetFullInfoByOGRN">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="OGRN" type="s:long">
+              <s:annotation>
+                <s:documentation source="ОГРН" />
+              </s:annotation>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetFullInfoByOGRNResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetFullInfoByOGRNResult" type="tns:FullInfo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="FullInfo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long">
+            <s:annotation>
+              <s:documentation source="Уникальный ключ организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="OGRN" nillable="true" type="s:long">
+            <s:annotation>
+              <s:documentation source="ОГРН организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="INN" type="s:string">
+            <s:annotation>
+              <s:documentation source="ИНН организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="ShortName" type="s:string">
+            <s:annotation>
+              <s:documentation source="Краткое наименование финансовой организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Полное наименование финансовой организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="EngName" type="s:string">
+            <s:annotation>
+              <s:documentation source="Фирменное наименование на английском языке" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Address" type="s:string">
+            <s:annotation>
+              <s:documentation source="Адрес в пределах местонахождения" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Phones" type="s:string">
+            <s:annotation>
+              <s:documentation source="Телефоны" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Email" type="s:string">
+            <s:annotation>
+              <s:documentation source="E-mail" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="OKATO" nillable="true" type="s:int">
+            <s:annotation>
+              <s:documentation source="Код ОКАТО" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Reg" type="s:string">
+            <s:annotation>
+              <s:documentation source="Субъект РФ" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="FOTypes" type="tns:ArrayOfString">
+            <s:annotation>
+              <s:documentation source="Коды типов организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="Status" type="tns:FoStatus">
+            <s:annotation>
+              <s:documentation source="Статсус организации: Действует - 1/Не действует - 2" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="IsSroMember" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Членство в саморегулируемой организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="IsRss" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Участие в системе страхования вкладов" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="NPO_FLG" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Участие в системе гарантирования прав участников НПФ по негосударственному пенсионному обеспечению (НПО)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="ASV_FLG" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Участие в системе гарантирования прав застрахованных лиц" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="PaySystem" type="s:string">
+            <s:annotation>
+              <s:documentation source="Наименование платежной системы (obsolete)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="REGNUM" nillable="true" type="s:int">
+            <s:annotation>
+              <s:documentation source="Регистрационный номер" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="BIC" type="s:string">
+            <s:annotation>
+              <s:documentation source="БИК" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Fund" type="tns:FundInfo">
+            <s:annotation>
+              <s:documentation source="Информация об уставе" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="LicList" type="tns:ArrayOfLicInfo">
+            <s:annotation>
+              <s:documentation source="Информация о наличии права (лицензии) на осуществление деятельности на финансовом рынке" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="PaymentSystems" type="tns:ArrayOfPaySystem">
+            <s:annotation>
+              <s:documentation source="Платежные системы" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="WebSites" type="tns:ArrayOfString">
+            <s:annotation>
+              <s:documentation source="Веб сайты организаций" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="MFOList" type="tns:ArrayOfMFORecord">
+            <s:annotation>
+              <s:documentation source="Микрофинансовые организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="HasBranches" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Имеет подразделения" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Error" type="s:string">
+            <s:annotation>
+              <s:documentation source="Ошибка" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="BnkStatus" type="s:string">
+            <s:annotation>
+              <s:documentation source="Статус кредитной организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="RegistrationDate" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата регистрации Банком России" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="FoStatus">
+        <s:restriction base="s:string">
+          <s:enumeration value="Any" />
+          <s:enumeration value="Active" />
+          <s:enumeration value="NotActive" />
+          <s:enumeration value="Unknown" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="FundInfo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="APPROVAL_DATE" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата согласования последней  редакции устава" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="CHANGE_DATE" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата согласования последних изменений в устав" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="CHANGE_NUM" nillable="true" type="s:int">
+            <s:annotation>
+              <s:documentation source="Номер изменений устава" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="APPROVAL_REG_DATE" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата регистрации в уполномоченном органе" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="CHANGE_REG_DATE" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата регистрации изменений устава в уполномоченном органе" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="FUND_VALUE" type="s:decimal">
+            <s:annotation>
+              <s:documentation source="Уставный капитал (руб.)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="FUND_CHANGE_DATE" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата изменения величины уставного капитала" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfLicInfo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="LicInfo" nillable="true" type="tns:LicInfo" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="LicInfo">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="VidID" type="s:int">
+            <s:annotation>
+              <s:documentation source="Код вида деятельности на финансовом рынке" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="VidD" type="s:string">
+            <s:annotation>
+              <s:documentation source="Наименование вида деятельности на финансовом рынке" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="LIC_Number" type="s:string">
+            <s:annotation>
+              <s:documentation source="Учетный номер (номер лицензии, номер записи в реестре)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="LIC_Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Наименование лицензии" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="LIC_DTStart" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата начала действия права(лицензии)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="LIC_DTEnd" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата прекращения действия права(лицензии)" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="FinServices" type="tns:ArrayOfString1">
+            <s:annotation>
+              <s:documentation source="Виды финансовых услуг" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString1">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="FinService" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPaySystem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PaymentSystem" nillable="true" type="tns:PaySystem" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="PaySystem">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Название платежной системы" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateStart" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата начала участия" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateFinish" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата исключения" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="PayTypes" type="tns:ArrayOfPaySystemType">
+            <s:annotation>
+              <s:documentation source="Типы платежной системы" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPaySystemType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PayType" nillable="true" type="tns:PaySystemType" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="PaySystemType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Тип значимости" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateBegin" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата признания значимости" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateEnd" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата признания утраты значимости" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfMFORecord">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MFO" nillable="true" type="tns:MFORecord" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MFORecord">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="MFOVid" type="s:string">
+            <s:annotation>
+              <s:documentation source="Вид микрофинансовой организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateBegin" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата начала действия" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="DateEnd" nillable="true" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата прекращения действия" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetFullInfoByINN">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="INN" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetFullInfoByINNResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetFullInfoByINNResult" type="tns:FullInfo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SearchByINNs">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="INNs" type="tns:ArrayOfLong" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfLong">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="INN" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SearchByINNsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SearchByINNsResult" type="tns:RecordSetEx" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RecordSetEx">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="DS" type="tns:ArrayOfRecord">
+            <s:annotation>
+              <s:documentation source="Записи" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Error" type="s:string">
+            <s:annotation>
+              <s:documentation source="Ошибки" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="IsSucess" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Успешная обработка" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfRecord">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Record" nillable="true" type="tns:Record" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Record">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long">
+            <s:annotation>
+              <s:documentation source="Внутренний код организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="OGRN" nillable="true" type="s:long">
+            <s:annotation>
+              <s:documentation source="ОГРН" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="INN" type="s:string">
+            <s:annotation>
+              <s:documentation source="ИНН" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Название" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="Status" type="tns:FoStatus">
+            <s:annotation>
+              <s:documentation source="Статус организации: Действует - 1 /Не действует - 2" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="ErrorText" type="s:string">
+            <s:annotation>
+              <s:documentation source="Сообщение об ошибке" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SearchByOGRNs">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="OGRNs" type="tns:ArrayOfLong1" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfLong1">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="OGRN" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SearchByOGRNsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SearchByOGRNsResult" type="tns:RecordSetEx" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetFullInfoByID">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="ID" type="s:long" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetFullInfoByIDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetFullInfoByIDResult" type="tns:FullInfo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="EnumFOTypes">
+        <s:complexType />
+      </s:element>
+      <s:element name="EnumFOTypesResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="EnumFOTypesResult" type="tns:ArrayOfFOType" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfFOType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="FOType" nillable="true" type="tns:FOType" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="FOType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Code" type="s:string">
+            <s:annotation>
+              <s:documentation source="Код типа организации" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Название типа организации" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="EnumFOVids">
+        <s:complexType />
+      </s:element>
+      <s:element name="EnumFOVidsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="EnumFOVidsResult" type="tns:ArrayOfFOVid" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfFOVid">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="FOVid" nillable="true" type="tns:FOVid" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="FOVid">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Code" type="s:int">
+            <s:annotation>
+              <s:documentation source="Код вида деятельности" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Название вида деятельности" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="ShortName" type="s:string">
+            <s:annotation>
+              <s:documentation source="Короткое название вида деятельности" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="EnumRegions">
+        <s:complexType />
+      </s:element>
+      <s:element name="EnumRegionsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="EnumRegionsResult" type="tns:ArrayOfRegion" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfRegion">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="Region" nillable="true" type="tns:Region" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="Region">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="OKATO" type="s:int">
+            <s:annotation>
+              <s:documentation source="Код ОКАТО" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Название региона" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="Search">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+              <s:annotation>
+                <s:documentation source="по названию" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="0" maxOccurs="1" name="Addr" type="s:string">
+              <s:annotation>
+                <s:documentation source="по адресу" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="Status" type="tns:FoStatus" />
+            <s:element minOccurs="0" maxOccurs="1" name="FoType" type="s:string">
+              <s:annotation>
+                <s:documentation source="код типа финансовой организации или пусто" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="VidID" type="s:int">
+              <s:annotation>
+                <s:documentation source="код вида деятельности или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="OKATO" type="s:int">
+              <s:annotation>
+                <s:documentation source="код ОКАТО региона или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="page" type="s:unsignedInt">
+              <s:annotation>
+                <s:documentation source="номер страницы данных (начиная с 0)" />
+              </s:annotation>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SearchResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SearchResult" type="tns:RecordSet" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="RecordSet">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RecordSets">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="RequestParams" type="tns:ArrayOfReqParam" />
+              <s:element minOccurs="0" maxOccurs="1" name="DS" type="tns:ArrayOfRecord" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="RecordSets">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="IsSucess" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Успешная обработка" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="TotalPages" type="s:unsignedInt">
+            <s:annotation>
+              <s:documentation source="Всего страниц найдено" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="CurrentPage" type="s:unsignedInt">
+            <s:annotation>
+              <s:documentation source="Номер текущей страницы" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="PageSize" type="s:unsignedInt">
+            <s:annotation>
+              <s:documentation source="Макс. количество записей в странице" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="TotalRows" type="s:unsignedInt">
+            <s:annotation>
+              <s:documentation source="Всего записей найдено" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Error" type="s:string">
+            <s:annotation>
+              <s:documentation source="Ошибки" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfReqParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ReqParam" nillable="true" type="tns:ReqParam" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ReqParam">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Value" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SearchByLicDate">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="qType" type="tns:QType">
+              <s:annotation>
+                <s:documentation source="Тип поиска Q1,Q2,Q3,Q4" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="FromDate" type="s:dateTime">
+              <s:annotation>
+                <s:documentation source="Дата начала периода" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="ToDate" type="s:dateTime">
+              <s:annotation>
+                <s:documentation source="Дата окончания периода" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="0" maxOccurs="1" name="FoType" type="s:string">
+              <s:annotation>
+                <s:documentation source="код типа финансовой организации или пусто" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="VidID" type="s:int">
+              <s:annotation>
+                <s:documentation source="код вида деятельности или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="OKATO" type="s:int">
+              <s:annotation>
+                <s:documentation source="код ОКАТО региона или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="page" type="s:unsignedInt">
+              <s:annotation>
+                <s:documentation source="номер страницы данных (начиная с 0)" />
+              </s:annotation>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:simpleType name="QType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Q1" />
+          <s:enumeration value="Q2" />
+          <s:enumeration value="Q3" />
+          <s:enumeration value="Q4" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="SearchByLicDateResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SearchByLicDateResult" type="tns:RecordSet" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetBranchesInfoByID">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="id" type="s:long" />
+            <s:element minOccurs="1" maxOccurs="1" name="page" type="s:unsignedInt" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetBranchesInfoByIDResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetBranchesInfoByIDResult" type="tns:BranchRecordSet" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="BranchRecordSet">
+        <s:complexContent mixed="false">
+          <s:extension base="tns:RecordSets">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="DS" type="tns:ArrayOfBranchRecord" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ArrayOfBranchRecord">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="BranchRecord" nillable="true" type="tns:BranchRecord" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="BranchRecord">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:long">
+            <s:annotation>
+              <s:documentation source="Id филиала" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Num" type="s:string">
+            <s:annotation>
+              <s:documentation source="№ филиала/доп офиса" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string">
+            <s:annotation>
+              <s:documentation source="Наименование подразделения" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="BranchType" type="s:string">
+            <s:annotation>
+              <s:documentation source="Тип подразделения" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Address" type="s:string">
+            <s:annotation>
+              <s:documentation source="Фактический адрес" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="OpenDate" type="s:dateTime">
+            <s:annotation>
+              <s:documentation source="Дата открытия" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="0" maxOccurs="1" name="Affiliation" type="s:string">
+            <s:annotation>
+              <s:documentation source="Принадлежность" />
+            </s:annotation>
+          </s:element>
+          <s:element minOccurs="1" maxOccurs="1" name="HasChild" type="s:boolean">
+            <s:annotation>
+              <s:documentation source="Имеет подчиненные структуры" />
+            </s:annotation>
+          </s:element>
+        </s:sequence>
+      </s:complexType>
+      <s:element name="SearchByLicNum">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="licNumber" type="s:string">
+              <s:annotation>
+                <s:documentation source="номер лицензии" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="0" maxOccurs="1" name="FoType" type="s:string">
+              <s:annotation>
+                <s:documentation source="код типа финансовой организации или пусто" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="VidID" type="s:int">
+              <s:annotation>
+                <s:documentation source="код вида деятельности или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="OKATO" type="s:int">
+              <s:annotation>
+                <s:documentation source="код ОКАТО региона или -1" />
+              </s:annotation>
+            </s:element>
+            <s:element minOccurs="1" maxOccurs="1" name="page" type="s:unsignedInt">
+              <s:annotation>
+                <s:documentation source="номер страницы данных (начиная с 0)" />
+              </s:annotation>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="SearchByLicNumResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="SearchByLicNumResult" type="tns:RecordSet" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetLastUpdateSoapIn">
+    <wsdl:part name="parameters" element="tns:GetLastUpdate" />
+  </wsdl:message>
+  <wsdl:message name="GetLastUpdateSoapOut">
+    <wsdl:part name="parameters" element="tns:GetLastUpdateResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByOGRNSoapIn">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByOGRN" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByOGRNSoapOut">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByOGRNResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByINNSoapIn">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByINN" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByINNSoapOut">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByINNResponse" />
+  </wsdl:message>
+  <wsdl:message name="SearchByINNsSoapIn">
+    <wsdl:part name="parameters" element="tns:SearchByINNs" />
+  </wsdl:message>
+  <wsdl:message name="SearchByINNsSoapOut">
+    <wsdl:part name="parameters" element="tns:SearchByINNsResponse" />
+  </wsdl:message>
+  <wsdl:message name="SearchByOGRNsSoapIn">
+    <wsdl:part name="parameters" element="tns:SearchByOGRNs" />
+  </wsdl:message>
+  <wsdl:message name="SearchByOGRNsSoapOut">
+    <wsdl:part name="parameters" element="tns:SearchByOGRNsResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByIDSoapIn">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByID" />
+  </wsdl:message>
+  <wsdl:message name="GetFullInfoByIDSoapOut">
+    <wsdl:part name="parameters" element="tns:GetFullInfoByIDResponse" />
+  </wsdl:message>
+  <wsdl:message name="EnumFOTypesSoapIn">
+    <wsdl:part name="parameters" element="tns:EnumFOTypes" />
+  </wsdl:message>
+  <wsdl:message name="EnumFOTypesSoapOut">
+    <wsdl:part name="parameters" element="tns:EnumFOTypesResponse" />
+  </wsdl:message>
+  <wsdl:message name="EnumFOVidsSoapIn">
+    <wsdl:part name="parameters" element="tns:EnumFOVids" />
+  </wsdl:message>
+  <wsdl:message name="EnumFOVidsSoapOut">
+    <wsdl:part name="parameters" element="tns:EnumFOVidsResponse" />
+  </wsdl:message>
+  <wsdl:message name="EnumRegionsSoapIn">
+    <wsdl:part name="parameters" element="tns:EnumRegions" />
+  </wsdl:message>
+  <wsdl:message name="EnumRegionsSoapOut">
+    <wsdl:part name="parameters" element="tns:EnumRegionsResponse" />
+  </wsdl:message>
+  <wsdl:message name="SearchSoapIn">
+    <wsdl:part name="parameters" element="tns:Search" />
+  </wsdl:message>
+  <wsdl:message name="SearchSoapOut">
+    <wsdl:part name="parameters" element="tns:SearchResponse" />
+  </wsdl:message>
+  <wsdl:message name="SearchByLicDateSoapIn">
+    <wsdl:part name="parameters" element="tns:SearchByLicDate" />
+  </wsdl:message>
+  <wsdl:message name="SearchByLicDateSoapOut">
+    <wsdl:part name="parameters" element="tns:SearchByLicDateResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetBranchesInfoByIDSoapIn">
+    <wsdl:part name="parameters" element="tns:GetBranchesInfoByID" />
+  </wsdl:message>
+  <wsdl:message name="GetBranchesInfoByIDSoapOut">
+    <wsdl:part name="parameters" element="tns:GetBranchesInfoByIDResponse" />
+  </wsdl:message>
+  <wsdl:message name="SearchByLicNumSoapIn">
+    <wsdl:part name="parameters" element="tns:SearchByLicNum" />
+  </wsdl:message>
+  <wsdl:message name="SearchByLicNumSoapOut">
+    <wsdl:part name="parameters" element="tns:SearchByLicNumResponse" />
+  </wsdl:message>
+  <wsdl:portType name="FinOrgSoap">
+    <wsdl:operation name="GetLastUpdate">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение даты последнего обновления информации в БД</wsdl:documentation>
+      <wsdl:input message="tns:GetLastUpdateSoapIn" />
+      <wsdl:output message="tns:GetLastUpdateSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByOGRN">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации об организации по ее ОГРН</wsdl:documentation>
+      <wsdl:input message="tns:GetFullInfoByOGRNSoapIn" />
+      <wsdl:output message="tns:GetFullInfoByOGRNSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByINN">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации об организации по ее ИНН</wsdl:documentation>
+      <wsdl:input message="tns:GetFullInfoByINNSoapIn" />
+      <wsdl:output message="tns:GetFullInfoByINNSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SearchByINNs">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации об организациях по их ИНН</wsdl:documentation>
+      <wsdl:input message="tns:SearchByINNsSoapIn" />
+      <wsdl:output message="tns:SearchByINNsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SearchByOGRNs">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации об организациях по их ОГРН</wsdl:documentation>
+      <wsdl:input message="tns:SearchByOGRNsSoapIn" />
+      <wsdl:output message="tns:SearchByOGRNsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByID">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации об организации по ее вн. ID</wsdl:documentation>
+      <wsdl:input message="tns:GetFullInfoByIDSoapIn" />
+      <wsdl:output message="tns:GetFullInfoByIDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOTypes">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение списка кодов типов организаций </wsdl:documentation>
+      <wsdl:input message="tns:EnumFOTypesSoapIn" />
+      <wsdl:output message="tns:EnumFOTypesSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOVids">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение списка кодов видов деятельности </wsdl:documentation>
+      <wsdl:input message="tns:EnumFOVidsSoapIn" />
+      <wsdl:output message="tns:EnumFOVidsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="EnumRegions">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Список субъектов РФ с кодами ОКАТО </wsdl:documentation>
+      <wsdl:input message="tns:EnumRegionsSoapIn" />
+      <wsdl:output message="tns:EnumRegionsSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="Search">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Поиск организации</wsdl:documentation>
+      <wsdl:input message="tns:SearchSoapIn" />
+      <wsdl:output message="tns:SearchSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicDate">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Поиск организаций датам лицензий</wsdl:documentation>
+      <wsdl:input message="tns:SearchByLicDateSoapIn" />
+      <wsdl:output message="tns:SearchByLicDateSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetBranchesInfoByID">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение информации о филиале по внутреннему Id</wsdl:documentation>
+      <wsdl:input message="tns:GetBranchesInfoByIDSoapIn" />
+      <wsdl:output message="tns:GetBranchesInfoByIDSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicNum">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Поиск по номеру лицензии</wsdl:documentation>
+      <wsdl:input message="tns:SearchByLicNumSoapIn" />
+      <wsdl:output message="tns:SearchByLicNumSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="FinOrgSoap" type="tns:FinOrgSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetLastUpdate">
+      <soap:operation soapAction="http://web.cbr.ru/GetLastUpdate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByOGRN">
+      <soap:operation soapAction="http://web.cbr.ru/GetFullInfoByOGRN" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByINN">
+      <soap:operation soapAction="http://web.cbr.ru/GetFullInfoByINN" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByINNs">
+      <soap:operation soapAction="http://web.cbr.ru/SearchByINNs" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByOGRNs">
+      <soap:operation soapAction="http://web.cbr.ru/SearchByOGRNs" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByID">
+      <soap:operation soapAction="http://web.cbr.ru/GetFullInfoByID" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOTypes">
+      <soap:operation soapAction="http://web.cbr.ru/EnumFOTypes" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOVids">
+      <soap:operation soapAction="http://web.cbr.ru/EnumFOVids" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumRegions">
+      <soap:operation soapAction="http://web.cbr.ru/EnumRegions" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Search">
+      <soap:operation soapAction="http://web.cbr.ru/Search" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicDate">
+      <soap:operation soapAction="http://web.cbr.ru/SearchByLicDate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetBranchesInfoByID">
+      <soap:operation soapAction="http://web.cbr.ru/GetBranchesInfoByID" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicNum">
+      <soap:operation soapAction="http://web.cbr.ru/SearchByLicNum" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="FinOrgSoap12" type="tns:FinOrgSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetLastUpdate">
+      <soap12:operation soapAction="http://web.cbr.ru/GetLastUpdate" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByOGRN">
+      <soap12:operation soapAction="http://web.cbr.ru/GetFullInfoByOGRN" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByINN">
+      <soap12:operation soapAction="http://web.cbr.ru/GetFullInfoByINN" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByINNs">
+      <soap12:operation soapAction="http://web.cbr.ru/SearchByINNs" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByOGRNs">
+      <soap12:operation soapAction="http://web.cbr.ru/SearchByOGRNs" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetFullInfoByID">
+      <soap12:operation soapAction="http://web.cbr.ru/GetFullInfoByID" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOTypes">
+      <soap12:operation soapAction="http://web.cbr.ru/EnumFOTypes" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumFOVids">
+      <soap12:operation soapAction="http://web.cbr.ru/EnumFOVids" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="EnumRegions">
+      <soap12:operation soapAction="http://web.cbr.ru/EnumRegions" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Search">
+      <soap12:operation soapAction="http://web.cbr.ru/Search" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicDate">
+      <soap12:operation soapAction="http://web.cbr.ru/SearchByLicDate" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetBranchesInfoByID">
+      <soap12:operation soapAction="http://web.cbr.ru/GetBranchesInfoByID" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="SearchByLicNum">
+      <soap12:operation soapAction="http://web.cbr.ru/SearchByLicNum" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="FinOrg">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Финансовые организации ver: 06.05.2025</wsdl:documentation>
+    <wsdl:port name="FinOrgSoap" binding="tns:FinOrgSoap">
+      <soap:address location="http://www.cbr.ru/FO_ZoomWS/FinOrg.asmx" />
+    </wsdl:port>
+    <wsdl:port name="FinOrgSoap12" binding="tns:FinOrgSoap12">
+      <soap12:address location="http://www.cbr.ru/FO_ZoomWS/FinOrg.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

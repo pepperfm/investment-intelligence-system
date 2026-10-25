@@ -40,6 +40,7 @@ const groups = computed<NavigationMenuItem[][]>(() => {
       item('/research', { badge: badge(status.value?.activeRuns, 'primary') }),
       item('/hypotheses', { badge: badge(toDecide.value, 'warning') }),
       item('/instruments'),
+      item('/macro'),
     ],
     [
       item('/portfolio', { badge: badge(status.value?.pendingOrders, 'warning') }),

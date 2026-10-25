@@ -6,7 +6,7 @@
     "dev": "bun --bun nuxt dev",
     "build": "bun --bun nuxt build",
     "preview": "bun --bun nuxt preview",
-    "start": "bun run .output/server/index.mjs",
+    "start": "bun run scripts/start.ts",
     "postinstall": "bun --bun nuxt prepare",
     "typecheck": "nuxt typecheck",
     "lint": "eslint . --max-warnings 0",

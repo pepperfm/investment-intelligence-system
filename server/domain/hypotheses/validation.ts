@@ -1,8 +1,11 @@
+import type { EvidenceCoverage } from '../../../shared/types/evidence'
 import type { EntryScenario, ExitScenario, EvidenceItem, SourceRef } from '../../../shared/types/investment'
 import type { AnalystOutput } from '../../../shared/schemas/investment'
 import { staleDays } from '../market/calendar'
 
 export interface ValidationInput {
+  strategy?: string
+  coverage?: EvidenceCoverage
   draft: AnalystOutput
   entry: EntryScenario
   exit: ExitScenario
@@ -29,6 +32,14 @@ export function validateHypothesis(input: ValidationInput) {
     issues.push(`Утверждений без источников: ${uncited}`)
   }
   if (input.draft.direction === 'long') {
+    if (input.strategy === 'position' && (!input.coverage?.issuerFundamentals || !input.coverage.macro)) {
+      issues.push('Position: недостаточно проверенной отчётности или макроконтекста для фундаментальной гипотезы')
+    }
+    const financialClaims = input.draft.supportingEvidence.filter(item => /выручк|ebitda|чист\S* прибыл|долгов\S* нагруз|денежн\S* поток|net debt/i.test(item.claim))
+    const verifiedFinancialSources = new Set(input.sources.filter(source => source.kind === 'report' && (source.verification === 'manual_verified' || source.verification === 'machine_verified')).map(source => source.id))
+    if (financialClaims.some(item => !item.sourceIds.some(id => verifiedFinancialSources.has(id)))) {
+      issues.push('Фундаментальные аргументы требуют ссылки на подтверждённый первичный документ')
+    }
     if (input.draft.supportingEvidence.length === 0) {
       issues.push('Нет подтверждающих аргументов')
     }

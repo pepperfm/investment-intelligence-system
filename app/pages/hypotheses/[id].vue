@@ -17,7 +17,9 @@ const tab = ref('evidence')
 const critique = computed(() => h.value?.reviews.find(r => r.role === 'critic'))
 const outcome = computed(() => h.value?.reviews.find(r => r.role === 'outcome'))
 const canDecide = computed(() => ['ready_for_user', 'needs_review', 'watching'].includes(h.value?.status ?? ''))
-const canApprove = computed(() => h.value?.status === 'ready_for_user' || h.value?.status === 'watching')
+const canApprove = computed(() => h.value
+  && ['ready_for_user', 'watching'].includes(h.value.status)
+  && h.value.criticVerdict === 'supported' && h.value.validation.ok)
 const canClose = computed(() => ['user_approved', 'user_rejected', 'watching', 'ready_for_user', 'needs_review'].includes(h.value?.status ?? ''))
 const lastClose = computed(() => instrumentData.value?.candles.at(-1)?.close ?? null)
 const rr = computed(() => {
@@ -147,6 +149,8 @@ const SOURCE_KIND_LABELS: Record<string, string> = {
   event: 'События',
   report: 'Отчётность',
   memory: 'Память',
+  macro: 'Макро ЦБ',
+  regulatory: 'События регулятора',
 }
 
 const tabs = computed(() => [
@@ -219,7 +223,7 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [[
   {
     label: 'Повторить проверку критиком',
     icon: 'i-lucide-rotate-ccw',
-    disabled: !['needs_review', 'awaiting_critic'].includes(h.value?.status ?? ''),
+    disabled: !['needs_review', 'awaiting_critic', 'watching'].includes(h.value?.status ?? ''),
     onSelect: rerunCritic,
   },
   {
@@ -501,6 +505,12 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
               </div>
 
               <div v-else-if="tab === 'sources'" class="space-y-4">
+                <UAlert
+                  v-if="h.snapshot?.evidenceCoverage?.missing.length"
+                  color="warning"
+                  title="Покрытие данных на момент анализа"
+                  :description="h.snapshot.evidenceCoverage.missing.join('. ')"
+                />
                 <div v-for="(items, kind) in sourceGroups" :key="kind">
                   <p class="section-label mb-2">
                     {{ SOURCE_KIND_LABELS[kind] ?? kind }} · {{ items.length }}

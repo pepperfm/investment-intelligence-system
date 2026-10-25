@@ -180,7 +180,7 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
           <template #header>
             <UTabs
               v-model="tab"
-              :items="[{ label: 'События', value: 'events', icon: 'i-lucide-newspaper', badge: String(data.events.length) }, { label: 'Отчётность', value: 'reports', icon: 'i-lucide-file-spreadsheet' }, { label: 'Гипотезы', value: 'hypotheses', icon: 'i-lucide-lightbulb', badge: String(hypotheses?.length ?? 0) }]"
+              :items="[{ label: 'События', value: 'events', icon: 'i-lucide-newspaper', badge: String(data.events.length) }, { label: 'Отчётность', value: 'reports', icon: 'i-lucide-file-spreadsheet' }, { label: 'Финансы', value: 'fundamentals', icon: 'i-lucide-file-check' }, { label: 'Банк и лицензии', value: 'bank', icon: 'i-lucide-landmark' }, { label: 'Макро', value: 'macro', icon: 'i-lucide-landmark' }, { label: 'Гипотезы', value: 'hypotheses', icon: 'i-lucide-lightbulb', badge: String(hypotheses?.length ?? 0) }]"
               :content="false"
               variant="link"
               size="sm"
@@ -214,6 +214,50 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
               В текущей ленте нет новостей по этому эмитенту. Это не означает отсутствия корпоративных рисков.
             </li>
           </ul>
+          <div v-else-if="tab === 'bank'" class="p-5">
+            <BankEvidencePanel :context="data.bankEvidence" />
+          </div>
+          <div v-else-if="tab === 'fundamentals'" class="space-y-3 p-5">
+            <p class="text-xs text-muted">
+              Проверенные факты первичных документов. Банковские формы относятся к отдельному юридическому лицу; стандарты и консолидация не взаимозаменяемы.
+            </p>
+            <div
+              v-for="fact in data.issuerFundamentals"
+              :key="fact.id"
+              class="rounded-lg bg-elevated p-3 text-sm"
+            >
+              <p class="num">
+                {{ fact.metricKey }}: {{ fact.value }} {{ fact.unit }}
+              </p>
+              <p class="text-xs text-muted">
+                {{ fact.verification === 'machine_verified' ? 'Сверено кодом' : 'Подтверждено пользователем' }} · {{ fact.reportingStandard }} · {{ fact.basis === 'non_ifrs' ? 'non-IFRS' : 'Отчётный показатель' }} · {{ fact.consolidated ? 'Группа' : 'Юридическое лицо' }} · {{ fact.periodStart }} — {{ fact.periodEnd }}
+              </p>
+              <p class="text-xs text-muted">
+                Публикация: {{ fmtDate(fact.publishedAt) }} · Доступно в IIS: {{ fmtDate(fact.availableAt) }} · {{ fact.locator }}
+              </p>
+              <a
+                :href="fact.sourceUrl"
+                target="_blank"
+                rel="noopener"
+                class="text-xs text-primary hover:underline"
+              >{{ fact.title }}</a>
+            </div>
+            <UButton
+              v-if="!data.issuerFundamentals.length"
+              to="/macro"
+              variant="outline"
+            >
+              Загрузить первичный отчёт
+            </UButton>
+          </div>
+          <div v-else-if="tab === 'macro'" class="space-y-3 p-5">
+            <p class="text-sm text-muted">
+              Ставка, курсы, денежная масса и публикации регулятора доступны в отдельном разделе с датами получения и статусами источников.
+            </p>
+            <UButton to="/macro" variant="outline">
+              Макро и источники
+            </UButton>
+          </div>
           <div v-else-if="tab === 'reports'" class="overflow-x-auto">
             <p class="px-5 py-3 text-xs text-muted">
               Публичные таблицы МСФО Smart-Lab — вторичный источник. Первоисточник — по ссылке «Отчёт»,

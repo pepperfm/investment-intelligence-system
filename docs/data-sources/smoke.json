@@ -1,0 +1,81 @@
+[
+  {
+    "name": "catalog",
+    "publications": 35,
+    "datasets": 4,
+    "status": "ok",
+    "checkedAt": "2026-10-25T13:27:45.258Z"
+  },
+  {
+    "name": "keyrate",
+    "url": "https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx",
+    "status": 200,
+    "count": 20,
+    "hash": "18d376a161760f050baa82e020d5ab137b4b08abedb4e38d96df2d4e088a1b1f",
+    "checkedAt": "2026-10-25T13:27:45.996Z"
+  },
+  {
+    "name": "fx",
+    "url": "https://www.cbr.ru/scripts/XML_daily.asp",
+    "status": 200,
+    "count": 3,
+    "hash": "abb46e103f933ec4db731d8ad4439ace39909a784cf317bfe9059cc92a880f7b",
+    "checkedAt": "2026-10-25T13:27:46.344Z"
+  },
+  {
+    "name": "data",
+    "url": "https://www.cbr.ru/dataservice/data?publicationId=5&datasetId=7&y1=2026&y2=2026",
+    "status": 200,
+    "count": 9,
+    "hash": "7e4454dbda56ddc45e4c3af8e94e82da275d06d642c03480f252a89a9eaa0a3a",
+    "checkedAt": "2026-10-25T13:27:46.723Z"
+  },
+  {
+    "name": "rss",
+    "url": "https://www.cbr.ru/rss/RssPress",
+    "status": 200,
+    "count": 14,
+    "hash": "c8f19e544c2839fa4f00520dfc17f4cf90b3dac59dc4159fcf883f672caa9962",
+    "checkedAt": "2026-10-25T13:27:47.056Z"
+  },
+  {
+    "name": "bank-search",
+    "url": "https://www.cbr.ru/CreditInfoWebServ/CreditOrgInfo.asmx",
+    "status": 200,
+    "count": 4,
+    "hash": "7fb818344b173f871aee57d40432ff57bf7d45cf014212212ad77857006c37f5",
+    "checkedAt": "2026-10-25T13:27:47.479Z"
+  },
+  {
+    "name": "bank-full-101",
+    "url": "https://www.cbr.ru/CreditInfoWebServ/CreditOrgInfo.asmx",
+    "status": 200,
+    "count": 194,
+    "hash": "f060eb9ec373ed52b7ad36a499038dec3e0648f582a51c0102778e76fb954877",
+    "checkedAt": "2026-10-25T13:27:47.792Z"
+  },
+  {
+    "name": "bank-full-102",
+    "url": "https://www.cbr.ru/CreditInfoWebServ/CreditOrgInfo.asmx",
+    "status": 200,
+    "count": 103,
+    "hash": "4c81823e8ff6635b509a442f2d369b25829ff285b836b31aa61fea06f7fcc5b5",
+    "checkedAt": "2026-10-25T13:27:48.141Z"
+  },
+  {
+    "name": "finorg-update",
+    "url": "https://www.cbr.ru/FO_ZoomWS/FinOrg.asmx",
+    "status": 200,
+    "count": "2026-10-25T00:00:00",
+    "hash": "b2e7383222a81b48249d4a755bbae9c54bf1f80ab86f6fcb7f6329080e3d0a3e",
+    "checkedAt": "2026-10-25T13:27:48.465Z"
+  },
+  {
+    "name": "finorg-sber",
+    "url": "https://www.cbr.ru/FO_ZoomWS/FinOrg.asmx",
+    "status": 200,
+    "count": 12,
+    "hash": "baf296f6fc0adb6065865a2923e25152fd759dca6711c83358cddb485dd803fb",
+    "checkedAt": "2026-10-25T13:27:48.848Z"
+  }
+]

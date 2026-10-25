@@ -26,6 +26,11 @@ export const NAV_ITEMS: NavEntry[] = [
     to: '/instruments',
   },
   {
+    label: 'Макро и источники',
+    icon: 'i-lucide-landmark',
+    to: '/macro',
+  },
+  {
     label: 'Paper-портфель',
     icon: 'i-lucide-wallet',
     to: '/portfolio',

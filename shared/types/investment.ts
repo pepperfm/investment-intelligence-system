@@ -22,10 +22,16 @@ export interface Candle {
 
 export interface SourceRef {
   id: string
-  kind: 'candles' | 'event' | 'report' | 'memory' | 'metrics' | 'backtest'
+  kind: 'candles' | 'event' | 'report' | 'memory' | 'metrics' | 'backtest' | 'macro' | 'regulatory'
   title: string
   url: string | null
   asOf: string
+  sourceId?: string
+  publishedAt?: string | null
+  availableAt?: string | null
+  observedAt?: string
+  contentHash?: string
+  verification?: 'official_observed' | 'machine_verified' | 'manual_verified' | 'aggregated_unverified'
 }
 
 export interface EvidenceItem {

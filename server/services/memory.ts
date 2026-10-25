@@ -4,7 +4,7 @@ import { EMBEDDING_DIMENSIONS } from '../db/schema/investment'
 import { HASH_EMBEDDING_MODEL, hashEmbedding } from '../domain/memory/embedding'
 
 export interface MemoryDocument {
-  kind: 'event' | 'report' | 'hypothesis' | 'review' | 'retrospective'
+  kind: 'event' | 'report' | 'hypothesis' | 'review' | 'retrospective' | 'regulatory'
   refId: string
   instrumentId: string | null
   strategyId?: string | null
@@ -55,6 +55,14 @@ async function embed(text: string): Promise<{
 }
 
 export async function upsertDocument(doc: MemoryDocument) {
+  // Generated text becomes knowable when written, even when its subject is historical.
+  const availableAt = ['hypothesis', 'review', 'retrospective'].includes(doc.kind) ? new Date() : doc.availableAt
+  if (process.env.DEBUG_FIX && availableAt !== doc.availableAt) {
+    console.info('[FIX:memory-availability] Recording generated text at write time', {
+      kind: doc.kind,
+      availableAt,
+    })
+  }
   const [row] = await db.insert(schema.documents).values({
     kind: doc.kind,
     refId: doc.refId,
@@ -62,13 +70,13 @@ export async function upsertDocument(doc: MemoryDocument) {
     strategyId: doc.strategyId ?? null,
     title: doc.title,
     content: doc.content,
-    availableAt: doc.availableAt,
+    availableAt,
   }).onConflictDoUpdate({
     target: [schema.documents.kind, schema.documents.refId],
     set: {
       title: doc.title,
       content: doc.content,
-      availableAt: doc.availableAt,
+      availableAt,
     },
   }).returning({ id: schema.documents.id })
   const { model, vector } = await embed(`${doc.title}\n${doc.content}`)
@@ -102,6 +110,8 @@ export async function searchMemory(query: string, options: SearchOptions = {}) {
   const conditions = []
   if (options.before) {
     conditions.push(lte(schema.documents.availableAt, options.before))
+    // Also exclude legacy backdated documents written after the requested moment.
+    conditions.push(lte(schema.documents.createdAt, options.before))
   }
   if (options.kinds?.length) {
     conditions.push(inArray(schema.documents.kind, options.kinds))

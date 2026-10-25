@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { NuxtLink } from '#components'
+
 type Result = ApiResponse<'/api/memory/search'>[number]
 const q = ref('')
 const before = ref('')
@@ -155,7 +157,7 @@ useHead({ title: 'Память · IIS' })
               <div class="min-w-0 flex-1 space-y-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <component
-                    :is="hypothesisLink(r) ? resolveComponent('NuxtLink') : 'span'"
+                    :is="hypothesisLink(r) ? NuxtLink : 'span'"
                     :to="hypothesisLink(r) ?? undefined"
                     class="font-medium text-highlighted"
                     :class="hypothesisLink(r) ? 'hover:underline' : ''"

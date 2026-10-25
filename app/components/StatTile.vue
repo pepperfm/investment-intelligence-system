@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { NuxtLink } from '#components'
+
 defineProps<{
   label: string
   value: string
@@ -11,7 +13,7 @@ defineProps<{
 
 <template>
   <component
-    :is="to ? resolveComponent('NuxtLink') : 'div'"
+    :is="to ? NuxtLink : 'div'"
     :to="to"
     class="group relative flex flex-col gap-1 overflow-hidden rounded-xl bg-default p-4 ring ring-default transition-colors"
     :class="to ? 'hover:bg-elevated/50' : ''"

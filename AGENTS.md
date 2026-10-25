@@ -34,6 +34,7 @@ IIS (investment-intelligence-system) — локальная персональн
 │   ├── services/           # Работа с БД: анализ, рынок, память, оценки, стратегии, настройки
 │   ├── ai/                 # Провайдеры агентов (codex/claude/mock), изоляция процессов, контракты
 │   ├── adapters/market/    # Finam (read-only) и mock-провайдер рыночных данных
+│   ├── adapters/evidence/  # HTTP/SOAP/RSS ЦБ, проверенные контракты и provenance
 │   ├── trading/            # Paper-брокер — единственное место изменения заявок
 │   ├── db/schema/          # Drizzle-схема (investment.ts, auth.ts)
 │   ├── db/migrations/      # Сгенерированные SQL-миграции (коммитятся)
@@ -62,6 +63,10 @@ IIS (investment-intelligence-system) — локальная персональн
 | `server/db/schema/investment.ts` | Схема БД: инструменты, свечи, гипотезы, версии правил, память, заявки |
 | `shared/schemas/investment.ts` | zod-контракты API и ответов агентов |
 | `server/adapters/market/public-fundamentals.ts` | Ручная загрузка RSS Finam и таблиц МСФО Smart-Lab |
+| `server/services/evidence.ts` | Ручная синхронизация ЦБ, DB lease, аудит запросов и версии |
+| `server/services/primary-documents.ts` | Ручной каталог оригиналов с детерминированной проверкой PDF/HTML |
+| `server/services/bank-evidence.ts` | Версии форм 101/102 и FinOrg с asOf-фильтром |
+| `server/services/issuer-fundamentals.ts` | Импорт первичных документов с подтверждением пользователя |
 | `server/adapters/market/public-data.ts` | Детерминированный разбор дат, единиц и источников; без LLM |
 | `.codex/agents/*.toml` | Роли: market_researcher, hypothesis_analyst, hypothesis_critic, outcome_reviewer |
 
@@ -73,6 +78,7 @@ IIS (investment-intelligence-system) — локальная персональн
 | Архитектурный план | INVESTMENT_ARCHITECTURE_PLAN.md | Исходные требования продукта |
 | План реализации | IMPLEMENTATION_PLAN.md | Решения D1–D27, проверки, блокеры, оставшиеся задачи |
 | Резюме результатов | RESULTS_SUMMARY.md | Версии правил v1→v6, улучшения анализа, стоимость моделей |
+| Источники данных | docs/data-sources/availability.md | Проверенные endpoints, smoke и внешние блокеры |
 | Деплой | deploy/README.md | Примеры для Ubuntu (Bun + systemd + Nginx) |
 
 ## Файлы AI-контекста

@@ -16,6 +16,7 @@ import { searchMemory, upsertDocument } from './memory'
 import { trackRecord } from './evaluations'
 import { getCostModel } from './settings'
 import { activeVersion } from './strategies'
+import { loadEvidenceContext } from './evidence-packet'
 
 const MAX_STALE_DAYS = 5
 const ANALYST_VERSION = 'pipeline-v1'
@@ -207,7 +208,9 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   const sameSetup = record.trades.filter(t => t.setupType === signal.setupType)
   const sameSymbol = record.trades.filter(t => t.symbol === instrument.symbol)
   const lastTs = candles.at(-1)?.ts ?? run.asOf.toISOString()
+  const context = await loadEvidenceContext(instrumentId, run.asOf)
   const sources: SourceRef[] = [
+    ...context.sources,
     {
       id: 'candles',
       kind: 'candles',
@@ -234,14 +237,30 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
       kind: 'event' as const,
       title: e.title,
       url: e.url,
-      asOf: e.publishedAt.toISOString(),
+      asOf: e.retrievedAt.toISOString(),
+      publishedAt: e.publishedAt.toISOString(),
+      availableAt: e.retrievedAt.toISOString(),
+      observedAt: e.retrievedAt.toISOString(),
+      contentHash: createHash('sha256').update(JSON.stringify({
+        externalId: e.externalId,
+        title: e.title,
+        body: e.body,
+      })).digest('hex'),
     })),
     ...reports.map(r => ({
       id: `rep:${r.id.slice(0, 8)}`,
       kind: 'report' as const,
       title: `${r.reportType} ${r.period}`,
       url: r.url,
-      asOf: r.publishedAt.toISOString(),
+      asOf: r.availableAt.toISOString(),
+      publishedAt: r.publishedAt.toISOString(),
+      availableAt: r.availableAt.toISOString(),
+      observedAt: r.availableAt.toISOString(),
+      verification: 'aggregated_unverified' as const,
+      contentHash: createHash('sha256').update(JSON.stringify({
+        externalId: r.externalId,
+        metrics: r.metrics,
+      })).digest('hex'),
     })),
     ...memory.map(m => ({
       id: `mem:${m.id.slice(0, 8)}`,
@@ -253,6 +272,7 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   ]
   const { metrics, ...signalRest } = signal
   const packet: EvidencePacket = {
+    ...context,
     mode: run.kind === 'why_not_buy' ? 'why_not_buy' : 'research',
     asOf: run.asOf.toISOString(),
     instrument: {
@@ -435,6 +455,8 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
     entry,
     exit,
     sources: packet.sources,
+    strategy: packet.strategy.id,
+    coverage: packet.evidenceCoverage,
     lastCandleTs,
     asOf: run.asOf,
     maxStaleDays: MAX_STALE_DAYS,
@@ -540,7 +562,7 @@ export async function runCritic(hypothesisId: string, logger?: RunLogger, provid
       statusMessage: 'Hypothesis not found',
     })
   }
-  if (!['awaiting_critic', 'needs_review'].includes(h.status)) {
+  if (!['awaiting_critic', 'needs_review', 'watching'].includes(h.status)) {
     throw createError({
       statusCode: 409,
       statusMessage: `Critic cannot run in status ${h.status}`,

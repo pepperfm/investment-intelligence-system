@@ -30,6 +30,14 @@ const KIND: Record<string, {
     icon: 'i-lucide-file-spreadsheet',
     label: 'Отчётность',
   },
+  macro: {
+    icon: 'i-lucide-landmark',
+    label: 'Макроданные ЦБ',
+  },
+  regulatory: {
+    icon: 'i-lucide-newspaper',
+    label: 'Регуляторное событие',
+  },
   memory: {
     icon: 'i-lucide-brain',
     label: 'Память',
@@ -58,6 +66,31 @@ const KIND: Record<string, {
           </p>
           <p class="text-sm text-highlighted">
             {{ source.title }}
+          </p>
+          <p v-if="source.publishedAt">
+            Публикация: {{ fmtDate(source.publishedAt, true) }}
+          </p>
+          <p v-if="source.availableAt">
+            Доступно в IIS: {{ fmtDate(source.availableAt, true) }}
+          </p>
+          <p v-if="source.observedAt">
+            Получено: {{ fmtDate(source.observedAt, true) }}
+          </p>
+          <p v-if="source.verification === 'aggregated_unverified'" class="text-warning">
+            Вторичный источник; первичный документ не сверен
+          </p>
+          <p v-if="source.verification === 'machine_verified'">
+            Числа сверены кодом с первичным документом
+          </p>
+          <p v-if="source.verification === 'manual_verified'">
+            Числа подтверждены пользователем по документу
+          </p>
+          <p
+            v-if="source.contentHash"
+            class="num truncate"
+            :title="source.contentHash"
+          >
+            SHA-256: {{ source.contentHash }}
           </p>
           <a
             v-if="source.url"

@@ -5,7 +5,7 @@ export type DecisionAction = 'approve' | 'reject' | 'defer' | 'watch' | 'close'
 const USER_DECIDABLE: HypothesisStatus[] = ['ready_for_user', 'needs_review', 'watching']
 
 /** Allowed user transitions. Nothing reaches the user before the critic gate. */
-export function nextStatusForDecision(current: HypothesisStatus, action: DecisionAction): HypothesisStatus {
+export function nextStatusForDecision(current: HypothesisStatus, action: DecisionAction, gate?: GateInput): HypothesisStatus {
   if (action === 'close') {
     if (['user_approved', 'user_rejected', 'watching', 'ready_for_user', 'needs_review'].includes(current)) {
       return 'closed'
@@ -17,7 +17,7 @@ export function nextStatusForDecision(current: HypothesisStatus, action: Decisio
   }
   switch (action) {
     case 'approve':
-      if (current === 'needs_review') {
+      if (current === 'needs_review' || !gate || gateStatus(gate) !== 'ready_for_user') {
         throw new Error('Гипотеза с возражениями критика не может быть одобрена: сначала повторите проверку')
       }
       return 'user_approved'

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { h as render, resolveComponent } from 'vue'
+import { h as render } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import { exportHypotheses, type HypothesisExport, type HypothesisExportFormat } from '~/utils/hypothesis-export'
+import { UCheckbox, StatusBadge, VerdictBadge, LevelsBar, UBadge, UIcon, UTooltip } from '#components'
 
 const route = useRoute()
 const { data, status: loadStatus } = await useFetch('/api/hypotheses')
@@ -19,6 +21,37 @@ const strategy = ref<string>('all')
 const direction = ref<string>('all')
 const q = ref('')
 const preview = ref<string | null>(null)
+const selected = ref<string[]>([])
+const copyFormat = ref<HypothesisExportFormat>('md')
+const copyAction = useAction()
+watch([tab, strategy, direction, q], () => {
+  selected.value = []
+})
+const selectedRows = computed(() => rows.value.filter(row => selected.value.includes(row.id)))
+const selectionState = computed(() => {
+  if (!selectedRows.value.length) {
+    return false
+  }
+  if (selectedRows.value.length === rows.value.length) {
+    return true
+  }
+  return 'indeterminate' as const
+})
+function toggleRow(id: string, checked: boolean) {
+  selected.value = checked ? [...new Set([...selected.value, id])] : selected.value.filter(value => value !== id)
+}
+async function copySelected() {
+  const ids = selectedRows.value.map(row => row.id)
+  const format = copyFormat.value
+  if (!ids.length) {
+    return
+  }
+  await copyAction.run(async () => {
+    const hypotheses = await Promise.all(ids.map(id => $fetch<HypothesisExport>(`/api/hypotheses/${id}`)))
+    await navigator.clipboard.writeText(exportHypotheses(hypotheses, format))
+    return hypotheses.length
+  }, count => `Скопировано гипотез: ${count} · ${format === 'md' ? 'Markdown' : 'TXT'}`)
+}
 
 const count = (group: Group) => (data.value ?? []).filter(h => group === 'all' || (GROUPS[group] as readonly string[]).includes(h.status)).length
 const tabs = computed(() => [
@@ -56,14 +89,23 @@ const rows = computed(() => (data.value ?? []).filter(h =>
   && (!q.value || `${h.symbol} ${h.name} ${h.thesis}`.toLowerCase().includes(q.value.toLowerCase())),
 ))
 
-const StatusBadge = resolveComponent('StatusBadge')
-const VerdictBadge = resolveComponent('VerdictBadge')
-const LevelsBar = resolveComponent('LevelsBar')
-const UBadge = resolveComponent('UBadge')
-const UIcon = resolveComponent('UIcon')
-const UTooltip = resolveComponent('UTooltip')
-
 const columns: TableColumn<Row>[] = [
+  {
+    id: 'select',
+    header: () => render(UCheckbox, {
+      'aria-label': 'Выбрать все видимые гипотезы',
+      'modelValue': selectionState.value,
+      'disabled': rows.value.length === 0,
+      'onUpdate:modelValue': (value: unknown) => {
+        selected.value = value === true ? rows.value.map(row => row.id) : []
+      },
+    }),
+    cell: ({ row }) => render('div', { onClick: (event: Event) => event.stopPropagation() }, [render(UCheckbox, {
+      'aria-label': `Выбрать ${row.original.symbol} ${STRATEGY_LABELS[row.original.strategyId]}`,
+      'modelValue': selected.value.includes(row.original.id),
+      'onUpdate:modelValue': (value: unknown) => toggleRow(row.original.id, value === true),
+    })]),
+  },
   {
     accessorKey: 'symbol',
     header: 'Инструмент',
@@ -178,6 +220,34 @@ useHead({ title: 'Гипотезы · IIS' })
       </UDashboardToolbar>
     </template>
     <template #body>
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <span class="text-sm text-muted">Выбрано: {{ selectedRows.length }}</span>
+        <USelect
+          v-model="copyFormat"
+          :items="[{ label: 'Markdown', value: 'md' }, { label: 'TXT', value: 'txt' }]"
+          aria-label="Формат копирования"
+          size="sm"
+          class="w-32"
+        />
+        <UButton
+          icon="i-lucide-copy"
+          size="sm"
+          :disabled="!selectedRows.length"
+          :loading="copyAction.pending.value"
+          @click="copySelected"
+        >
+          Скопировать выбранные
+        </UButton>
+        <UButton
+          v-if="selectedRows.length"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          @click="selected = []"
+        >
+          Снять выбор
+        </UButton>
+      </div>
       <UTable
         :data="rows"
         :columns="columns"

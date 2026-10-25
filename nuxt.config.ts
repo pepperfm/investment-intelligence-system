@@ -91,6 +91,7 @@ export default defineNuxtConfig({
     llmostReviewerModel: '',
     llmostReviewerEffort: '',
     aiTimeoutMs: 600000,
+    pdfTextBin: 'pdftotext',
     embeddingProvider: 'hash',
     embeddingUrl: '',
     embeddingKey: '',
@@ -147,5 +148,9 @@ export default defineNuxtConfig({
   },
   security: {
     rateLimiter: false,
+    requestSizeLimiter: {
+      maxRequestSizeInBytes: 21_000_000,
+      maxUploadFileRequestInBytes: 21_000_000,
+    },
   },
 })

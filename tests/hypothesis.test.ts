@@ -42,7 +42,11 @@ describe('user decisions', () => {
     expect(() => nextStatusForDecision('awaiting_critic', 'approve')).toThrow()
     expect(() => nextStatusForDecision('needs_review', 'approve')).toThrow()
     expect(nextStatusForDecision('needs_review', 'reject')).toBe('user_rejected')
-    expect(nextStatusForDecision('ready_for_user', 'approve')).toBe('user_approved')
+    expect(nextStatusForDecision('ready_for_user', 'approve', {
+      criticVerdict: 'supported',
+      criticSucceeded: true,
+      validationOk: true,
+    })).toBe('user_approved')
   })
 })
 
@@ -100,5 +104,104 @@ describe('validateHypothesis', () => {
     expect(result.issues.join(' ')).toMatch(/несуществующие/)
     expect(result.issues.join(' ')).toMatch(/стоп < вход < цель/)
     expect(result.issues.join(' ')).toMatch(/устарели/)
+  })
+})
+
+describe('fundamental evidence gate', () => {
+  const input = {
+    draft: {
+      ...draft,
+      counterEvidence: [{
+        claim: 'Риск',
+        sourceIds: ['metrics'],
+      }],
+    },
+    entry: {
+      type: 'market_next_open' as const,
+      price: 100,
+      validDays: 1,
+      note: '',
+    },
+    exit: {
+      stopLoss: 90,
+      takeProfit: 120,
+      timeExitDays: 10,
+      note: '',
+    },
+    sources: [{
+      id: 'metrics',
+      kind: 'metrics' as const,
+      title: 'Метрики',
+      url: null,
+      asOf: '2026-10-23T00:00:00Z',
+    }],
+    lastCandleTs: '2026-10-23T00:00:00Z',
+    asOf: new Date('2026-10-24T00:00:00Z'),
+    maxStaleDays: 5,
+    rewardRisk: 2,
+    minRewardRisk: 1.2,
+  }
+  it('keeps technical Swing eligible but blocks Position with missing fundamentals', () => {
+    expect(validateHypothesis({
+      ...input,
+      strategy: 'swing',
+    }).ok).toBe(true)
+    const result = validateHypothesis({
+      ...input,
+      strategy: 'position',
+      coverage: {
+        macro: true,
+        issuerFundamentals: false,
+        regulatoryEvents: true,
+        missing: ['fundamentals'],
+      },
+    })
+    expect(result.ok).toBe(false)
+    expect(gateStatus({
+      criticVerdict: 'supported',
+      criticSucceeded: true,
+      validationOk: result.ok,
+    })).toBe('needs_review')
+    expect(validateHypothesis({
+      ...input,
+      strategy: 'position',
+      draft: {
+        ...input.draft,
+        direction: 'no_trade',
+      },
+    }).ok).toBe(true)
+  })
+  it('rejects revenue assertions cited only to candles or an unverified aggregate', () => {
+    const financialDraft = {
+      ...input.draft,
+      supportingEvidence: [{
+        claim: 'Выручка выросла на 20%',
+        sourceIds: ['metrics'],
+      }],
+    }
+    expect(validateHypothesis({
+      ...input,
+      strategy: 'swing',
+      draft: financialDraft,
+    }).ok).toBe(false)
+    const primary = {
+      id: 'fact:1',
+      kind: 'report' as const,
+      title: 'Отчёт',
+      url: 'https://issuer.example/report',
+      asOf: '2026-10-23T00:00:00Z',
+      verification: 'manual_verified' as const,
+    }
+    expect(validateHypothesis({
+      ...input,
+      sources: [...input.sources, primary],
+      draft: {
+        ...financialDraft,
+        supportingEvidence: [{
+          claim: 'Выручка выросла на 20%',
+          sourceIds: ['fact:1'],
+        }],
+      },
+    }).ok).toBe(true)
   })
 })

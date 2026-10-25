@@ -1,0 +1,51 @@
+[
+  {
+    "name": "publications",
+    "url": "https://www.cbr.ru/dataservice/publications",
+    "status": 200,
+    "bytes": 4194,
+    "checkedAt": "2026-10-25T08:04:43.358130+00:00"
+  },
+  {
+    "name": "daily-wsdl",
+    "url": "https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL",
+    "status": 200,
+    "bytes": 193123,
+    "checkedAt": "2026-10-25T08:04:43.525904+00:00"
+  },
+  {
+    "name": "daily-help",
+    "url": "https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?op=KeyRateXML",
+    "status": 200,
+    "bytes": 6502,
+    "checkedAt": "2026-10-25T08:04:43.606067+00:00"
+  },
+  {
+    "name": "fx",
+    "url": "https://www.cbr.ru/scripts/XML_daily.asp",
+    "status": 200,
+    "bytes": 9512,
+    "checkedAt": "2026-10-25T08:04:43.683059+00:00"
+  },
+  {
+    "name": "rss",
+    "url": "https://www.cbr.ru/rss/RssPress",
+    "status": 200,
+    "bytes": 80437,
+    "checkedAt": "2026-10-25T08:04:43.832731+00:00"
+  },
+  {
+    "name": "banks-wsdl",
+    "url": "https://www.cbr.ru/CreditInfoWebServ/CreditOrgInfo.asmx?WSDL",
+    "status": 200,
+    "bytes": 258150,
+    "checkedAt": "2026-10-25T08:04:44.021829+00:00"
+  },
+  {
+    "name": "finorg-doc",
+    "url": "https://www.cbr.ru/development/finorg/",
+    "status": 200,
+    "bytes": 59369,
+    "checkedAt": "2026-10-25T08:04:44.228078+00:00"
+  }
+]

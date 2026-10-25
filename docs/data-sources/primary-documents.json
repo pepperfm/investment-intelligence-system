@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-25T13:30:27.548Z",
+  "documents": [
+    {
+      "inn": "3906391460",
+      "title": "Яндекс · МСФО, 2 квартал и 1 полугодие 2026",
+      "content_hash": "52c73b17df6be3917f2a75f95c1b4f765ab753907b615ab708468dbcf3d30b2f",
+      "verification": "machine_verified",
+      "extractor_version": "primary-pdf-poppler-rows-v1",
+      "published_at": "2026-07-28T21:00:00.000Z",
+      "available_at": "2026-10-25T13:19:52.776Z",
+      "facts": 16
+    },
+    {
+      "inn": "7707083893",
+      "title": "Сбербанк · форма 102 на 2026-09-01",
+      "content_hash": "39cd438e1596054669071165edb4cb97ee665ea1d88458e4db4badff3182a0bf",
+      "verification": "machine_verified",
+      "extractor_version": "cbr-f102-html-identity-units-v1",
+      "published_at": null,
+      "available_at": "2026-10-25T13:19:54.391Z",
+      "facts": 2
+    },
+    {
+      "inn": "7707083893",
+      "title": "Сбербанк · форма 102 на 2025-09-01",
+      "content_hash": "68f504e6dbdfbe77c0ae2fa4d6bf2ccde75cec2e0c9208fd63cf1b4ec858b7b4",
+      "verification": "machine_verified",
+      "extractor_version": "cbr-f102-html-identity-units-v1",
+      "published_at": null,
+      "available_at": "2026-10-25T13:19:54.765Z",
+      "facts": 2
+    },
+    {
+      "inn": "8401005730",
+      "title": "Норникель · консолидированные результаты МСФО 2025",
+      "content_hash": "1a80e0eae0e8edc482d65bb1c20efbf58d844122d41af3579cdbe7bd0acc6a4b",
+      "verification": "machine_verified",
+      "extractor_version": "primary-pdf-poppler-rows-v1",
+      "published_at": "2026-02-10T21:00:00.000Z",
+      "available_at": "2026-10-25T13:19:54.183Z",
+      "facts": 8
+    }
+  ]
+}

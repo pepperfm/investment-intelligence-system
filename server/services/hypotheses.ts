@@ -1,3 +1,4 @@
+import type { EvidenceCoverage } from '../../shared/types/evidence'
 import { db, schema } from '@nuxthub/db'
 import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm'
 import type { HypothesisStatus, StrategyId } from '../../shared/types/investment'
@@ -67,6 +68,7 @@ export async function getHypothesis(id: string) {
           sha256: schema.sourceSnapshots.sha256,
           asOf: schema.sourceSnapshots.asOf,
           capturedAt: schema.sourceSnapshots.capturedAt,
+          evidenceCoverage: sql<EvidenceCoverage | null>`${schema.sourceSnapshots.payload}->'evidenceCoverage'`,
         }).from(schema.sourceSnapshots).where(eq(schema.sourceSnapshots.id, row.snapshotId))
       : Promise.resolve([]),
     db.select().from(schema.orders).where(eq(schema.orders.hypothesisId, id)).orderBy(desc(schema.orders.createdAt)),
@@ -113,8 +115,19 @@ export async function decideHypothesis(id: string, action: DecisionAction, comme
     }
     let next: HypothesisStatus
     try {
-      next = nextStatusForDecision(row.status as HypothesisStatus, action)
+      next = nextStatusForDecision(row.status as HypothesisStatus, action, {
+        criticVerdict: row.criticVerdict as 'supported' | 'disputed' | 'insufficient_evidence' | null,
+        criticSucceeded: row.criticVerdict !== null,
+        validationOk: row.validation.ok,
+      })
     } catch (error) {
+      if (process.env.DEBUG_FIX) {
+        console.info('[FIX:critic-gate] Decision rejected', {
+          id,
+          action,
+          status: row.status,
+        })
+      }
       throw createError({
         statusCode: 409,
         statusMessage: (error as Error).message,

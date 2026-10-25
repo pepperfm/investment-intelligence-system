@@ -175,7 +175,7 @@ export async function reviewOutcome(hypothesisId: string) {
     strategyId: h.strategyId,
     title: `Ретроспектива ${instrument.ticker} ${h.strategyId}: ${evaluation.outcome} ${(evaluation.netReturn * 100).toFixed(1)}%`,
     content: [result.output.summary, result.output.forecastVsActual, ...result.output.lessons].join('\n'),
-    availableAt: evaluation.exitAt ?? new Date(),
+    availableAt: new Date(),
   })
   return result.output
 }
