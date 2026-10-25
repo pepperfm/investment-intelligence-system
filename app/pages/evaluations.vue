@@ -128,6 +128,13 @@ useHead({ title: 'Оценки · IIS' })
       </UDashboardToolbar>
     </template>
     <template #body>
+      <UAlert
+        v-if="stats?.includesReconstruction"
+        color="warning"
+        title="Статистика включает историческую реконструкцию"
+        description="Данные получены позже даты сценария. Историческое время публикации и корректировки неизвестны; это условные расчёты, а не подтверждённая торговая результативность."
+        class="mb-4"
+      />
       <div class="grid gap-4 xl:grid-cols-3">
         <UCard class="xl:col-span-2">
           <div class="mb-3 flex items-center justify-between">

@@ -7,6 +7,8 @@ import { staleDays, type CalendarOptions } from '../market/calendar'
 
 export interface ValidationInput {
   calendar?: CalendarOptions
+  confirmedSessionAge?: number
+  backtestVerified?: boolean
   strategy?: string
   coverage?: EvidenceCoverage
   draft: AnalystOutput
@@ -46,6 +48,9 @@ export function validateHypothesis(input: ValidationInput) {
     issues.push(`Утверждений без источников: ${uncited}`)
   }
   if (input.draft.direction === 'long') {
+    if (input.backtestVerified === false) {
+      issues.push('История/корректировки не подтверждены для long; реконструкция не разрешает покупку')
+    }
     if (input.strategy === 'position' && (!input.coverage?.issuerFundamentals || !input.coverage.macro)) {
       issues.push('Position: недостаточно проверенной отчётности или макроконтекста для фундаментальной гипотезы')
     }
@@ -67,7 +72,7 @@ export function validateHypothesis(input: ValidationInput) {
   if (input.draft.counterEvidence.length === 0) {
     issues.push('Не приведено ни одного контраргумента')
   }
-  const age = staleDays(input.lastCandleTs, input.asOf, input.calendar)
+  const age = input.confirmedSessionAge ?? staleDays(input.lastCandleTs, input.asOf, input.calendar)
   if (age > input.maxStaleDays) {
     issues.push(`Котировки устарели: последние данные ${age === Infinity ? 'отсутствуют' : `${age} дн. назад`}`)
   }

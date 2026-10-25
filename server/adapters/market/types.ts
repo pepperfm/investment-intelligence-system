@@ -58,7 +58,11 @@ export interface MarketDataProvider {
   readonly id: 'mock' | 'finam'
   readonly benchmarkSymbol: string
   listInstruments(): Promise<ProviderInstrument[]>
-  getCandles(symbol: string, from: Date, to: Date): Promise<Candle[]>
+  getCandles(symbol: string, from: Date, to: Date, observe?: (response: {
+    endpoint: string
+    observedAt: string
+    payload: unknown
+  }) => Promise<void>): Promise<Candle[]>
   getEvents(symbol: string, from: Date, to: Date): Promise<ProviderEvent[]>
   getReports(symbol: string, from: Date, to: Date): Promise<ProviderReport[]>
   getAccount(): Promise<ProviderAccount | null>

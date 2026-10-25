@@ -21,7 +21,9 @@ const canApprove = computed(() => h.value
   && ['ready_for_user', 'watching'].includes(h.value.status)
   && h.value.criticVerdict === 'supported' && h.value.validation.ok)
 const canClose = computed(() => ['user_approved', 'user_rejected', 'watching', 'ready_for_user', 'needs_review'].includes(h.value?.status ?? ''))
-const lastClose = computed(() => instrumentData.value?.candles.at(-1)?.close ?? null)
+const physicalChart = computed(() => h.value?.audit.marketData?.barPolicy === 'physical_session_v1')
+const chartCandles = computed(() => physicalChart.value ? h.value?.audit.chartCandles ?? [] : instrumentData.value?.candles ?? [])
+const lastClose = computed(() => chartCandles.value.at(-1)?.close ?? null)
 const rr = computed(() => {
   if (!h.value) {
     return null
@@ -309,7 +311,7 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
                     <dt class="text-[11px] text-muted">
                       Горизонт
                     </dt><dd class="num text-sm font-semibold text-highlighted">
-                      {{ h.horizonDays }} дн.
+                      {{ h.horizonDays }} {{ h.marketScenario?.horizonUnit === 'confirmed_sessions' ? 'сессий' : 'дн.' }}
                     </dd>
                   </div>
                   <div>
@@ -341,12 +343,12 @@ useHead({ title: computed(() => `${h.value?.instrument.ticker ?? 'Гипотез
               />
               <USeparator class="my-5" />
               <p class="mb-2 text-xs text-muted">
-                График загруженной истории может включать цены после asOf. Они не входят в исходный пакет анализа; будущие цены используются только для отдельной оценки исхода.
+                {{ physicalChart ? 'MOEX: только 60 исходных физических сессий из закреплённого snapshot. Данные после asOf и котировки Finam сюда не подставляются.' : 'Сырая загруженная история инструмента: может включать цены после asOf. Они не входят в исходный пакет анализа; будущие цены используются только для отдельной оценки исхода.' }}
               </p>
               <PriceChart
-                :candles="instrumentData?.candles ?? []"
-                :indicators="instrumentData?.dataQuality.status === 'verified'"
-                :ranges="instrumentData?.dataQuality.status === 'verified'"
+                :candles="chartCandles"
+                :indicators="!physicalChart && instrumentData?.dataQuality.status === 'verified'"
+                :ranges="!physicalChart && instrumentData?.dataQuality.status === 'verified'"
                 :levels="levels"
                 :markers="[{ ts: h.evidenceTimestamp, label: 'идея' }]"
                 :height="240"

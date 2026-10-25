@@ -2,6 +2,7 @@
 import type { StrategyId } from '#shared/types/investment'
 
 const { data: overview } = await useFetch('/api/instruments/overview')
+const { data: marketData } = await useFetch('/api/market-data')
 const { data: runs, refresh } = await useFetch('/api/runs')
 const { data: status } = useSystemStatus()
 const start = useAction()
@@ -10,6 +11,14 @@ const kind = ref<'research' | 'why_not_buy'>('research')
 const strategies = ref<StrategyId[]>(['swing'])
 const selected = ref<string[]>([])
 const asOf = ref('')
+const researchBarsProvider = shallowRef<'configured' | 'moex_iss'>('configured')
+const barSources = [{
+  label: 'Текущий источник (настройки)',
+  value: 'configured',
+}, {
+  label: 'MOEX ISS · физические сессии · реконструкция',
+  value: 'moex_iss',
+}]
 
 const equities = computed(() => (overview.value ?? []).filter(i => i.kind === 'equity').sort((a, b) => a.ticker.localeCompare(b.ticker)))
 const versionOf = (s: StrategyId) => equities.value[0]?.signals.find(x => x.strategy === s)?.version
@@ -28,7 +37,7 @@ function toggleStrategy(s: StrategyId) {
 // Estimate is exact for "today": screening is deterministic and only setups reach the agents.
 const estimate = computed(() => {
   const candidates = selected.value.length * strategies.value.length
-  const live = !asOf.value
+  const live = !asOf.value && researchBarsProvider.value === 'configured'
   const withSetup = equities.value.filter(i => selected.value.includes(i.id)).reduce((n, i) => n + i.signals.filter(s => s.setup && strategies.value.includes(s.strategy as StrategyId)).length, 0)
   const toAgents = kind.value === 'why_not_buy' ? candidates : live ? withSetup : null
   const perCall = status.value?.analyst.id === 'mock' ? 0.05 : 14
@@ -66,6 +75,7 @@ async function submit() {
   const run = await start.run(() => $fetch<ApiResponse<'/api/runs', 'post'>>('/api/runs', {
     method: 'POST',
     body: {
+      researchBarsProvider: researchBarsProvider.value === 'moex_iss' ? 'moex_iss' : undefined,
       kind: kind.value,
       strategies: strategies.value,
       instrumentIds: selected.value,
@@ -187,6 +197,33 @@ useHead({ title: 'Исследования · IIS' })
           </div>
 
           <div>
+            <UFormField label="Источник исследовательских свечей" class="mb-4">
+              <USelect
+                v-model="researchBarsProvider"
+                :items="barSources"
+                class="w-full"
+              />
+              <p v-if="researchBarsProvider === 'moex_iss'" class="mt-2 text-xs text-muted">
+                Явный выбор нового набора входных данных: дневной OHLCV сверяется с часовой историей. Горизонт — подтверждённые физические сессии, включая выходные при наличии торгов. Историческая доступность и корректировки неизвестны; long и paper остаются под ограничениями. Перед запуском — ручная синхронизация выбранных бумаг и индекса, это может занять несколько минут.
+              </p>
+            </UFormField>
+            <details v-if="marketData?.series.length" class="mb-4 text-xs text-muted">
+              <summary class="cursor-pointer">
+                Источники: сверка с часовой историей · {{ marketData.series.length }} инструментов
+              </summary>
+              <div
+                v-for="series in marketData.series"
+                :key="series.id"
+                class="mt-2 border-l border-default pl-2"
+              >
+                <p>{{ overview?.find(i => i.id === series.instrumentId)?.ticker ?? series.instrumentId }} · {{ series.source }} / {{ series.board }} · {{ series.policyId }}</p>
+                <p>{{ series.from }} — {{ series.to }} · получено {{ fmtDate(series.observedAt, true) }}</p>
+                <p>Реконструкция: {{ series.counts.research_usable_with_limits }} · карантин: {{ series.counts.quarantined }}</p>
+                <p v-for="item in series.quarantine" :key="item.date">
+                  {{ item.date }}: {{ item.issues.join(', ') }}
+                </p>
+              </div>
+            </details>
             <p class="section-label mb-2">
               Данные на дату
             </p>

@@ -86,12 +86,24 @@ export async function getHypothesis(id: string) {
     calendarVersion: payload?.calendarVersion ?? 'legacy_unknown',
     normalizationVersion: payload?.normalizationVersion ?? 'legacy_unknown',
     dataQuality: payload?.dataQuality ?? null,
-    marketProvider: instrument?.provider ?? 'unknown',
+    marketProvider: payload?.marketData?.source ?? instrument?.provider ?? 'unknown',
+    marketData: payload?.marketData ?? null,
+    backtestQuality: payload?.backtestQuality ?? null,
+    chartCandles: payload?.marketData?.barPolicy === 'physical_session_v1'
+      ? (payload.recentCandles ?? []).map(c => ({
+          ts: `${c.d}T00:00:00.000Z`,
+          open: c.o,
+          high: c.h,
+          low: c.l,
+          close: c.c,
+          volume: c.v,
+        }))
+      : null,
     pinnedStrategy: payload?.pinnedStrategy ?? null,
     trackRecordAuditId: payload?.trackRecord.audit?.id ?? null,
     sourceAvailability: {
-      available: [...new Set(row.sources.map(source => source.sourceId ?? source.kind))],
-      observedLater: [...new Set(laterSources.map(source => source.sourceId))].filter(key => !sourceHealth.some(source => source.sourceId === key && source.status === 'ok')),
+      available: [...new Set(row.sources.filter(source => !source.observedAt || new Date(source.observedAt) <= row.evidenceTimestamp).map(source => source.sourceId ?? source.kind))],
+      observedLater: [...new Set([...row.sources.filter(source => source.observedAt && new Date(source.observedAt) > row.evidenceTimestamp).map(source => source.sourceId ?? source.kind), ...laterSources.map(source => source.sourceId)])].filter(key => !sourceHealth.some(source => source.sourceId === key && source.status === 'ok')),
       unavailable: sourceHealth.filter(source => source.status !== 'ok' && !laterSources.some(later => later.sourceId === source.sourceId)).map(source => source.sourceId),
     },
   }

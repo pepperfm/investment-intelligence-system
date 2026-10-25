@@ -59,7 +59,7 @@ describe('Finam read-only market adapter', () => {
     expect(requests.some(r => r.includes('cursor=next'))).toBe(true)
     expect(requests).not.toContain('/v1/assets')
   })
-  it('refreshes an expired JWT once, sorts/deduplicates bars and rejects corrupt prices', async () => {
+  it('refreshes an expired JWT once, preserves duplicate bars for quarantine and rejects corrupt prices', async () => {
     let auth = 0
     let calls = 0
     let corrupt = false
@@ -95,7 +95,7 @@ describe('Finam read-only market adapter', () => {
     })
     const result = await provider.getCandles('SBER@MISX', new Date('2024-01-01'), new Date('2024-01-03'))
     expect(auth).toBe(2)
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(2)
     expect(result[0]?.volume).toBe(1_000_000)
     corrupt = true
     await expect(provider.getCandles('SBER@MISX', new Date('2024-01-01'), new Date('2024-01-03'))).rejects.toThrow('invalid candle prices')

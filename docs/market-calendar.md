@@ -1,100 +1,94 @@
-# MOEX dates and Finam daily data
+# MOEX calendar and two bar clocks
 
-Verified on 25 October 2026. This is a local, versioned schedule table, not a calendar polling service.
-No existing candles or hypotheses are rewritten.
+## Dates are different dimensions
 
-## Two different dates
+A physical Moscow `sessionDate` identifies when prices occurred. A logical
+`tradingDate` groups exchange sessions for the next regular trading day.
+[MOEX stock-session technology](https://www.moex.com/a8920) and the
+[2026 weekend announcement](https://www.moex.com/n95564) assign additional sessions
+to that next day, with eligible weekend stock sessions 09:50–19:00 Moscow.
+Instrument/board admission must be established separately. A ticker name or general
+weekend schedule does not establish historical advance eligibility.
 
-A physical Moscow `sessionDate` identifies when trades happen. A logical `tradingDate`
-identifies the exchange trading day. The [official stock-session description](https://www.moex.com/a8920)
-and [2026 weekend schedule](https://www.moex.com/n95564) assign additional weekend sessions to
-the following regular trading day. They specify 09:50–19:00 Moscow for eligible instruments.
-A market-wide weekend schedule does not establish admission of an individual security/board.
-`inspectSession()` therefore returns `unknown` without an explicit verified eligibility flag.
-It does not invent a universal weekday opening time.
+For 25–29 September 2026:
 
-The compatibility helpers `addTradingDays`, `tradingDaysBetween`, `isTradingDay` operate on
-UTC-midnight **date labels**, counting each regular logical trading day once. They do not count
-Saturday and Sunday as two extra trading days. Physical instants use `moscowDate()` / `inspectSession()`.
-For 25–29 September the logical sequence is 25, 28, 29 September; physical sessions on
-26–27 September belong to 28 September. Ten logical days after 25 September is 9 October.
-The model does not claim that an eligible instrument's next physical opening is Monday.
-Unverified daily data blocks the executable scenario instead of making that claim.
+| Physical date | Logical day | Observed equity physical session |
+| --- | --- | --- |
+| Friday 25 | 25 September | separate period |
+| Saturday 26 | 28 September | separate period |
+| Sunday 27 | 28 September | separate period |
+| Monday 28 | 28 September | separate period |
+| Tuesday 29 | 29 September | separate period |
 
-## Schedule versions and scope
+The real daily/hourly/history reconciliation proves this distinction; details and
+source fixtures are in [market-data-contract.md](market-data-contract.md).
+A Monday logical history bar contains both weekend volumes. A physical Monday daily
+bar independently matches only Monday hourly observations. They must not share one axis.
 
-`moex-stocks-2026-v2` includes holidays and additional holiday sessions from
-[30 December 2025](https://www.moex.com/n96571), plus the
-[4 September amendment](https://www.moex.com/n103931): 28–29 November closed,
-5–6 December open for eligible securities. Before that amendment's publication,
-`CalendarOptions.asOf` selects `moex-stocks-2026-v1` with the previous December closures.
-24–25 October have no sessions. 23 February, 1 May, 12 June, 4 November are additional
-sessions; 1–2/7 January and 31 December are closed. Published regular holiday sessions
-on 5–6/8–9 January, 9 March, 11 May remain regular logical dates.
+## Legacy logical clock
 
-Supported scope: MOEX stocks, 2026, declared stock/index boards. Unknown years, boards,
-or a knowledge cutoff before the verified holiday publication raise `CalendarUnavailableError`.
-`staleDays` counts logical elapsed days and returns Infinity on unknown schedules.
-`mock-weekday-v1` is an explicitly separate synthetic model for old mock history;
-it is never evidence of actual MOEX sessions. There is no automatic transfer between providers.
+`calendar.ts` compatibility helpers operate on UTC-midnight **date labels**, not
+physical instants. `isTradingDay`, `addTradingDays`, `tradingDaysBetween` count a
+regular logical day once. `moscowDate` / `inspectSession` inspect physical dates.
+Ten logical days after 25 September 2026 is 9 October; that says nothing about a
+physical-session horizon that counts 26/27 September separately.
 
-## Actual raw comparison
+Bundled logical schedule `moex-stocks-2026-v2` includes the
+[holiday publication](https://www.moex.com/n96571) and
+[4 September amendment](https://www.moex.com/n103931): 28–29 November closed instead
+of 5–6 December. `asOf` before that amendment selects v1. 24–25 October are closed;
+23 February, 1 May, 12 June, 4 November use additional sessions. The old unverified
+years/boards remain unknown in this legacy helper. `mock-weekday-v1` is explicitly
+synthetic and does not attest real exchange sessions.
 
-Manual command (no DB writes, no orders, no AI):
+The code intentionally does not infer a universal weekday stock opening from this
+market-wide schedule: morning/evening admission varies. Historical observation also
+does not establish when IIS first knew a future schedule. Old logical scenarios are
+not silently converted into physical-session strategies.
+
+## Physical-session research clock
+
+`physical-session-facts-v1` and `physical_session_v1` count **confirmed physical
+observations** for the scoped instrument/board. Source reconciliation can establish
+2024, 2025 or 2026 facts without making the calendar pretend they were known live.
+It has no hard-coded year gate. It is built from dated facts, source revisions,
+observation times and bounded complete-response coverage.
+
+An observed period establishes actual activity, not a closure on all missing dates.
+No row stays `unknown`; coverage bounds counting but is not a blanket future schedule.
+Weekend eligibility is not inferred from the weekday of a date. Conflicting duplicated
+facts and missing required coverage preserve an explicit diagnostic.
+
+Staleness counts confirmed sessions in the declared clock. Horizon labels use
+“N confirmed sessions,” not legacy “N trading days.” An exact future `checkAt` needs
+published instrument-scoped open/closed scheduling facts for the intervening dates.
+Without those facts it is conditional/unknown; no guessed future date is advertised.
+A future session may enter the clock only via a schedule genuinely available at the
+cutoff, never through a later-observed price bar.
+
+Research bars currently use a conservative `finalization_buffer` of two days after
+physical-date midnight. This is an eligibility time, not the claimed actual exchange
+close. The clock retains this distinction. Later-retrieved prices require explicit
+historical reconstruction; they do not make later reports/news available in the past.
+
+## Verification and retained limits
 
 ```sh
 bun scripts/calendar-smoke.ts --live --record
+bun scripts/market-contract-probe.ts --live --record
+bun scripts/moex-series-smoke.ts --live --record
+bun run test tests/calendar.test.ts tests/market-probe-fixtures.test.ts
 ```
 
-Results in `tests/fixtures/calendar/daily-feed-probe.json` are allowlisted public market fields
-only. The configured read credential is used in memory; auth responses, headers, account information,
-and opaque error bodies are not saved. These are real observations, not synthetic expected prices.
+The initial three-symbol fixture and original 2026 schedule evidence are retained.
+New six-symbol probes capture public market fields, hashes and observation times;
+no account identifiers, JWTs, credentials or private responses are saved.
+MOEX daily/hourly equity prices match in the checked slices across 2024–2026.
+Full-window ROSN/IMOEX smoke also finds real conflicting periods, retained as quarantine.
+Per-period trust does not mean every period of the repository passes.
 
-| Instrument | Finam status / rows | MOEX status / rows | Weekend comparison |
-| --- | --- | --- | --- |
-| ROSN@MISX / TQBR | 200 / 13 | 200 / 12 | All OHLCV agree on 19, 20, 26, 27 September |
-| NVTK@MISX / TQBR | 200 / 13 | 200 / 12 | All OHLCV agree on those four dates |
-| TATN@MISX / TQBR | 200 / 13 | 200 / 12 | All OHLCV agree on those four dates |
-
-On weekdays open prices and volumes sometimes differ. For example, 28 September
-ROSN volume is 11,568,773 at Finam vs 11,572,990 at MOEX; weekend volumes are 801,050
-and 418,234 in both. These observations do not prove which weekday sessions each provider includes.
-Presence of actual weekend trades supports trading activity for these symbols on those dates,
-but is not a versioned historical admission record. The probed current securities endpoint
-returned SECID/BOARDID and omitted the requested TRADINGSESSION field.
-
-Finam daily timestamps are 04:00 UTC including weekends. Its raw response also contains
-30 September 04:00 UTC despite requested exclusive end 30 September 00:00 UTC.
-The adapter's interval filter must remain; this raw observation does not change the documented
-[Finam REST contract](https://api.finam.ru/docs/rest): daily depth 365 days,
-start inclusive/end exclusive, OHLCV and timestamp. That documentation does not establish
-completion times, adjustment policy, or whether weekend amounts overlap Monday aggregation.
-
-MOEX daily `begin/end` labels also cannot be read as actual execution bounds:
-weekend rows end around 23:59 Moscow while the published physical session ends at 19:00.
-No independent intraday tape was fetched; therefore overlap, precise last included trade and
-publication latency remain unverified. Neither a weekday label nor a matching closing price
-is proof of a complete, non-overlapping daily feed.
-
-## Enforced data-quality policy
-
-Chosen calculation model: **completed, non-overlapping logical trading-day bars**.
-`inspectBarQuality()` requires a verified trading-date timestamp contract, an explicit adjustment
-policy, provenance URLs and per-period `completedAt` / `availableAt`. It rejects duplicate dates,
-unordered periods, unknown schedules, invalid OHLCV and contradictory availability times.
-It filters by both actual completion and availability relative to `asOf`, not by trading date alone.
-A Monday aggregate completed after Friday `2026-09-25T20:59:59Z` cannot enter that analysis.
-`trading-day-v1` is the normalization version; it validates a declared normalized series,
-it does not silently aggregate or remove legacy rows.
-
-**External blocker:** no verified Finam D-bar aggregation/completion contract exists yet.
-Consequently legacy Finam rows produce `data_quality_blocked` and no accepted calculation series.
-They remain available for viewing/audit. Do not manufacture completion from 04:00 UTC,
-remove weekend rows to turn the gate green, or sum them into Monday without evidence.
-Resolving this requires provider confirmation or an independently reconciled, complete
-intraday feed with dated instrument admission and publication/completion policy.
-
-The gate cannot be unlocked by this probe. A future adapter must supply an independently
-verified contract and persist its version alongside snapshots; existing results retain their originals.
-Calendar tests cover schedules, versions, ten-day horizons, admission unknown/false,
-UTC/Moscow distinction, duplicate periods and Friday cutoff of a future Monday aggregate.
+Finam D-bar completion/aggregation remains unproven and blocked. Selecting MOEX
+research is an explicit configuration/source-policy choice while the broker remains
+Finam. No old raw candles, hypotheses or snapshots are rewritten by these probes.
+See [market-data-contract.md](market-data-contract.md) for all empirical conclusions,
+limits and the exact algorithm.

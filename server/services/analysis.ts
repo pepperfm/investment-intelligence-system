@@ -7,17 +7,17 @@ import { redactForCritic, type CriticClaims, type EvidencePacket, type TrackStat
 import { aggregateStats } from '../domain/evaluations/outcome'
 import { balanceByOutcome, dedupeEvents, retrospectiveRef } from '../domain/memory/selection'
 import { addTradingDays, startOfUtcDay, calendarVersion } from '../domain/market/calendar'
+import { researchSessionClock } from '../domain/market/physical-session-clock'
 import { scenarioDeadline } from '../domain/market/scenario-deadline'
 import { computeMetrics } from '../domain/market/indicators'
 import { gateStatus } from '../domain/hypotheses/state'
 import { validateHypothesis, validateCriticOutput } from '../domain/hypotheses/validation'
 import { STRATEGY_INFO, evaluateSignal } from '../domain/strategies/rules'
-import { benchmarkInstrument, getInstrument, loadCandles, syncCandles, syncFundamentals } from './market'
+import { benchmarkInstrument, getInstrument, loadResearchBars, researchBarSelection, freezeResearchSelection, syncResearchBars, syncFundamentals } from './market'
 import { searchMemory, upsertDocument } from './memory'
 import { trackRecord } from './evaluations'
 import { getCostModel } from './settings'
 import { pinStrategy, pinnedStrategy } from '../domain/strategies/pinned'
-import { inspectBarQuality } from '../domain/market/bar-quality'
 import { withSourceLease } from './source-lock'
 import { loadEvidenceContext } from './evidence-packet'
 
@@ -46,6 +46,19 @@ export async function startRun(userId: string, input: StartRunInput) {
   for (const version of active) {
     versions[version.strategyId] = version.version
   }
+  // Explicit opt-in creates a new input-set version, never rewrites strategy versions.
+  let researchSelection = researchBarSelection(input.researchBarsProvider)
+  if (researchSelection.provider === 'moex_iss') {
+    const benchmark = await benchmarkInstrument()
+    for (const id of [...new Set([...input.instrumentIds, ...(benchmark ? [benchmark.id] : [])])]) {
+      await syncResearchBars(id, researchSelection)
+    }
+    researchSelection = {
+      ...researchSelection,
+      revisionCutoff: new Date().toISOString(),
+    }
+  }
+  researchSelection = await freezeResearchSelection(researchSelection)
   const executionCosts = await getCostModel()
   const [run] = await db.insert(schema.analysisRuns).values({
     userId,
@@ -59,6 +72,7 @@ export async function startRun(userId: string, input: StartRunInput) {
     rulesVersions: versions,
     pinnedStrategies: pins,
     executionCosts,
+    researchSelection,
   }).returning()
   // Runs only on explicit user command; the process keeps state in the database.
   void executeRun(run!.id).catch(error => console.error('Analysis run crashed', run!.id, (error as Error).message))
@@ -95,6 +109,11 @@ export async function executeRun(runId: string) {
   }).where(eq(schema.analysisRuns.id, runId))
   const summary = {
     candidates: 0,
+    blockedByDataQuality: [] as {
+      symbol: string
+      strategy: string
+      reasons: string[]
+    }[],
     screenedOut: [] as {
       symbol: string
       strategy: string
@@ -115,10 +134,10 @@ export async function executeRun(runId: string) {
   try {
     const isLive = Date.now() - run.asOf.getTime() < 86_400_000
     const benchmark = await benchmarkInstrument()
-    if (isLive) {
+    if (isLive && run.researchSelection?.provider !== 'moex_iss') {
       await logger.log('info', 'Обновление котировок и событий перед анализом')
       for (const id of [...run.instrumentIds, ...(benchmark ? [benchmark.id] : [])]) {
-        await syncCandles(id)
+        await syncResearchBars(id, run.researchSelection ?? undefined)
         await syncFundamentals(id)
       }
     } else {
@@ -135,10 +154,17 @@ export async function executeRun(runId: string) {
         const task = tasks[cursor++]!
         try {
           const result = await analyseCandidate(run, task.instrumentId, task.strategy, benchmark?.id ?? null, logger)
-          if (result.kind === 'screened') {
+          if (result.kind === 'blocked') {
+            summary.blockedByDataQuality.push(result.entry)
+          } else if (result.kind === 'screened') {
             summary.screenedOut.push(result.entry)
-          } else {
-            summary.hypotheses.push(result.entry)
+          } else if ('id' in result.entry && result.entry.id) {
+            summary.hypotheses.push(result.entry as {
+              id: string
+              symbol: string
+              strategy: string
+              status: string
+            })
           }
         } catch (error) {
           const instrument = await getInstrument(task.instrumentId)
@@ -152,9 +178,9 @@ export async function executeRun(runId: string) {
       }
     }
     await Promise.all(Array.from({ length: CONCURRENCY }, worker))
-    await logger.log('info', `Готово: гипотез ${summary.hypotheses.length}, отсеяно ${summary.screenedOut.length}, ошибок ${summary.failures.length}`)
+    await logger.log('info', `Готово: гипотез ${summary.hypotheses.length}, отсеяно ${summary.screenedOut.length}, блокировано данными ${summary.blockedByDataQuality.length}, ошибок ${summary.failures.length}`)
     await db.update(schema.analysisRuns).set({
-      status: summary.failures.length === tasks.length && tasks.length > 0 ? 'failed' : 'completed',
+      status: summary.blockedByDataQuality.length === tasks.length && tasks.length > 0 ? 'blocked' : summary.blockedByDataQuality.length ? 'completed_with_blocks' : summary.failures.length === tasks.length && tasks.length > 0 ? 'failed' : 'completed',
       summary,
       finishedAt: new Date(),
       error: summary.failures.length === tasks.length && tasks.length > 0 ? 'Все кандидаты завершились ошибкой' : null,
@@ -172,7 +198,7 @@ export async function executeRun(runId: string) {
 
 type Run = typeof schema.analysisRuns.$inferSelect
 
-export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'> & Partial<Pick<Run, 'pinnedStrategies' | 'executionCosts'>>, instrumentId: string, strategy: StrategyId, benchmarkId: string | null) {
+export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'> & Partial<Pick<Run, 'pinnedStrategies' | 'executionCosts' | 'researchSelection'>>, instrumentId: string, strategy: StrategyId, benchmarkId: string | null) {
   const instrument = await getInstrument(instrumentId)
   const storedRun = run.pinnedStrategies ? run : (await db.select().from(schema.analysisRuns).where(eq(schema.analysisRuns.id, run.id)))[0]
   const version = pinnedStrategy(storedRun?.pinnedStrategies, strategy)
@@ -182,31 +208,42 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
     board: instrument.board,
     asOf: run.asOf,
   }
-  const rawCandles = await loadCandles(instrumentId, {
-    to: run.asOf,
-    limit: 400,
+  // Legacy runs use their original raw provider only; current MOEX settings never reinterpret them.
+  const selection = storedRun?.researchSelection ?? {
+    provider,
+    policyId: provider === 'mock' ? 'mock_daily' as const : 'legacy_daily' as const,
+    inputSetVersion: `${provider}-legacy-input-v1`,
+    revisionCutoff: run.asOf.toISOString(),
+  }
+  const requiredBars = Math.max(210, version.rules.slowSma, version.rules.trendSma, version.rules.momentumLookback + 1, version.rules.breakoutLookback + 1, version.rules.regimeSma ?? 0)
+  const research = await loadResearchBars({
+    instrumentId,
+    asOf: run.asOf,
+    purpose: 'signal',
+    limit: selection.policyId === 'physical_session_v1' ? requiredBars : 400,
+    selection,
   })
-  const rawBenchmarkCandles = benchmarkId
-    ? await loadCandles(benchmarkId, {
-        to: run.asOf,
-        limit: 300,
+  const benchmarkResearch = benchmarkId
+    ? await loadResearchBars({
+        instrumentId: benchmarkId,
+        asOf: run.asOf,
+        purpose: 'signal',
+        limit: selection.policyId === 'physical_session_v1' ? requiredBars : 300,
+        selection,
       })
-    : []
-  const quality = inspectBarQuality(rawCandles, {
-    dataSource: provider,
-    board: instrument.board,
-    asOf: run.asOf,
-  })
-  const benchmarkQuality = inspectBarQuality(rawBenchmarkCandles, {
-    dataSource: provider,
-    asOf: run.asOf,
-  })
-  const candles = quality.completedBars
-  const benchmarkCandles = benchmarkQuality.completedBars
+    : null
+  const quality = research.quality
+  const candles = research.bars
+  const benchmarkCandles = benchmarkResearch?.bars ?? []
+  const physical = selection.policyId === 'physical_session_v1'
+  const age = physical ? researchSessionClock(candles, research.provenance, run.asOf).stale(candles.at(-1)?.earliestUseAt) : null
+  if (physical) {
+    research.provenance.confirmedSessionAge = age?.status === 'known' ? age.sessions : null
+  }
   const dataQuality = {
-    status: quality.status === 'verified' && benchmarkQuality.status === 'verified' ? 'verified' : 'data_quality_blocked',
-    issues: [...quality.issues, ...benchmarkQuality.issues.map(issue => `benchmark:${issue}`)].slice(0, 30),
-    calendarVersion: calendarVersion(calendar),
+    status: quality.status === 'data_quality_blocked' || !benchmarkResearch || benchmarkResearch.quality.status === 'data_quality_blocked' ? 'data_quality_blocked' : physical ? 'research_usable_with_limits' : 'verified',
+    issues: [...quality.issues, ...(benchmarkResearch?.quality.issues.map(issue => `benchmark:${issue}`) ?? ['benchmark_missing'])].slice(0, 30),
+    calendarVersion: physical ? quality.calendarVersion : calendarVersion(calendar),
     normalizationVersion: quality.normalizationVersion,
   }
   const benchmarkMetrics = computeMetrics(benchmarkCandles)
@@ -258,12 +295,10 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   if (!costs) {
     throw new Error('Издержки не зафиксированы в legacy-run; нельзя подставлять текущие значения')
   }
-  const record = await trackRecord(strategy, version.id, version.rules, run.asOf, costs)
-  if (record.dataQuality.status !== 'verified') {
-    dataQuality.status = 'data_quality_blocked'
-    dataQuality.issues = [...dataQuality.issues, ...record.dataQuality.issues].slice(0, 30)
-  }
-  const usableTrades = dataQuality.status === 'verified' ? record.trades : []
+  const record = await trackRecord(strategy, version.id, version.rules, run.asOf, costs, selection)
+  // Fresh signal suitability is separate from historical representativeness. A limited
+  // backtest never becomes verified buying evidence and never blocks a no_trade explanation.
+  const usableTrades = record.dataQuality.status === 'data_quality_blocked' ? [] : record.trades
   const sameSetup = usableTrades.filter(t => t.setupType === signal.setupType)
   const sameSymbol = usableTrades.filter(t => t.symbol === instrument.symbol)
   const lastTs = candles.at(-1)?.ts ?? run.asOf.toISOString()
@@ -273,21 +308,25 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
     {
       id: 'candles',
       kind: 'candles',
-      title: `Дневные свечи ${instrument.symbol} (${candles.length} шт.)`,
+      title: `${physical ? 'MOEX: реконструкция физических сессий; историческая доступность неизвестна' : 'Дневные свечи'} ${instrument.symbol} (${candles.length} шт.)`,
+      observedAt: research.provenance.observedAt ?? undefined,
+      contentHash: research.provenance.inputHash,
       url: null,
       asOf: lastTs,
     },
     {
       id: 'metrics',
       kind: 'metrics',
-      title: 'Индикаторы и сигнал стратегии (рассчитаны кодом)',
+      title: `Индикаторы и сигнал стратегии (рассчитаны кодом)${physical ? '; реконструкция, не наблюдавшаяся IIS в прошлом' : ''}`,
+      observedAt: research.provenance.observedAt ?? undefined,
       url: null,
       asOf: lastTs,
     },
     {
       id: 'track',
       kind: 'backtest',
-      title: `Point-in-time бэктест ${STRATEGY_INFO[strategy].name} v${version.version} (${record.trades.length} сделок)`,
+      observedAt: research.provenance.observedAt ?? undefined,
+      title: `${physical ? 'Реконструкция с ограничениями; историческая доступность неизвестна. ' : ''}Point-in-time бэктест ${STRATEGY_INFO[strategy].name} v${version.version} (${record.trades.length} сделок)`,
       url: null,
       asOf: lastTs,
     },
@@ -345,21 +384,29 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   }).returning({ id: schema.sourceSnapshots.id })
   let nextEntry = 'не установлено: календарь или контракт свечи не подтверждён'
   let marketScenario: import('../../shared/types/investment').MarketScenario | undefined
-  if (dataQuality.status === 'verified' && signal.entry !== null && signal.stopLoss !== null && signal.takeProfit !== null) {
+  if (dataQuality.status !== 'data_quality_blocked' && signal.entry !== null && signal.stopLoss !== null && signal.takeProfit !== null) {
     try {
-      nextEntry = addTradingDays(new Date(lastTs), 1, calendar).toISOString().slice(0, 10)
-      scenarioDeadline(run.asOf, {
-        type: 'market_next_open',
-        price: signal.entry,
-        validDays: version.rules.entryValidDays,
-        note: '',
-      }, {
-        stopLoss: signal.stopLoss,
-        takeProfit: signal.takeProfit,
-        timeExitDays: version.rules.horizonDays,
-        note: '',
-      }, calendar)
+      if (physical) {
+        nextEntry = 'условно: следующая подтверждённая физическая сессия; будущий допуск неизвестен'
+      } else {
+        nextEntry = addTradingDays(new Date(lastTs), 1, calendar).toISOString().slice(0, 10)
+        scenarioDeadline(run.asOf, {
+          type: 'market_next_open',
+          price: signal.entry,
+          validDays: version.rules.entryValidDays,
+          note: '',
+        }, {
+          stopLoss: signal.stopLoss,
+          takeProfit: signal.takeProfit,
+          timeExitDays: version.rules.horizonDays,
+          note: '',
+        }, calendar)
+      }
       marketScenario = {
+        horizonUnit: physical ? 'confirmed_sessions' : 'logical_trading_days',
+        deadlineConditional: physical,
+        inputSetVersion: selection.inputSetVersion,
+        researchSelection: selection,
         entry: {
           type: 'market_next_open',
           price: signal.entry,
@@ -387,6 +434,9 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
   }
   const packet: EvidencePacket = {
     ...context,
+    marketData: research.provenance,
+    benchmarkData: benchmarkResearch?.provenance,
+    backtestQuality: record.dataQuality,
     marketScenario,
     dataQuality,
     calendarVersion: dataQuality.calendarVersion,
@@ -423,14 +473,14 @@ export async function buildEvidencePacket(run: Pick<Run, 'id' | 'kind' | 'asOf'>
         hash: sha256(auditPayload),
         inputSeriesHash: record.audit.inputSeriesHash,
       },
-      validity: dataQuality.status,
+      validity: record.dataQuality.status,
       universe: new Set(usableTrades.map(t => t.symbol)).size,
       all: trackStats(usableTrades),
       sameSetup: trackStats(sameSetup),
       sameSymbol: trackStats(sameSymbol),
     },
     execution: {
-      entry: `Последняя подтверждённая сессия — ${lastTs.slice(0, 10)}; следующее логическое торговое открытие: ${nextEntry}. Условный сценарий не является рекомендацией. При гэпе уровни прибыль/риск меняются.`,
+      entry: `Последняя подтверждённая сессия — ${lastTs.slice(0, 10)}; ${physical ? 'следующая физическая сессия' : 'следующее логическое торговое открытие'}: ${nextEntry}. Условный сценарий не является рекомендацией. При гэпе уровни прибыль/риск меняются.`,
       evaluation: 'Исход считает код: при касании стопа и цели в один день — стоп; гэп через стоп исполняется по открытию; выход по времени — закрытие последнего дня горизонта.',
       costs,
     },
@@ -536,7 +586,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
   if (packet.dataQuality?.status === 'data_quality_blocked' || !packet.marketScenario || (run.kind === 'research' && !signal.setup)) {
     await logger.log('info', `${label}: ${packet.dataQuality?.status ?? 'screened'} — ${[...signal.failures, ...(packet.dataQuality?.issues ?? [])].join('; ')}`)
     return {
-      kind: 'screened' as const,
+      kind: packet.dataQuality?.status === 'data_quality_blocked' || !packet.marketScenario ? 'blocked' as const : 'screened' as const,
       entry: {
         symbol: instrument.symbol,
         strategy,
@@ -548,7 +598,7 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
   await logger.log('info', `${label}: market_researcher (${analyst.id})`)
   const research = await analyst.run({
     role: 'market_researcher',
-    task: `Исследуй ${instrument.name} (${instrument.symbol}) для стратегии ${STRATEGY_INFO[strategy].name}, горизонт ${version.rules.horizonDays} торговых дней, на момент ${packet.asOf}.`,
+    task: `Исследуй ${instrument.name} (${instrument.symbol}) для стратегии ${STRATEGY_INFO[strategy].name}, горизонт ${version.rules.horizonDays} ${packet.marketScenario?.horizonUnit === 'confirmed_sessions' ? 'подтверждённых физических сессий' : 'торговых дней'}, на момент ${packet.asOf}.`,
     packet,
     schema: researchOutputSchema,
   })
@@ -577,6 +627,8 @@ async function analyseCandidate(run: Run, instrumentId: string, strategy: Strate
       board: instrument.board,
       asOf: run.asOf,
     },
+    confirmedSessionAge: packet.marketData?.barPolicy === 'physical_session_v1' ? packet.marketData.confirmedSessionAge ?? Infinity : undefined,
+    backtestVerified: packet.backtestQuality?.status === 'verified',
     coverage: packet.evidenceCoverage,
     lastCandleTs,
     asOf: run.asOf,
@@ -661,10 +713,13 @@ async function insertHypothesis(run: Run, input: InsertInput) {
       validation: input.validation,
       confidence: draft.confidence,
       evidenceTimestamp: run.asOf,
-      checkAt: scenarioDeadline(run.asOf, input.entry, input.exit, {
-        provider: input.packet.dataQuality?.calendarVersion === 'mock-weekday-v1' ? 'mock' : 'finam',
-        asOf: run.asOf,
-      }),
+      // A monitoring date, not an invented exchange execution deadline; the scenario says conditional.
+      checkAt: input.packet.marketScenario?.deadlineConditional
+        ? new Date(run.asOf.getTime() + 86_400_000)
+        : scenarioDeadline(run.asOf, input.entry, input.exit, {
+            provider: input.packet.dataQuality?.calendarVersion === 'mock-weekday-v1' ? 'mock' : 'finam',
+            asOf: run.asOf,
+          }),
       status: 'awaiting_critic',
       analystProvider: input.analystProvider,
       analystVersion: ANALYST_VERSION,

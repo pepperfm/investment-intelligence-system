@@ -1,16 +1,89 @@
 import { db, schema } from '@nuxthub/db'
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm'
-import type { PositionSnapshot } from '../../shared/types/investment'
+import type { PositionSnapshot, RiskCheckResult } from '../../shared/types/investment'
 import { addTradingDays, startOfUtcDay } from '../domain/market/calendar'
 import { checkOrderRisk, suggestQuantity, type PortfolioState } from '../domain/risk/limits'
-import { inspectBarQuality } from '../domain/market/bar-quality'
 import { paperFill } from '../domain/risk/paper-fill'
 import { avgTurnover } from '../domain/market/indicators'
-import { getInstrument, lastClose, loadCandles } from '../services/market'
+import { getInstrument, loadResearchBars, freezeResearchSelection } from '../services/market'
+import type { ResearchBarSelection } from '../../shared/types/market-data'
 import { getCostModel, getRiskLimits } from '../services/settings'
 
 const PAPER_INITIAL_CASH = 1_000_000
 type TradingReader = Pick<typeof db, 'select'>
+
+type PaperRiskCheck = RiskCheckResult
+
+/** A manual command may observe new revisions while preserving the approved source and bar model. */
+function observeCurrentRevision(selection?: ResearchBarSelection) {
+  return selection
+    ? {
+        ...selection,
+        auditIds: undefined,
+        revisionCutoff: new Date().toISOString(),
+      }
+    : undefined
+}
+
+/** Paper prices always require verified data; historical reconstructions cannot execute tickets. */
+async function paperMarketData(instrumentId: string, selection?: ResearchBarSelection, after?: Date) {
+  const asOf = new Date()
+  // Paper consumes newly observed data on an explicit process command, keeping the chosen source/policy.
+  const currentSelection = selection
+    ? {
+        ...selection,
+        auditIds: undefined,
+        revisionCutoff: asOf.toISOString(),
+      }
+    : undefined
+  try {
+    const pinnedCurrent = currentSelection?.provider === 'moex_iss' ? await freezeResearchSelection(currentSelection) : currentSelection
+    const result = await loadResearchBars({
+      instrumentId,
+      asOf,
+      purpose: 'paper',
+      selection: pinnedCurrent,
+      after,
+      limit: after ? undefined : 20,
+    })
+    const issues = result.quality.status === 'verified' ? [] : [...result.quality.issues]
+    if (!after && !result.bars.length) {
+      issues.push('Нет завершённых проверенных баров для цены и ликвидности')
+    }
+    return {
+      bars: result.bars,
+      ok: result.quality.status === 'verified' && (Boolean(after) || result.bars.length > 0),
+      metadata: {
+        selection: result.provenance.selection,
+        provenance: result.provenance,
+        status: result.quality.status,
+        issues,
+        assessedAt: asOf.toISOString(),
+      },
+    }
+  } catch (error) {
+    return {
+      bars: [],
+      ok: false,
+      metadata: {
+        selection: currentSelection,
+        provenance: null,
+        status: 'data_quality_blocked',
+        issues: [error instanceof Error ? error.message.slice(0, 500) : 'Источник котировок недоступен'],
+        assessedAt: asOf.toISOString(),
+      },
+    }
+  }
+}
+
+function suspension(issues: string[], riskCheck?: PaperRiskCheck) {
+  return {
+    status: 'suspended_data_quality',
+    closedAt: null,
+    rejectReason: `data_quality_blocked: ${issues.slice(0, 10).join('; ')}`,
+    ...(riskCheck ? { riskCheck } : {}),
+  }
+}
 
 /**
  * Paper broker. This module is the only place where orders change state, it is called only from
@@ -31,9 +104,10 @@ export async function paperAccount() {
   return created ?? (await db.select().from(schema.accounts).where(and(eq(schema.accounts.provider, 'paper'), eq(schema.accounts.externalId, 'default'))))[0]!
 }
 
-export async function positions(accountId: string, reader: TradingReader = db): Promise<(PositionSnapshot & {
+export async function positions(accountId: string, reader: TradingReader = db, selection?: ResearchBarSelection): Promise<(PositionSnapshot & {
   sector: string
   lotSize: number
+  valuationQuality: string
 })[]> {
   const rows = await reader.select({
     execution: schema.executions,
@@ -71,12 +145,15 @@ export async function positions(accountId: string, reader: TradingReader = db): 
     if (p.quantity <= 0) {
       continue
     }
-    const last = (await lastClose(instrumentId))?.close ?? p.cost / p.quantity
+    const quote = await paperMarketData(instrumentId, selection)
+    // Cost basis is an explicitly marked accounting fallback, never a permitted execution quote.
+    const last = quote.ok ? quote.bars.at(-1)!.close : p.cost / p.quantity
     result.push({
       instrumentId,
       symbol: p.symbol,
       sector: p.sector,
       lotSize: p.lotSize,
+      valuationQuality: quote.ok ? 'verified' : 'unavailable_cost_basis',
       quantity: p.quantity,
       avgPrice: p.cost / p.quantity,
       lastPrice: last,
@@ -87,17 +164,19 @@ export async function positions(accountId: string, reader: TradingReader = db): 
   return result
 }
 
-export async function portfolioState(accountId: string, reader: TradingReader = db): Promise<PortfolioState & {
+export async function portfolioState(accountId: string, reader: TradingReader = db, selection?: ResearchBarSelection): Promise<PortfolioState & {
   account: typeof schema.accounts.$inferSelect
   list: Awaited<ReturnType<typeof positions>>
+  dataQualityIssues: string[]
 }> {
   const [account] = await reader.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
-  const list = await positions(accountId, reader)
+  const list = await positions(accountId, reader, selection)
   const equity = account!.cash + list.reduce((s, p) => s + p.marketValue, 0)
   const [dayStart] = await reader.select({ equity: schema.portfolioSnapshots.equity }).from(schema.portfolioSnapshots).where(and(eq(schema.portfolioSnapshots.accountId, accountId), lt(schema.portfolioSnapshots.takenAt, startOfUtcDay(new Date())))).orderBy(desc(schema.portfolioSnapshots.takenAt)).limit(1)
   return {
     account: account!,
     list,
+    dataQualityIssues: list.filter(p => p.valuationQuality !== 'verified').map(p => `${p.symbol}: цена портфеля не подтверждена`),
     equity,
     cash: account!.cash,
     positions: Object.fromEntries(list.map(p => [p.instrumentId, {
@@ -128,18 +207,15 @@ async function assessOrder(request: Omit<OrderRequest, 'idempotencyKey'>) {
       statusMessage: 'Only equities can be traded',
     })
   }
-  const { stopLoss, violations: hypothesisViolations } = await orderHypothesis(request)
-  const last = await lastClose(request.instrumentId)
-  if (!last) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'No market data for instrument',
-    })
-  }
-  const price = request.type === 'limit' && request.limitPrice ? request.limitPrice : last.close
-  const [limits, costs, state, candles] = await Promise.all([getRiskLimits(), getCostModel(), portfolioState(account.id), loadCandles(request.instrumentId, { limit: 20 })])
+  const { stopLoss, violations: hypothesisViolations, dataQualityIssues: hypothesisDataIssues, researchSelection } = await orderHypothesis(request)
+  const quote = await paperMarketData(request.instrumentId, observeCurrentRevision(researchSelection))
+  const [limits, costs, state] = await Promise.all([getRiskLimits(), getCostModel(), portfolioState(account.id, db, quote.metadata.selection)])
+  const last = quote.ok ? quote.bars.at(-1)! : null
+  const price = request.type === 'limit' && request.limitPrice ? request.limitPrice : last?.close ?? 0
+  const candles = quote.ok ? quote.bars : []
+  const dataQualityIssues = [...quote.metadata.issues, ...state.dataQualityIssues, ...hypothesisDataIssues]
   const turnover = avgTurnover(candles, Math.min(20, candles.length))
-  const riskCheck = checkOrderRisk({
+  const riskCheck: PaperRiskCheck = checkOrderRisk({
     side: request.side,
     instrumentId: request.instrumentId,
     sector: instrument.sector,
@@ -152,9 +228,10 @@ async function assessOrder(request: Omit<OrderRequest, 'idempotencyKey'>) {
     limits,
     costs,
   })
+  riskCheck.paperData = quote.metadata
   riskCheck.violations.push(...hypothesisViolations)
-  riskCheck.ok = riskCheck.violations.length === 0
-  const suggestedQuantity = stopLoss !== null
+  riskCheck.ok = riskCheck.violations.length === 0 && dataQualityIssues.length === 0
+  const suggestedQuantity = stopLoss !== null && quote.ok && !dataQualityIssues.length
     ? suggestQuantity({
         equity: state.equity,
         entry: price,
@@ -168,8 +245,12 @@ async function assessOrder(request: Omit<OrderRequest, 'idempotencyKey'>) {
     account,
     riskCheck,
     price,
-    lastClose: last.close,
-    lastCloseAt: last.ts,
+    lastClose: last?.close ?? null,
+    lastCloseAt: last?.ts ?? null,
+    dataQuality: {
+      status: dataQualityIssues.length ? 'data_quality_blocked' : 'verified',
+      issues: dataQualityIssues,
+    },
     stopLoss,
     suggestedQuantity,
     estimatedCommission: riskCheck.notional * costs.commissionPct / 100,
@@ -188,7 +269,7 @@ export async function createOrder(request: OrderRequest) {
   if (duplicate) {
     return duplicate
   }
-  const { account, riskCheck, estimatedCommission } = await assessOrder(request)
+  const { account, riskCheck, estimatedCommission, dataQuality } = await assessOrder(request)
   const [order] = await db.insert(schema.orders).values({
     accountId: account.id,
     hypothesisId: request.hypothesisId ?? null,
@@ -197,47 +278,57 @@ export async function createOrder(request: OrderRequest) {
     type: request.type,
     quantity: request.quantity,
     limitPrice: request.type === 'limit' ? request.limitPrice! : null,
-    status: riskCheck.ok ? 'pending_confirmation' : 'rejected',
+    status: dataQuality.status !== 'verified' ? 'suspended_data_quality' : riskCheck.ok ? 'pending_confirmation' : 'rejected',
     idempotencyKey: request.idempotencyKey,
     riskCheck,
     estimatedCommission,
-    rejectReason: riskCheck.ok ? null : riskCheck.violations.join('; '),
-    closedAt: riskCheck.ok ? null : new Date(),
+    rejectReason: dataQuality.status !== 'verified' ? suspension(dataQuality.issues).rejectReason : riskCheck.ok ? null : riskCheck.violations.join('; '),
+    closedAt: dataQuality.status !== 'verified' || riskCheck.ok ? null : new Date(),
   }).onConflictDoNothing().returning()
   return order ?? (await db.select().from(schema.orders).where(eq(schema.orders.idempotencyKey, request.idempotencyKey)))[0]!
 }
 
 /** Step 2: explicit human confirmation. Risk is re-validated against the current portfolio. */
 export async function confirmOrder(orderId: string) {
-  const order = await lockedTransition(orderId, 'pending_confirmation', async (o) => {
+  return lockedTransition(orderId, ['pending_confirmation', 'suspended_data_quality', 'working', 'filled', 'rejected', 'cancelled'], async (o) => {
+    // A repeated confirmation cannot refresh the execution clock or duplicate a fill.
+    if (!['pending_confirmation', 'suspended_data_quality'].includes(o.status)) {
+      return undefined
+    }
     const instrument = await getInstrument(o.instrumentId)
-    const [limits, costs, state, last, candles] = await Promise.all([getRiskLimits(), getCostModel(), portfolioState(o.accountId), lastClose(o.instrumentId), loadCandles(o.instrumentId, { limit: 20 })])
     const hypothesis = await orderHypothesis(o)
-    const riskCheck = checkOrderRisk({
+    const selection = o.riskCheck?.paperData?.selection ?? hypothesis.researchSelection
+    const quote = await paperMarketData(o.instrumentId, observeCurrentRevision(selection))
+    const [limits, costs, state] = await Promise.all([getRiskLimits(), getCostModel(), portfolioState(o.accountId, db, quote.metadata.selection)])
+    const issues = [...quote.metadata.issues, ...state.dataQualityIssues, ...hypothesis.dataQualityIssues]
+    if (!quote.ok || issues.length) {
+      return suspension(issues, {
+        ...o.riskCheck,
+        paperData: quote.metadata,
+      })
+    }
+    const riskCheck: PaperRiskCheck = checkOrderRisk({
       side: o.side as 'buy' | 'sell',
       instrumentId: o.instrumentId,
       sector: instrument.sector,
       quantity: o.quantity,
       lotSize: instrument.lotSize,
-      price: o.limitPrice ?? last?.close ?? 0,
+      price: o.limitPrice ?? quote.bars.at(-1)!.close,
       stopLoss: hypothesis.stopLoss,
-      avgTurnover: avgTurnover(candles, Math.min(20, candles.length)),
+      avgTurnover: avgTurnover(quote.bars, Math.min(20, quote.bars.length)),
       portfolio: state,
       limits,
       costs,
     })
+    riskCheck.paperData = quote.metadata
     riskCheck.violations.push(...hypothesis.violations)
     riskCheck.ok = riskCheck.violations.length === 0
-    if (process.env.DEBUG_FIX && !riskCheck.ok) {
-      console.info('[FIX:order-confirmation] Rejected stale ticket', {
-        orderId,
-        violations: riskCheck.violations,
-      })
-    }
     return riskCheck.ok
       ? {
           status: 'working',
           confirmedAt: new Date(),
+          closedAt: null,
+          rejectReason: null,
           riskCheck,
         }
       : {
@@ -247,10 +338,6 @@ export async function confirmOrder(orderId: string) {
           closedAt: new Date(),
         }
   })
-  if (order.status === 'working') {
-    await tryFill(order.id)
-  }
-  return (await db.select().from(schema.orders).where(eq(schema.orders.id, orderId)))[0]!
 }
 
 /** Shared by ticket creation, confirmation and execution; a saved ticket is not lasting approval. */
@@ -260,9 +347,12 @@ async function orderHypothesis(request: {
   side: string
 }, reader: TradingReader = db, at = new Date()) {
   const violations: string[] = []
+  const dataQualityIssues: string[] = []
   if (!request.hypothesisId) {
     return {
       stopLoss: null,
+      dataQualityIssues,
+      researchSelection: undefined,
       violations: request.side === 'buy' ? ['Покупка требует гипотезы long, поддержанной критиком и одобренной пользователем'] : violations,
     }
   }
@@ -270,6 +360,8 @@ async function orderHypothesis(request: {
   if (!h || h.instrumentId !== request.instrumentId) {
     return {
       stopLoss: null,
+      dataQualityIssues,
+      researchSelection: undefined,
       violations: ['Гипотеза не соответствует инструменту'],
     }
   }
@@ -284,14 +376,17 @@ async function orderHypothesis(request: {
     if (h.semanticVersion === 'legacy') {
       violations.push('Legacy-гипотеза не даёт нового разрешения на покупку: требуется новый анализ')
     }
-    let expired = true
+    let expired: boolean | null = null
     try {
+      if (h.marketScenario?.researchSelection?.policyId === 'physical_session_v1') {
+        throw new Error('Будущие физические сессии для окна входа не подтверждены')
+      }
       expired = at.getTime() >= addTradingDays(h.evidenceTimestamp, h.entryScenario.validDays, {
         provider: instrument?.provider === 'mock' ? 'mock' : 'finam',
         asOf: h.evidenceTimestamp,
       }).getTime() + 86_400_000
     } catch {
-      violations.push('data_quality_blocked: окно входа не подтверждено календарём')
+      dataQualityIssues.push('Окно входа не подтверждено календарём')
     }
     if (expired) {
       violations.push(`Окно входа гипотезы (${h.entryScenario.validDays} торг. дн.) истекло — нужен новый анализ`)
@@ -299,18 +394,20 @@ async function orderHypothesis(request: {
   }
   return {
     stopLoss: h.exitScenario.stopLoss,
+    researchSelection: h.marketScenario?.researchSelection,
+    dataQualityIssues,
     violations,
   }
 }
 
 export async function cancelOrder(orderId: string) {
-  return lockedTransition(orderId, ['pending_confirmation', 'working'], async () => ({
+  return lockedTransition(orderId, ['pending_confirmation', 'working', 'suspended_data_quality'], async () => ({
     status: 'cancelled',
     closedAt: new Date(),
   }))
 }
 
-async function lockedTransition(orderId: string, from: string | string[], next: (order: typeof schema.orders.$inferSelect) => Promise<Partial<typeof schema.orders.$inferInsert>>) {
+async function lockedTransition(orderId: string, from: string | string[], next: (order: typeof schema.orders.$inferSelect) => Promise<Partial<typeof schema.orders.$inferInsert> | undefined>) {
   return db.transaction(async (tx) => {
     const [order] = await tx.select().from(schema.orders).where(eq(schema.orders.id, orderId)).for('update')
     if (!order) {
@@ -326,7 +423,11 @@ async function lockedTransition(orderId: string, from: string | string[], next: 
         statusMessage: `Order is ${order.status}`,
       })
     }
-    const [updated] = await tx.update(schema.orders).set(await next(order)).where(eq(schema.orders.id, orderId)).returning()
+    const changes = await next(order)
+    if (!changes) {
+      return order
+    }
+    const [updated] = await tx.update(schema.orders).set(changes).where(eq(schema.orders.id, orderId)).returning()
     return updated!
   })
 }
@@ -346,25 +447,30 @@ async function tryFill(orderId: string) {
     if (!order.confirmedAt) {
       return false
     }
-    const instrumentForQuality = await getInstrument(order.instrumentId)
-    const rawBars = await loadCandles(order.instrumentId, {
-      after: order.confirmedAt,
-      to: new Date(),
-    })
-    const quality = inspectBarQuality(rawBars, {
-      dataSource: instrumentForQuality.provider === 'mock' ? 'mock' : 'finam',
-      board: instrumentForQuality.board,
-      asOf: new Date(),
-    })
-    if (quality.status === 'data_quality_blocked' && rawBars.length) {
-      await tx.update(schema.orders).set({
-        status: 'rejected',
-        rejectReason: `data_quality_blocked: ${quality.issues.join('; ')}`,
-        closedAt: new Date(),
-      }).where(eq(schema.orders.id, orderId))
+    const gate = await orderHypothesis(order, tx)
+    const selection = order.riskCheck?.paperData?.selection ?? gate.researchSelection
+    const instrumentForSource = await getInstrument(order.instrumentId)
+    if (!selection && instrumentForSource.provider !== 'mock') {
+      await tx.update(schema.orders).set(suspension(['Legacy-заявка не закрепила источник цен: требуется явная повторная проверка и подтверждение'])).where(eq(schema.orders.id, orderId))
       return false
     }
-    const bars = quality.completedBars
+    const quote = await paperMarketData(order.instrumentId, observeCurrentRevision(selection))
+    if (!quote.ok) {
+      await tx.update(schema.orders).set(suspension(quote.metadata.issues, {
+        ...order.riskCheck,
+        paperData: quote.metadata,
+      })).where(eq(schema.orders.id, orderId))
+      return false
+    }
+    const future = await paperMarketData(order.instrumentId, quote.metadata.selection, order.confirmedAt)
+    if (!future.ok) {
+      await tx.update(schema.orders).set(suspension(future.metadata.issues, {
+        ...order.riskCheck,
+        paperData: future.metadata,
+      })).where(eq(schema.orders.id, orderId))
+      return false
+    }
+    const bars = future.bars
     const fill = paperFill({
       side: order.side as 'buy' | 'sell',
       type: order.type as 'market' | 'limit',
@@ -380,10 +486,9 @@ async function tryFill(orderId: string) {
     const [account] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, order.accountId)).for('update')
     // Serialize all fills for this account, then read holdings on the same transaction.
     // Confirmation alone cannot reserve a position until the next daily bar arrives.
-    const [state, instrument, candles, hypothesis] = await Promise.all([
-      portfolioState(order.accountId, tx),
+    const [state, instrument, hypothesis] = await Promise.all([
+      portfolioState(order.accountId, tx, quote.metadata.selection),
       getInstrument(order.instrumentId),
-      loadCandles(order.instrumentId, { limit: 20 }),
       orderHypothesis(order, tx, executedAt),
     ])
     const riskCheck = checkOrderRisk({
@@ -394,11 +499,23 @@ async function tryFill(orderId: string) {
       lotSize: instrument.lotSize,
       price,
       stopLoss: hypothesis.stopLoss,
-      avgTurnover: avgTurnover(candles, Math.min(20, candles.length)),
+      avgTurnover: avgTurnover(quote.bars, Math.min(20, quote.bars.length)),
       portfolio: state,
       limits,
       costs,
     })
+    const dataIssues = [...state.dataQualityIssues, ...hypothesis.dataQualityIssues]
+    if (dataIssues.length) {
+      await tx.update(schema.orders).set(suspension(dataIssues, {
+        ...riskCheck,
+        paperData: future.metadata,
+      })).where(eq(schema.orders.id, orderId))
+      return false
+    }
+    const paperRisk: PaperRiskCheck = {
+      ...riskCheck,
+      paperData: future.metadata,
+    }
     riskCheck.violations.push(...hypothesis.violations)
     const cashAfter = account!.cash - sign * notional - commission
     if (cashAfter < 0) {
@@ -433,7 +550,7 @@ async function tryFill(orderId: string) {
     await tx.update(schema.accounts).set({ cash: cashAfter }).where(eq(schema.accounts.id, order.accountId))
     await tx.update(schema.orders).set({
       status: 'filled',
-      riskCheck,
+      riskCheck: paperRisk,
       closedAt: new Date(),
     }).where(eq(schema.orders.id, orderId))
     if (order.hypothesisId && order.side === 'buy') {
@@ -469,6 +586,12 @@ export async function processWorkingOrders() {
 
 export async function takeSnapshot(accountId: string) {
   const state = await portfolioState(accountId)
+  if (state.dataQualityIssues.length) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: `data_quality_blocked: ${state.dataQualityIssues.join('; ')}`,
+    })
+  }
   const [row] = await db.insert(schema.portfolioSnapshots).values({
     accountId,
     cash: state.cash,
@@ -499,6 +622,7 @@ export async function portfolioOverview() {
     cash: state.cash,
     dayStartEquity: state.dayStartEquity,
     positions: state.list,
+    dataQualityIssues: state.dataQualityIssues,
     orders,
     executions,
     snapshots,

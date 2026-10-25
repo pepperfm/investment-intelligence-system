@@ -6,3 +6,8 @@ export function scenarioDeadline(asOf: Date, entry: EntryScenario, exit: ExitSce
   const entryDays = entry.type === 'market_next_open' ? 1 : entry.validDays
   return addTradingDays(asOf, entryDays + exit.timeExitDays - 1, calendar)
 }
+
+/** Physical-session horizons do not inherit the legacy weekday/logical deadline. */
+export function scenarioDeadlineForClock(asOf: Date, entry: EntryScenario, exit: ExitScenario, clock: import('./physical-session-clock').BarClock) {
+  return clock.deadline(asOf, entry, exit)
+}

@@ -59,11 +59,27 @@ const equityCurve = computed(() => [
       }]
     : []),
 ])
-const openOrders = computed(() => (data.value?.orders ?? []).filter(o => ['pending_confirmation', 'working'].includes(o.order.status)))
+const openOrders = computed(() => (data.value?.orders ?? []).filter(o => ['pending_confirmation', 'working', 'suspended_data_quality'].includes(o.order.status)))
 const shownOrders = computed(() => orderTab.value === 'open' ? openOrders.value : data.value?.orders ?? [])
 
 async function act(url: string, message: string) {
   await action.run(() => $fetch<unknown>(url, { method: 'POST' }), message)
+  await refresh()
+}
+
+async function confirm(id: string) {
+  await action.run(() => $fetch<ApiResponse<'/api/orders/:id/confirm', 'post'>>(`/api/orders/${id}/confirm`, { method: 'POST' }), (result) => {
+    if (result.status === 'working') {
+      return 'Заявка подтверждена заново; исполнение возможно только по следующей новой сессии'
+    }
+    if (result.status === 'suspended_data_quality') {
+      return 'Заявка остаётся приостановленной: проверенные данные пока недоступны'
+    }
+    if (result.status === 'rejected') {
+      return 'Заявка не прошла повторную проверку риска'
+    }
+    return ORDER_LABELS[result.status] ?? result.status
+  })
   await refresh()
 }
 
@@ -92,7 +108,7 @@ useHead({ title: 'Paper-портфель · IIS' })
     <template #header>
       <PageNavbar title="Paper-портфель">
         <template #title-extra>
-          <UTooltip text="Исполнение симулируется: последняя цена + спред и проскальзывание, комиссия. Плечо и шорты запрещены.">
+          <UTooltip text="Исполнение симулируется по новой проверенной сессии после подтверждения, с издержками. При проблеме данных заявка приостанавливается.">
             <UBadge color="neutral" icon="i-lucide-flask-round">
               симуляция
             </UBadge>
@@ -121,6 +137,12 @@ useHead({ title: 'Paper-портфель · IIS' })
       </PageNavbar>
     </template>
     <template #body>
+      <UAlert
+        v-if="data?.dataQualityIssues.length"
+        color="warning"
+        title="Часть цен портфеля не подтверждена"
+        :description="`${data.dataQualityIssues.join('; ')}. Для отображения использована себестоимость; заявки и новые снимки заблокированы до проверки цен.`"
+      />
       <template v-if="data">
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile
@@ -336,8 +358,8 @@ useHead({ title: 'Paper-портфель · IIS' })
               <span class="font-medium text-highlighted">{{ o.side === 'buy' ? 'Покупка' : 'Продажа' }} {{ symbol.split('@')[0] }}</span>
               <span class="num">× {{ o.quantity }}</span>
               <span class="text-xs text-muted">{{ o.type === 'limit' ? `лимит ${fmtNum(o.limitPrice)}` : 'рыночная' }} · {{ fmtDate(o.createdAt, true) }}</span>
-              <UBadge :color="ORDER_COLORS[o.status] ?? 'neutral'" size="sm">
-                {{ ORDER_LABELS[o.status] ?? o.status }}
+              <UBadge :color="o.status === 'suspended_data_quality' ? 'warning' : ORDER_COLORS[o.status] ?? 'neutral'" size="sm">
+                {{ o.status === 'suspended_data_quality' ? 'Приостановлена: качество данных' : ORDER_LABELS[o.status] ?? o.status }}
               </UBadge>
               <UTooltip v-if="o.rejectReason" :text="o.rejectReason">
                 <UIcon name="i-lucide-info" class="size-4 text-error" />
@@ -351,14 +373,14 @@ useHead({ title: 'Paper-портфель · IIS' })
               </NuxtLink>
               <span class="ml-auto flex gap-1.5">
                 <UButton
-                  v-if="o.status === 'pending_confirmation'"
+                  v-if="o.status === 'pending_confirmation' || o.status === 'suspended_data_quality'"
                   size="xs"
                   color="warning"
                   icon="i-lucide-shield-check"
-                  @click="act(`/api/orders/${o.id}/confirm`, 'Заявка подтверждена')"
-                >Подтвердить</UButton>
+                  @click="confirm(o.id)"
+                >{{ o.status === 'suspended_data_quality' ? 'Проверить и подтвердить заново' : 'Подтвердить' }}</UButton>
                 <UButton
-                  v-if="o.status === 'pending_confirmation' || o.status === 'working'"
+                  v-if="['pending_confirmation', 'working', 'suspended_data_quality'].includes(o.status)"
                   size="xs"
                   color="neutral"
                   variant="ghost"

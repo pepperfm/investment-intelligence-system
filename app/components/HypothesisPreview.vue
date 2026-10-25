@@ -115,7 +115,7 @@ const bySeverity = computed(() => {
             <dt class="text-xs text-muted">
               Горизонт
             </dt><dd class="num">
-              {{ h.horizonDays }} торг. дн.
+              {{ h.horizonDays }} {{ h.marketScenario?.horizonUnit === 'confirmed_sessions' ? 'сессий' : 'торг. дн.' }}
             </dd>
           </div>
           <div>

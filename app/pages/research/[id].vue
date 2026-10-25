@@ -9,6 +9,11 @@ const { pause, resume } = useIntervalFn(() => refresh(), 2000, { immediate: fals
 watch(active, value => value ? resume() : pause(), { immediate: true })
 
 const summary = computed(() => run.value?.summary as null | {
+  blockedByDataQuality?: {
+    symbol: string
+    strategy: string
+    reasons: string[]
+  }[]
   candidates: number
   screenedOut: {
     symbol: string
@@ -25,8 +30,12 @@ const rows = computed(() => {
   const ids = new Set(run.value?.hypotheses.map(h => h.id))
   return (allHypotheses.value ?? []).filter(h => ids.has(h.id))
 })
-const dataBlocked = computed(() => summary.value?.screenedOut.some(row => row.reasons.some(reason => reason.startsWith('data_quality_blocked:'))))
-const done = computed(() => (run.value?.hypotheses.length ?? 0) + (summary.value?.screenedOut.length ?? 0) + (summary.value?.failures.length ?? 0))
+const isLegacyDataBlock = (row: { reasons: string[] }) => row.reasons.some(reason => reason.startsWith('data_quality_blocked:'))
+const screenedByStrategy = computed(() => summary.value?.screenedOut.filter(row => !isLegacyDataBlock(row)) ?? [])
+const blockedCandidates = computed(() => [...(summary.value?.blockedByDataQuality ?? []), ...(summary.value?.screenedOut.filter(isLegacyDataBlock) ?? [])])
+const dataBlocked = computed(() => blockedCandidates.value.length > 0)
+const displayStatus = computed(() => run.value?.status === 'completed' && dataBlocked.value ? blockedCandidates.value.length === total.value ? 'blocked' : 'completed_with_blocks' : run.value?.status ?? 'queued')
+const done = computed(() => (run.value?.hypotheses.length ?? 0) + (summary.value?.screenedOut.length ?? 0) + (summary.value?.failures.length ?? 0) + (summary.value?.blockedByDataQuality?.length ?? 0))
 const total = computed(() => (run.value?.instrumentIds.length ?? 0) * (run.value?.strategies.length ?? 0))
 const duration = computed(() => {
   if (!run.value?.startedAt) {
@@ -45,11 +54,11 @@ useHead({ title: 'Исследование · IIS' })
       <PageNavbar :title="run?.kind === 'why_not_buy' ? 'Почему не покупать' : 'Исследование'" back="/research">
         <template v-if="run" #title-extra>
           <UBadge
-            :color="run.status === 'completed' ? 'success' : run.status === 'failed' ? 'error' : 'primary'"
+            :color="displayStatus === 'completed' ? 'success' : displayStatus === 'failed' ? 'error' : ['blocked', 'completed_with_blocks'].includes(displayStatus) ? 'warning' : 'primary'"
             :icon="active ? 'i-lucide-loader-circle' : undefined"
             :ui="{ leadingIcon: 'animate-spin' }"
           >
-            {{ { completed: 'завершено', failed: 'ошибка', running: 'идёт анализ', queued: 'в очереди' }[run.status] ?? run.status }}
+            {{ { blocked: 'заблокировано данными', completed_with_blocks: 'завершено с блокировками', completed: 'завершено', failed: 'ошибка', running: 'идёт анализ', queued: 'в очереди' }[displayStatus] ?? displayStatus }}
           </UBadge>
         </template>
         <template #right>
@@ -99,7 +108,7 @@ useHead({ title: 'Исследование · IIS' })
             label="Гипотез"
             :value="String(run.hypotheses.length)"
             icon="i-lucide-lightbulb"
-            :hint="`отсеяно ${summary?.screenedOut.length ?? 0}`"
+            :hint="`нет сетапа ${screenedByStrategy.length} · блокировано ${blockedCandidates.length}`"
           />
           <StatTile
             label="Длительность"
@@ -139,23 +148,58 @@ useHead({ title: 'Исследование · IIS' })
             v-else
             :icon="active ? 'i-lucide-loader-circle' : 'i-lucide-filter-x'"
             :title="active ? 'Идёт анализ…' : 'Гипотез нет'"
-            :description="active ? 'Агенты работают; страница обновляется сама.' : 'Все кандидаты отсеяны детерминированным скринингом — агенты не вызывались.'"
+            :description="active ? 'Выполняется анализ; страница обновляется сама.' : dataBlocked ? 'Исследование заблокировано данными. Причины перечислены ниже; это не отсутствие сетапа.' : summary?.failures.length ? 'Анализ завершился ошибками; смотрите журнал.' : 'Кандидаты не прошли скрининг стратегии.'"
             size="sm"
             variant="naked"
             class="py-8"
           />
         </UCard>
 
+        <UCard v-if="blockedCandidates.length" class="mb-4">
+          <template #header>
+            Заблокированы качеством данных · {{ blockedCandidates.length }}
+          </template>
+          <div
+            v-for="item in blockedCandidates"
+            :key="`${item.symbol}:${item.strategy}`"
+            class="py-2 text-sm"
+          >
+            <strong>{{ item.symbol }} · {{ item.strategy }}</strong>
+            <p
+              v-for="reason in item.reasons"
+              :key="reason"
+              class="break-words text-xs text-muted"
+            >
+              {{ reason }}
+            </p>
+          </div>
+        </UCard>
+        <UAlert
+          v-if="run.researchSelection"
+          class="mb-4"
+          color="neutral"
+          :title="`${run.researchSelection.provider} · ${run.researchSelection.policyId}`"
+          :description="`Набор входных данных: ${run.researchSelection.inputSetVersion}. Ревизии закреплены на ${fmtDate(run.researchSelection.revisionCutoff, true)}. Прошлые запуски не переинтерпретируются.`"
+        />
+        <UButton
+          v-if="!active"
+          to="/research"
+          color="neutral"
+          variant="outline"
+          class="mb-4"
+        >
+          Новое исследование
+        </UButton>
         <div class="grid gap-4 lg:grid-cols-2">
-          <UCard v-if="summary?.screenedOut.length" :ui="{ body: 'p-0 sm:p-0' }">
+          <UCard v-if="screenedByStrategy.length" :ui="{ body: 'p-0 sm:p-0' }">
             <template #header>
               <p class="section-label">
-                Отсеяны скринингом · {{ summary.screenedOut.length }}
+                Отсеяны скринингом · {{ screenedByStrategy.length }}
               </p>
             </template>
             <ul class="divide-y divide-default">
               <li
-                v-for="s in summary.screenedOut"
+                v-for="s in screenedByStrategy"
                 :key="s.symbol + s.strategy"
                 class="flex items-start gap-3 px-4 py-2.5 text-sm sm:px-5"
               >

@@ -81,7 +81,7 @@ const gapLabels: Record<string, string> = {
         <h3 class="section-label">
           Отдельный ценовой прогноз
         </h3>
-        <p>{{ forecastLabels[h.priceForecast.criterion] ?? h.priceForecast.criterion }} · {{ h.priceForecast.windowTradingDays }} торг. дн.</p>
+        <p>{{ forecastLabels[h.priceForecast.criterion] ?? h.priceForecast.criterion }} · {{ h.priceForecast.windowTradingDays }} {{ scenario?.horizonUnit === 'confirmed_sessions' ? 'подтверждённых сессий' : 'торг. дн.' }}</p>
         <p>{{ h.priceForecast.rationale }}</p>
         <p class="text-xs text-muted">
           Источники: {{ h.priceForecast.sourceIds.join(', ') }}
@@ -104,7 +104,14 @@ const gapLabels: Record<string, string> = {
         :stop="scenario.exit.stopLoss"
         :target="scenario.exit.takeProfit"
       />
-      <p>Вход: {{ scenario.entry.type === 'market_next_open' ? 'следующее торговое открытие' : 'лимитный' }} · окно {{ scenario.entry.validDays }} торг. дн. · горизонт {{ scenario.horizonTradingDays }} торг. дн.</p>
+      <UAlert
+        v-if="scenario.horizonUnit === 'confirmed_sessions'"
+        color="warning"
+        title="Физические сессии · историческая реконструкция"
+        description="Новый набор входных данных, несопоставимый с прежними логическими днями. Историческая публикация и корректировки неизвестны. Будущий срок условный, paper-исполнение этим рядом не разрешено."
+        class="mb-2"
+      />
+      <p>Вход: {{ scenario.entry.type === 'market_next_open' ? 'следующее торговое открытие' : 'лимитный' }} · окно {{ scenario.entry.validDays }} {{ scenario.horizonUnit === 'confirmed_sessions' ? 'сессий' : 'торг. дн.' }} · горизонт {{ scenario.horizonTradingDays }} {{ scenario?.horizonUnit === 'confirmed_sessions' ? 'подтверждённых сессий' : 'торг. дн.' }}</p>
     </div>
     <div v-if="h.coverageGaps?.length" class="space-y-2">
       <h3 class="section-label">

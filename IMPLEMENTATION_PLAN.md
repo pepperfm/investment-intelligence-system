@@ -380,3 +380,71 @@ Legacy-карточка и независимые вердикты no_trade/fore
 Точные evidence: [acceptance.json](docs/hypothesis-review/acceptance.json),
 [market-calendar.md](docs/market-calendar.md),
 [real fixture](tests/fixtures/calendar/daily-feed-probe.json).
+
+
+## Разблокировка исследовательских котировок — 25.10.2026
+
+Источник задачи: IIS_MARKET_DATA_UNBLOCK_TZ.md, baseline 85dd666.
+
+- [x] A. Read-only Finam/MOEX probe для ROSN/NVTK/TATN/SBER/GAZP/IMOEX: daily,
+  history и полная часовая пагинация, контрольные даты 2024–2026.176 физических периодов
+  в реальных fixtures; логический понедельник ROSN включает выходные, physicaldaily — нет.
+- [x] B. Отдельный MoexIssResearchProvider, без подмены брокерского marketProvider.
+  Явный выбор в UI/конфигурации, shares/TQBR и index/SNDX; никаких fallback/mock цен.
+- [x] C. Аддитивные raw_market_bars, normalized_market_bars, bar_quality_audits и
+  analysis_runs.research_selection. Raw сохраняется до проверки/дедупликации; дубли и
+  противоречия — quarantine. Никакие старые candles не нормализуются на месте.
+- [x] D. Единый loadResearchBars для новых решений/индикаторов/бэктестов/оценок/риска.
+  Новая версия inputset, точные auditIDs (включая явное отсутствие), rules/cost/source hashes.
+  PhysicalBarClock опирается на scoped наблюдаемые факты и complete-response coverage,
+  не ограничен 2026 годом. No row остаётся unknown; будущие deadline условные.
+  Исследовательское качество отделено от репрезентативностибэктеста. Частичная вселенная
+  явно помечена; отсутствие постороннего инструмента не блокирует пригодный сигнал.
+- [x] E. Run statusesblocked/completed_with_blocks, отдельные списки data/strategy/error.
+  Старые ошибочно названные screenedOut отображаются как data-блоки без изменения БД.
+  Paper:suspended_data_quality, ручное возобновление с повторным risk/critic/expiry gate,
+  idempotency; неизвестные цены не дают fill и не отклоняют ticket окончательно.
+- [x] F. Backup, отдельная БД, миграция, реальный pipeline на исторической реконструкции,
+  ручные CodexCLI вызовы, численная контрфактическая оценка и повторяемость, браузер.
+
+### Фактическая приёмка
+
+Основная БД iis_finam: создан backup tmp/pre-market-unblock-20261025.dump (0600),
+миграция 20261025192349_bent_vengeance проверена сначала на копии
+`iis_market_unblock_verify_20261025`. В основную БД добавлены только новые рыночные
+наблюдения/аудиты. Counts+SHA существующих сущностей совпадают до/после:
+14,131candles,5hypotheses,43source_snapshots,5reviews,2runs,2strategy_versions,0orders/revisions.
+Настройки источника и активные стратегии не менялись; тестовые гипотезы только в копии.
+
+Реальный run `e29da1b1-8eab-4971-bdbc-ed6562015e78`, ROSN,why_not_buy,29.11.2024:
+реальные MOEX цены → согласованный OHLCV с часовыми свечами → детерминированный сигнал
+→ local Codex researcher/analyst/critic → `8f9ff6fb-2151-49b1-be48-3d1d2c1c2f58`,
+no_trade, critic supported, validation OK. Параметры Swing v1 не менялись; положительный сетап
+не подбирался. Платных HTTP вызовов моделей/реальных заявок нет. Отдельный mock-agent
+smoke использовал те же реальные цены и не считается реальной агентской приёмкой.
+
+Детерминированная оценка новой physical-гипотезы создала отдельную ревизию, повторный вызов
+вернул unchanged 1. Первоначальные пять legacy-гипотез не переинтерпретированы. Исторические
+окна 29.11.2024 и 24.01.2025 читают 210 пригодных наблюдений по каждой проверенной серии.
+
+Свежий run `a489ea66-6fca-4b87-87ff-a353b1117c6d` получил blocked,0 AI вызовов;
+причина — реальные daily/hourly расхождения IMOEX внутри требуемого окна. Это не screened_by_strategy.
+Браузер: явный выбор источника, периоды/карантин, отдельный статус блокировки, карточка
+настоящей гипотезы и реконструкция/физический горизонт; graph новой гипотезы только из её snapshot.
+
+Проверки: typecheck, typecheck:worker, lint, test(176/25), build, git diff --check.
+Прежнее нефатальное предупреждение Volar сохраняется. Финальные логи tmp/market-*-final.log.
+Полный воспроизводимый протокол и hashes: [acceptance](docs/market-data/acceptance.json).
+
+### Неустранённые внешние ограничения
+
+- FinamD-контракт не подтверждён; ручной verified:true не разблокирует его.
+- MOEX historicalAvailability и adjustmentPolicy остаются unknown: usable_with_limits,
+  не verified; long/paper соответствующий hardgate не ослаблен.
+- На 25.09.2026 и свежую дату IMOEX имеет реальные конфликты; новые исследования этих окон
+  и численные исходы пяти старых сценариев не объявлены разблокированными.
+- Достоверное будущее расписание/инструментальный допуск не выдумывается; checkAt для
+  conditional сценария — дата наблюдения, не обещанный срок исполнения.
+
+Таким образом, исторический real-data pipeline работает на согласованных периодах, но
+универсальная разблокировка всех источников/дат не заявляется.

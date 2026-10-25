@@ -122,8 +122,12 @@ export class FinamMarketDataProvider implements MarketDataProvider {
     return this.get<FinamAsset>(`/v1/assets/${encodeURIComponent(symbol)}${params}`)
   }
 
-  async getCandles(symbol: string, from: Date, to: Date): Promise<Candle[]> {
-    const result = new Map<string, Candle>()
+  async getCandles(symbol: string, from: Date, to: Date, observe?: (response: {
+    endpoint: string
+    observedAt: string
+    payload: unknown
+  }) => Promise<void>): Promise<Candle[]> {
+    const result: Candle[] = []
     // Only completed UTC days; today's changing bar must not enter research/backtests.
     const today = new Date()
     const until = new Date(Math.min(to.getTime(), Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))
@@ -146,6 +150,18 @@ export class FinamMarketDataProvider implements MarketDataProvider {
           volume: FinamDecimal
         }[]
       }>(`/v1/instruments/${encodeURIComponent(symbol)}/bars?${query}`)
+      await observe?.({
+        endpoint: `${BASE_URL}/v1/instruments/${encodeURIComponent(symbol)}/bars?${query}`,
+        observedAt: new Date().toISOString(),
+        payload: (data.bars ?? []).map(bar => ({
+          timestamp: bar.timestamp,
+          open: bar.open,
+          high: bar.high,
+          low: bar.low,
+          close: bar.close,
+          volume: bar.volume,
+        })),
+      })
       for (const bar of data.bars ?? []) {
         const day = new Date(bar.timestamp)
         if (!Number.isFinite(day.getTime())) {
@@ -173,11 +189,11 @@ export class FinamMarketDataProvider implements MarketDataProvider {
           || candle.high < Math.max(candle.open, candle.close) || candle.volume < 0) {
           throw new Error(`Finam invalid candle prices for ${symbol}`)
         }
-        result.set(candle.ts, candle)
+        result.push(candle)
       }
       start = end
     }
-    return [...result.values()].sort((a, b) => a.ts.localeCompare(b.ts))
+    return result.sort((a, b) => a.ts.localeCompare(b.ts))
   }
 
   getEvents(symbol: string, from: Date, to: Date) {

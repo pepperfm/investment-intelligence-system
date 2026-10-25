@@ -125,14 +125,14 @@ describe('daily bar contract gate', () => {
     expect(result.issues.some(s => s.includes('contract_unverified'))).toBe(true)
     expect(result.completedBars).toEqual([])
   })
-  it('excludes a future completed aggregate despite an already started weekend session', () => {
+  it('does not accept an arbitrary verified flag as a persisted source-policy audit', () => {
     const result = inspectBarQuality([bar('2026-09-25'), bar('2026-09-28')], {
       dataSource: 'finam',
       asOf: new Date('2026-09-25T20:59:59Z'),
       contract,
     })
-    expect(result.status).toBe('verified')
-    expect(result.completedBars.map(b => b.ts.slice(0, 10))).toEqual(['2026-09-25'])
+    expect(result.status).toBe('data_quality_blocked')
+    expect(result.completedBars).toEqual([])
   })
   it('blocks duplicate logical periods, unknown availability and invalid prices', () => {
     expect(inspectBarQuality([bar('2026-09-25'), bar('2026-09-25')], {

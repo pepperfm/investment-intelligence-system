@@ -117,6 +117,7 @@ export const outcomeReviewSchema = z.object({
 export type OutcomeReviewOutput = z.infer<typeof outcomeReviewSchema>
 
 export const startRunInput = z.object({
+  researchBarsProvider: z.literal('moex_iss').optional(),
   kind: z.enum(['research', 'why_not_buy']).default('research'),
   strategies: z.array(z.enum(STRATEGY_IDS)).min(1).max(2),
   instrumentIds: z.array(z.uuid()).min(1).max(30),

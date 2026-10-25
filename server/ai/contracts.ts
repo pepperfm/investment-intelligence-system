@@ -21,6 +21,12 @@ export interface TrackStats {
 export type AgentRole = 'market_researcher' | 'hypothesis_analyst' | 'hypothesis_critic' | 'outcome_reviewer'
 
 export interface EvidencePacket {
+  marketData?: import('../../shared/types/market-data').ResearchProvenance
+  benchmarkData?: import('../../shared/types/market-data').ResearchProvenance
+  backtestQuality?: {
+    status: string
+    issues: string[]
+  }
   calendarVersion?: string
   normalizationVersion?: string
   mode: 'research' | 'why_not_buy'

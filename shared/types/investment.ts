@@ -8,10 +8,18 @@ export const CRITIC_VERDICTS = ['supported', 'disputed', 'insufficient_evidence'
 export type CriticVerdict = typeof CRITIC_VERDICTS[number]
 
 export type RunKind = 'research' | 'why_not_buy'
-export type RunStatus = 'queued' | 'running' | 'completed' | 'failed'
+export type RunStatus = 'queued' | 'running' | 'completed' | 'completed_with_blocks' | 'blocked' | 'failed'
 export type Direction = 'long' | 'no_trade'
 
 export interface Candle {
+  physicalSessionDate?: string
+  barPolicyId?: string
+  earliestUseAt?: string
+  observedAt?: string
+  historicalAvailability?: 'verified' | 'unknown'
+  reconstruction?: boolean
+  sourceRevision?: string
+  provenanceHash?: string
   sessionDate?: string
   tradingDate?: string
   sessionType?: 'regular' | 'weekend_additional' | 'holiday' | 'unknown'
@@ -116,6 +124,14 @@ export interface CostModel {
 }
 
 export interface RiskCheckResult {
+  /** Persisted paper quote provenance; source/policy stay fixed while new manual observations may arrive. */
+  paperData?: {
+    selection?: import('./market-data').ResearchBarSelection
+    provenance: import('./market-data').ResearchProvenance | null
+    status: string
+    issues: string[]
+    assessedAt: string
+  }
   ok: boolean
   violations: string[]
   warnings: string[]
@@ -163,6 +179,10 @@ export interface PriceForecast {
 export interface MarketScenario {
   entry: EntryScenario
   exit: ExitScenario
+  horizonUnit?: 'logical_trading_days' | 'confirmed_sessions'
+  deadlineConditional?: boolean
+  inputSetVersion?: string
+  researchSelection?: import('./market-data').ResearchBarSelection
   horizonTradingDays: number
   strategyVersionId: string
   version: number

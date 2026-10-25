@@ -22,6 +22,14 @@ const STATUS = {
     icon: 'i-lucide-circle-check',
     class: 'text-success',
   },
+  blocked: {
+    icon: 'i-lucide-shield-alert',
+    class: 'text-warning',
+  },
+  completed_with_blocks: {
+    icon: 'i-lucide-shield-alert',
+    class: 'text-warning',
+  },
   failed: {
     icon: 'i-lucide-circle-x',
     class: 'text-error',
@@ -48,6 +56,7 @@ const duration = computed(() => {
 })
 const summary = computed(() => props.run.summary as null | {
   hypotheses?: unknown[]
+  blockedByDataQuality?: unknown[]
   screenedOut?: unknown[]
   failures?: unknown[]
 })
@@ -87,6 +96,12 @@ const historical = computed(() => Date.now() - new Date(props.run.asOf).getTime(
         <UTooltip text="Отсеяно скринингом">
           <span class="num flex items-center gap-1 text-muted"><UIcon name="i-lucide-filter" class="size-3.5 text-dimmed" />{{ summary.screenedOut?.length ?? 0 }}</span>
         </UTooltip>
+        <UBadge
+          v-if="summary.blockedByDataQuality?.length"
+          color="warning"
+          variant="subtle"
+          size="sm"
+        >Данные: {{ summary.blockedByDataQuality.length }} блок.</UBadge>
         <UTooltip v-if="summary.failures?.length" text="Ошибок">
           <span class="num flex items-center gap-1 text-error"><UIcon name="i-lucide-triangle-alert" class="size-3.5" />{{ summary.failures.length }}</span>
         </UTooltip>

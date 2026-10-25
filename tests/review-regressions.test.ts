@@ -3,7 +3,7 @@ import type { AnyPgTable } from 'drizzle-orm/pg-core'
 import { DEFAULT_COSTS, DEFAULT_RISK_LIMITS } from '../server/domain/risk/limits'
 
 import { nextStatusForDecision } from '../server/domain/hypotheses/state'
-import { processWorkingOrders, confirmOrder } from '../server/trading/paper-broker'
+import { processWorkingOrders, confirmOrder, createOrder } from '../server/trading/paper-broker'
 import { loadIssuerFacts } from '../server/services/issuer-fundamentals'
 import { decideHypothesis } from '../server/services/hypotheses'
 import { upsertDocument, searchMemory } from '../server/services/memory'
@@ -12,6 +12,8 @@ const store = vi.hoisted(() => ({
   rows: {} as Record<string, Record<string, unknown>[]>,
   locks: [] as string[],
   provider: 'mock' as 'mock' | 'finam',
+  barsVerified: false,
+  nextBarAt: '2026-10-21T00:00:00Z',
 }))
 
 vi.mock('drizzle-orm', async (original) => {
@@ -144,6 +146,9 @@ vi.mock('@nuxthub/db', async () => {
           values = value
           return query
         },
+        onConflictDoNothing() {
+          return query
+        },
         onConflictDoUpdate(value: Record<string, unknown>) {
           conflict = value
           return query
@@ -169,6 +174,43 @@ vi.mock('@nuxthub/db', async () => {
 })
 
 vi.mock('../server/services/market', () => ({
+  loadResearchBars: async (options: { after?: Date }) => {
+    const ready = store.provider === 'mock' || store.barsVerified
+    const bars = options.after
+      ? [{
+          ts: store.nextBarAt,
+          open: 100,
+          high: 101,
+          low: 99,
+          close: 100,
+          volume: 1e8,
+        }].filter(b => new Date(b.ts) > options.after!)
+      : Array.from({ length: 20 }, (_, i) => ({
+          ts: new Date(Date.UTC(2026, 9, 1 + i)).toISOString(),
+          open: 100,
+          high: 101,
+          low: 99,
+          close: 100,
+          volume: 1e8,
+        }))
+    return {
+      bars: ready ? bars : [],
+      quality: {
+        status: ready ? 'verified' : 'data_quality_blocked',
+        issues: ready ? [] : ['contract_unverified'],
+      },
+      provenance: {
+        source: store.provider,
+        selection: {
+          provider: store.provider,
+          policyId: store.provider === 'mock' ? 'mock_daily' : 'legacy_daily',
+          revisionCutoff: new Date().toISOString(),
+          inputSetVersion: 'test-v1',
+        },
+      },
+      gaps: [],
+    }
+  },
   getInstrument: async () => ({
     provider: store.provider,
     board: 'TQBR',
@@ -212,6 +254,8 @@ beforeEach(() => {
   store.rows = {}
   store.locks = []
   store.provider = 'mock'
+  store.barsVerified = false
+  store.nextBarAt = '2026-10-21T00:00:00Z'
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-10-20T12:00:00Z'))
   vi.stubGlobal('createError', (value: { statusMessage: string }) => new Error(value.statusMessage))
@@ -240,6 +284,8 @@ function order(id: string, overrides: Record<string, unknown> = {}) {
 function account() {
   store.rows.accounts = [{
     id: 'account',
+    provider: 'paper',
+    externalId: 'default',
     cash: 1_000_000,
   }]
   store.rows.executions = []
@@ -353,8 +399,87 @@ describe('review regressions', () => {
       quantity: 10,
     })]
     expect((await processWorkingOrders()).filled).toBe(0)
-    expect(store.rows.orders[0]!.status).toBe('rejected')
+    expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
+    expect(store.rows.orders[0]!.closedAt).toBeNull()
     expect(String(store.rows.orders[0]!.rejectReason)).toContain('data_quality_blocked')
+    expect(store.rows.executions).toHaveLength(0)
+  })
+  it('creates a durable suspended ticket when data is unavailable without filling or closing it', async () => {
+    account()
+    store.provider = 'finam'
+    const ticket = await createOrder({
+      instrumentId: 'a',
+      side: 'buy',
+      type: 'market',
+      quantity: 10,
+      hypothesisId: 'approved-h',
+      idempotencyKey: 'new-data-blocked',
+    })
+    expect(ticket.status).toBe('suspended_data_quality')
+    expect(ticket.closedAt).toBeNull()
+    expect(ticket.riskCheck.paperData?.status).toBe('data_quality_blocked')
+    expect(store.rows.executions).toHaveLength(0)
+    expect((await createOrder({
+      instrumentId: 'a',
+      side: 'buy',
+      type: 'market',
+      quantity: 10,
+      hypothesisId: 'approved-h',
+      idempotencyKey: 'new-data-blocked',
+    })).id).toBe(ticket.id)
+    expect(store.rows.orders).toHaveLength(1)
+  })
+  it('keeps confirmation suspended while data is still unavailable without starting an execution clock', async () => {
+    account()
+    store.provider = 'finam'
+    store.rows.orders = [order('pending-data', {
+      status: 'pending_confirmation',
+      confirmedAt: null,
+      side: 'buy',
+      hypothesisId: 'approved-h',
+    })]
+    const result = await confirmOrder('pending-data')
+    expect(result.status).toBe('suspended_data_quality')
+    expect(result.confirmedAt).toBeNull()
+    expect(result.closedAt).toBeNull()
+    expect(store.rows.executions).toHaveLength(0)
+  })
+  it('requires manual reconfirmation after data recovery and never fills an old bar', async () => {
+    account()
+    store.provider = 'finam'
+    store.rows.orders = [order('suspended', {
+      side: 'buy',
+      quantity: 10,
+      hypothesisId: 'approved-h',
+    })]
+    await processWorkingOrders()
+    expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
+    store.barsVerified = true
+    vi.setSystemTime(new Date('2026-10-22T12:00:00Z'))
+    await processWorkingOrders()
+    expect(store.rows.executions).toHaveLength(0)
+    expect(store.rows.orders[0]!.status).toBe('suspended_data_quality')
+    const restored = await confirmOrder('suspended')
+    expect(restored.status).toBe('working')
+    expect(restored.confirmedAt).toEqual(new Date())
+    expect(store.rows.executions).toHaveLength(0)
+    await confirmOrder('suspended')
+    expect(store.rows.orders[0]!.confirmedAt).toEqual(new Date())
+    store.nextBarAt = '2026-10-23T00:00:00Z'
+    vi.setSystemTime(new Date('2026-10-24T12:00:00Z'))
+    expect((await processWorkingOrders()).filled).toBe(1)
+    expect((await processWorkingOrders()).filled).toBe(0)
+    expect(store.rows.executions).toHaveLength(1)
+  })
+  it('rechecks the critic when a suspended ticket is manually restored', async () => {
+    account()
+    store.rows.orders = [order('suspended', {
+      status: 'suspended_data_quality',
+      side: 'buy',
+      hypothesisId: 'approved-h',
+    })]
+    store.rows.hypotheses[0]!.criticVerdict = 'disputed'
+    expect((await confirmOrder('suspended')).status).toBe('rejected')
     expect(store.rows.executions).toHaveLength(0)
   })
   it.each(['expired', 'closed', 'disputed', 'mismatched'])('rejects confirmation of a %s hypothesis', async (reason) => {

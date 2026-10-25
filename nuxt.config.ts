@@ -62,6 +62,8 @@ export default defineNuxtConfig({
     redisPrefix: 'iis:',
     authSecret: '',
     marketProvider: 'mock',
+    researchBarsProvider: '',
+    researchBarPolicy: '',
     finamReadSecret: '',
     finamAccountId: '',
     finamSymbols: '',

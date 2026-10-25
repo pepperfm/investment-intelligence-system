@@ -1,0 +1,1410 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-25T19:25:48.580Z",
+  "policyCandidate": "physical_session_v1",
+  "results": [
+    {
+      "instrument": {
+        "symbol": "ROSN",
+        "market": "shares",
+        "board": "TQBR"
+      },
+      "range": {
+        "id": "rosn-conflict2025",
+        "from": "2025-04-10",
+        "till": "2025-04-10"
+      },
+      "fieldMapping": {
+        "daily": "open/high/low/close/volume/value/begin/end",
+        "intraday": "same fields; ordered disjoint hourly periods",
+        "history": "TRADEDATE/TRADINGSESSION/OPEN/HIGH/LOW/CLOSE/VOLUME/VALUE where present"
+      },
+      "daily": {
+        "observedAt": "2026-10-25T19:25:48.293Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/ROSN/candles.json?from=2025-04-10&till=2025-04-10&iss.meta=off&interval=24",
+        "status": 200,
+        "sourceResponseHash": "be581414fe4f2e944f9cc1173c6a8e62c517869e9fb4f665714de5b640d6cde1",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              447.6,
+              440.65,
+              454,
+              437.1,
+              3204690898.6499987,
+              7200603,
+              "2025-04-10 00:00:00",
+              "2025-04-10 19:04:15"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "intraday": {
+        "observedAt": "2026-10-25T19:25:48.293Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/ROSN/candles.json?from=2025-04-10&till=2025-04-10&iss.meta=off&interval=60",
+        "status": 200,
+        "sourceResponseHash": "5930d8a94d62e95c4e274d5bdfdce44efe1ff741e40013a866e736618b96b9dc",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              447.6,
+              447.6,
+              447.6,
+              447.6,
+              6627613.199999997,
+              14807,
+              "2025-04-10 06:00:00",
+              "2025-04-10 06:59:59"
+            ],
+            [
+              447.6,
+              445.75,
+              448,
+              442.55,
+              176729900.50000003,
+              397059,
+              "2025-04-10 07:00:00",
+              "2025-04-10 07:59:59"
+            ],
+            [
+              445.75,
+              446.9,
+              447.9,
+              444.55,
+              89662504.55,
+              201114,
+              "2025-04-10 08:00:00",
+              "2025-04-10 08:59:59"
+            ],
+            [
+              446.9,
+              453.15,
+              454,
+              445.35,
+              259147150.25,
+              575226,
+              "2025-04-10 09:00:00",
+              "2025-04-10 09:59:59"
+            ],
+            [
+              453.2,
+              444.6,
+              453.55,
+              442.2,
+              724722026.0000001,
+              1621749,
+              "2025-04-10 10:00:00",
+              "2025-04-10 10:59:59"
+            ],
+            [
+              444.7,
+              440.5,
+              446.85,
+              439.2,
+              422379340.8499998,
+              955580,
+              "2025-04-10 11:00:00",
+              "2025-04-10 11:59:59"
+            ],
+            [
+              440.4,
+              444.05,
+              446.5,
+              440,
+              240362241.74999997,
+              541811,
+              "2025-04-10 12:00:00",
+              "2025-04-10 12:59:59"
+            ],
+            [
+              444.05,
+              444.9,
+              447.2,
+              443.15,
+              163227319.1,
+              366235,
+              "2025-04-10 13:00:00",
+              "2025-04-10 13:59:59"
+            ],
+            [
+              445,
+              444.65,
+              445.85,
+              441.45,
+              177628780.95000008,
+              400386,
+              "2025-04-10 14:00:00",
+              "2025-04-10 14:59:59"
+            ],
+            [
+              444.65,
+              446.3,
+              449.45,
+              444.65,
+              298501836.65,
+              667409,
+              "2025-04-10 15:00:00",
+              "2025-04-10 15:59:59"
+            ],
+            [
+              446.45,
+              439.25,
+              448.8,
+              439.25,
+              357999108.30000013,
+              805722,
+              "2025-04-10 16:00:00",
+              "2025-04-10 16:59:59"
+            ],
+            [
+              439.3,
+              441,
+              442.85,
+              437.1,
+              161832928.75,
+              367978,
+              "2025-04-10 17:00:00",
+              "2025-04-10 17:59:59"
+            ],
+            [
+              441,
+              440.65,
+              442.85,
+              439,
+              125870147.80000003,
+              285527,
+              "2025-04-10 18:00:00",
+              "2025-04-10 18:50:35"
+            ],
+            [
+              440.65,
+              437.45,
+              440.65,
+              433.65,
+              341534219.2,
+              782452,
+              "2025-04-10 19:00:00",
+              "2025-04-10 19:59:59"
+            ],
+            [
+              437.3,
+              441.8,
+              442.4,
+              435.85,
+              143802571.45,
+              327177,
+              "2025-04-10 20:00:00",
+              "2025-04-10 20:59:59"
+            ],
+            [
+              441.75,
+              440.95,
+              442.95,
+              439.3,
+              90589255.05,
+              205382,
+              "2025-04-10 21:00:00",
+              "2025-04-10 21:59:59"
+            ],
+            [
+              440.8,
+              439.85,
+              442.3,
+              438.35,
+              84099433.15,
+              190984,
+              "2025-04-10 22:00:00",
+              "2025-04-10 22:59:59"
+            ],
+            [
+              439.85,
+              438,
+              440.15,
+              437.9,
+              50081188.20000001,
+              114145,
+              "2025-04-10 23:00:00",
+              "2025-04-10 23:59:57"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "history": {
+        "observedAt": "2026-10-25T19:25:48.293Z",
+        "endpoint": "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/ROSN.json?from=2025-04-10&till=2025-04-10&iss.meta=off",
+        "status": 200,
+        "sourceResponseHash": "f8ae20c03f87a87814adecb66de2979d81bcb8c91b1e27a0515b3a05318c9afc",
+        "table": {
+          "columns": [
+            "BOARDID",
+            "TRADEDATE",
+            "SHORTNAME",
+            "SECID",
+            "NUMTRADES",
+            "VALUE",
+            "OPEN",
+            "LOW",
+            "HIGH",
+            "LEGALCLOSEPRICE",
+            "WAPRICE",
+            "CLOSE",
+            "VOLUME",
+            "MARKETPRICE2",
+            "MARKETPRICE3",
+            "ADMITTEDQUOTE",
+            "MP2VALTRD",
+            "MARKETPRICE3TRADESVALUE",
+            "ADMITTEDVALUE",
+            "WAVAL",
+            "TRADINGSESSION",
+            "CURRENCYID",
+            "TRENDCLSPR",
+            "TRADE_SESSION_DATE"
+          ],
+          "data": [
+            [
+              "TQBR",
+              "2025-04-10",
+              "Роснефть",
+              "ROSN",
+              98347,
+              3914797565.7,
+              447.6,
+              433.65,
+              454,
+              440.65,
+              443.75,
+              438,
+              8820743,
+              444.85,
+              444.85,
+              null,
+              2797607052.1,
+              2797607052.1,
+              null,
+              0,
+              3,
+              "SUR",
+              -1.79,
+              "2025-04-10"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "comparisons": [
+        {
+          "physicalSessionDate": "2025-04-10",
+          "source": "moex_iss",
+          "conclusion": "unknown",
+          "comparisonScope": "equity_ohlcv_and_turnover",
+          "intradayRows": 18,
+          "firstPeriodBegin": "2025-04-10 06:00:00",
+          "lastPeriodEnd": "2025-04-10 23:59:57",
+          "actual": {
+            "open": 447.6,
+            "high": 454,
+            "low": 437.1,
+            "close": 440.65,
+            "volume": 7200603,
+            "value": 3204690898.6499987
+          },
+          "aggregate": {
+            "open": 447.6,
+            "high": 454,
+            "low": 433.65,
+            "close": 438,
+            "volume": 8820743,
+            "value": 3914797565.7000003
+          },
+          "mismatches": [
+            "low",
+            "close",
+            "volume",
+            "value"
+          ],
+          "historicalAvailability": "unknown",
+          "adjustmentPolicy": "source_native_no_retro_adjustment_applied",
+          "unknowns": [
+            "Historical first publication time is not supplied by these endpoints.",
+            "Hourly reconciliation establishes non-overlap for this observed series, not immutable future provider behavior."
+          ]
+        }
+      ],
+      "logicalHistoryComparison": [
+        {
+          "logicalTradingDate": "2025-04-10",
+          "physicalSessionDates": [
+            "2025-04-10"
+          ],
+          "boundedByPriorHistory": false,
+          "actual": {
+            "open": 447.6,
+            "high": 454,
+            "low": 433.65,
+            "close": 438,
+            "volume": 8820743,
+            "value": 3914797565.7
+          },
+          "aggregate": {
+            "open": 447.6,
+            "high": 454,
+            "low": 437.1,
+            "close": 440.65,
+            "volume": 7200603,
+            "value": 3204690898.6499987
+          },
+          "mismatches": [
+            "low",
+            "close",
+            "volume",
+            "value"
+          ],
+          "conclusion": "unknown_boundary"
+        }
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ROSN",
+        "market": "shares",
+        "board": "TQBR"
+      },
+      "range": {
+        "id": "index-conflict2026",
+        "from": "2026-10-12",
+        "till": "2026-10-12"
+      },
+      "fieldMapping": {
+        "daily": "open/high/low/close/volume/value/begin/end",
+        "intraday": "same fields; ordered disjoint hourly periods",
+        "history": "TRADEDATE/TRADINGSESSION/OPEN/HIGH/LOW/CLOSE/VOLUME/VALUE where present"
+      },
+      "daily": {
+        "observedAt": "2026-10-25T19:25:48.409Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/ROSN/candles.json?from=2026-10-12&till=2026-10-12&iss.meta=off&interval=24",
+        "status": 200,
+        "sourceResponseHash": "a7d18e74ec9cb0eddc3ecb17a208fa7c115cc18ac14f52acb4a852864101e166",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              382.05,
+              377.95,
+              385,
+              375.55,
+              8629532769.999998,
+              22740813,
+              "2026-10-12 00:00:00",
+              "2026-10-12 23:59:54"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "intraday": {
+        "observedAt": "2026-10-25T19:25:48.409Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/ROSN/candles.json?from=2026-10-12&till=2026-10-12&iss.meta=off&interval=60",
+        "status": 200,
+        "sourceResponseHash": "5d78e7d19c920b92b7593924a3cda7203a9403b6d79259132f27801c9c5313ea",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              382.05,
+              382.05,
+              382.05,
+              382.05,
+              64103405.39999994,
+              167788,
+              "2026-10-12 06:00:00",
+              "2026-10-12 06:59:59"
+            ],
+            [
+              382.05,
+              377.5,
+              382.15,
+              375.55,
+              1210172517.7000003,
+              3201525,
+              "2026-10-12 07:00:00",
+              "2026-10-12 07:59:59"
+            ],
+            [
+              377.55,
+              378.15,
+              378.8,
+              376,
+              351231159.4,
+              930831,
+              "2026-10-12 08:00:00",
+              "2026-10-12 08:59:59"
+            ],
+            [
+              378.15,
+              377.5,
+              379.75,
+              377.1,
+              420480410.15000004,
+              1110882,
+              "2026-10-12 09:00:00",
+              "2026-10-12 09:59:59"
+            ],
+            [
+              377.45,
+              380.25,
+              385,
+              376.15,
+              2025646974.2499995,
+              5302189,
+              "2026-10-12 10:00:00",
+              "2026-10-12 10:59:59"
+            ],
+            [
+              380.3,
+              379,
+              380.95,
+              376.65,
+              744835105.0000005,
+              1969182,
+              "2026-10-12 11:00:00",
+              "2026-10-12 11:59:59"
+            ],
+            [
+              378.95,
+              377.95,
+              380,
+              377.3,
+              435854155.40000015,
+              1150501,
+              "2026-10-12 12:00:00",
+              "2026-10-12 12:59:59"
+            ],
+            [
+              377.95,
+              377.85,
+              380.6,
+              376.85,
+              712067893.5499998,
+              1882122,
+              "2026-10-12 13:00:00",
+              "2026-10-12 13:59:59"
+            ],
+            [
+              377.8,
+              380.65,
+              381.45,
+              376.9,
+              515370947.6000003,
+              1359906,
+              "2026-10-12 14:00:00",
+              "2026-10-12 14:59:59"
+            ],
+            [
+              380.55,
+              379.4,
+              381.3,
+              378.25,
+              602606892.7499999,
+              1587943,
+              "2026-10-12 15:00:00",
+              "2026-10-12 15:59:59"
+            ],
+            [
+              379.3,
+              378.85,
+              380.25,
+              378.6,
+              197875159.60000002,
+              521542,
+              "2026-10-12 16:00:00",
+              "2026-10-12 16:59:59"
+            ],
+            [
+              378.85,
+              379.9,
+              380,
+              378.6,
+              204958039.85000002,
+              540367,
+              "2026-10-12 17:00:00",
+              "2026-10-12 17:59:59"
+            ],
+            [
+              379.95,
+              380.25,
+              380.5,
+              379.3,
+              223048361.15,
+              587222,
+              "2026-10-12 18:00:00",
+              "2026-10-12 18:59:59"
+            ],
+            [
+              380.3,
+              379.65,
+              380.35,
+              378.95,
+              98905676.20000002,
+              260605,
+              "2026-10-12 19:00:00",
+              "2026-10-12 19:59:59"
+            ],
+            [
+              379.65,
+              379.8,
+              380,
+              377.2,
+              252487666.14999992,
+              666260,
+              "2026-10-12 20:00:00",
+              "2026-10-12 20:59:59"
+            ],
+            [
+              379.75,
+              379.25,
+              381.4,
+              378.55,
+              361684533.74999994,
+              951807,
+              "2026-10-12 21:00:00",
+              "2026-10-12 21:59:59"
+            ],
+            [
+              379.3,
+              378.9,
+              379.8,
+              378.7,
+              71951067.15,
+              189751,
+              "2026-10-12 22:00:00",
+              "2026-10-12 22:59:59"
+            ],
+            [
+              379.05,
+              377.95,
+              379.05,
+              377.35,
+              136252804.95000002,
+              360390,
+              "2026-10-12 23:00:00",
+              "2026-10-12 23:59:54"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "history": {
+        "observedAt": "2026-10-25T19:25:48.409Z",
+        "endpoint": "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities/ROSN.json?from=2026-10-12&till=2026-10-12&iss.meta=off",
+        "status": 200,
+        "sourceResponseHash": "e0ac0fa146fe659c4ecb8f88a17401dd42a45d889bce26ded29f62ad821ed650",
+        "table": {
+          "columns": [
+            "BOARDID",
+            "TRADEDATE",
+            "SHORTNAME",
+            "SECID",
+            "NUMTRADES",
+            "VALUE",
+            "OPEN",
+            "LOW",
+            "HIGH",
+            "LEGALCLOSEPRICE",
+            "WAPRICE",
+            "CLOSE",
+            "VOLUME",
+            "MARKETPRICE2",
+            "MARKETPRICE3",
+            "ADMITTEDQUOTE",
+            "MP2VALTRD",
+            "MARKETPRICE3TRADESVALUE",
+            "ADMITTEDVALUE",
+            "WAVAL",
+            "TRADINGSESSION",
+            "CURRENCYID",
+            "TRENDCLSPR",
+            "TRADE_SESSION_DATE"
+          ],
+          "data": [
+            [
+              "TQBR",
+              "2026-10-12",
+              "Роснефть",
+              "ROSN",
+              230468,
+              19004526454.85,
+              382.15,
+              372.7,
+              385,
+              380.25,
+              379.3,
+              377.95,
+              50106370,
+              379.9,
+              379.9,
+              null,
+              6082743939.3,
+              6082743939.3,
+              null,
+              0,
+              3,
+              "SUR",
+              -1.15,
+              "2026-10-12"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "comparisons": [
+        {
+          "physicalSessionDate": "2026-10-12",
+          "source": "moex_iss",
+          "conclusion": "non_overlapping",
+          "comparisonScope": "equity_ohlcv_and_turnover",
+          "intradayRows": 18,
+          "firstPeriodBegin": "2026-10-12 06:00:00",
+          "lastPeriodEnd": "2026-10-12 23:59:54",
+          "actual": {
+            "open": 382.05,
+            "high": 385,
+            "low": 375.55,
+            "close": 377.95,
+            "volume": 22740813,
+            "value": 8629532769.999998
+          },
+          "aggregate": {
+            "open": 382.05,
+            "high": 385,
+            "low": 375.55,
+            "close": 377.95,
+            "volume": 22740813,
+            "value": 8629532770
+          },
+          "mismatches": [],
+          "historicalAvailability": "unknown",
+          "adjustmentPolicy": "source_native_no_retro_adjustment_applied",
+          "unknowns": [
+            "Historical first publication time is not supplied by these endpoints.",
+            "Hourly reconciliation establishes non-overlap for this observed series, not immutable future provider behavior."
+          ]
+        }
+      ],
+      "logicalHistoryComparison": [
+        {
+          "logicalTradingDate": "2026-10-12",
+          "physicalSessionDates": [
+            "2026-10-12"
+          ],
+          "boundedByPriorHistory": false,
+          "actual": {
+            "open": 382.15,
+            "high": 385,
+            "low": 372.7,
+            "close": 377.95,
+            "volume": 50106370,
+            "value": 19004526454.85
+          },
+          "aggregate": {
+            "open": 382.05,
+            "high": 385,
+            "low": 375.55,
+            "close": 377.95,
+            "volume": 22740813,
+            "value": 8629532769.999998
+          },
+          "mismatches": [
+            "open",
+            "low",
+            "volume",
+            "value"
+          ],
+          "conclusion": "unknown_boundary"
+        }
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "IMOEX",
+        "market": "index",
+        "board": "SNDX"
+      },
+      "range": {
+        "id": "rosn-conflict2025",
+        "from": "2025-04-10",
+        "till": "2025-04-10"
+      },
+      "fieldMapping": {
+        "daily": "open/high/low/close/volume/value/begin/end",
+        "intraday": "same fields; ordered disjoint hourly periods",
+        "history": "TRADEDATE/TRADINGSESSION/OPEN/HIGH/LOW/CLOSE/VOLUME/VALUE where present"
+      },
+      "daily": {
+        "observedAt": "2026-10-25T19:25:48.468Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX/candles.json?from=2025-04-10&till=2025-04-10&iss.meta=off&interval=24",
+        "status": 200,
+        "sourceResponseHash": "7fbad9eb68e7178ceff46c2c13d50778da2fb7c3e706c00d173b25ab2b8bbe3c",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              2790.31,
+              2764.28,
+              2801.19,
+              2742.48,
+              90685181557.81,
+              0,
+              "2025-04-10 00:00:00",
+              "2025-04-10 23:59:59"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "intraday": {
+        "observedAt": "2026-10-25T19:25:48.468Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX/candles.json?from=2025-04-10&till=2025-04-10&iss.meta=off&interval=60",
+        "status": 200,
+        "sourceResponseHash": "00fcbde3ef64341579b4a5972eb1e029d1e4276bb8cde39203bebe38b5aad69d",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              2790.31,
+              2799.79,
+              2801.19,
+              2787.83,
+              2780792776.66,
+              0,
+              "2025-04-10 09:00:00",
+              "2025-04-10 09:59:59"
+            ],
+            [
+              2799.63,
+              2758.98,
+              2800.96,
+              2750.84,
+              17383310495.21,
+              0,
+              "2025-04-10 10:00:00",
+              "2025-04-10 10:59:59"
+            ],
+            [
+              2759.01,
+              2745.14,
+              2768.42,
+              2745.14,
+              8527364500.760002,
+              0,
+              "2025-04-10 11:00:00",
+              "2025-04-10 11:59:59"
+            ],
+            [
+              2744.94,
+              2763.6,
+              2770.14,
+              2742.48,
+              7065504479.16,
+              0,
+              "2025-04-10 12:00:00",
+              "2025-04-10 12:59:59"
+            ],
+            [
+              2763.62,
+              2761.54,
+              2774.56,
+              2758.51,
+              6424301695.339996,
+              0,
+              "2025-04-10 13:00:00",
+              "2025-04-10 13:59:59"
+            ],
+            [
+              2761.51,
+              2763.09,
+              2769.05,
+              2750.08,
+              5950711875.800003,
+              0,
+              "2025-04-10 14:00:00",
+              "2025-04-10 14:59:59"
+            ],
+            [
+              2763.12,
+              2781.8,
+              2796.87,
+              2763.1,
+              15621134372.580002,
+              0,
+              "2025-04-10 15:00:00",
+              "2025-04-10 15:59:59"
+            ],
+            [
+              2781.89,
+              2756.21,
+              2795.09,
+              2755.66,
+              13217993512.870003,
+              0,
+              "2025-04-10 16:00:00",
+              "2025-04-10 16:59:59"
+            ],
+            [
+              2756.34,
+              2756.69,
+              2777.63,
+              2745.74,
+              8029502342.720001,
+              0,
+              "2025-04-10 17:00:00",
+              "2025-04-10 17:59:59"
+            ],
+            [
+              2756.75,
+              2764.28,
+              2773.63,
+              2753.81,
+              5684565506.709991,
+              0,
+              "2025-04-10 18:00:00",
+              "2025-04-10 18:54:02"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "history": {
+        "observedAt": "2026-10-25T19:25:48.468Z",
+        "endpoint": "https://iss.moex.com/iss/history/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?from=2025-04-10&till=2025-04-10&iss.meta=off",
+        "status": 200,
+        "sourceResponseHash": "96f28679a44770f69d0b02f506a38eb20f70d354adc1e29af94a603e7b0966c0",
+        "table": {
+          "columns": [
+            "BOARDID",
+            "SECID",
+            "TRADEDATE",
+            "SHORTNAME",
+            "NAME",
+            "CLOSE",
+            "OPEN",
+            "HIGH",
+            "LOW",
+            "VALUE",
+            "DURATION",
+            "YIELD",
+            "DECIMALS",
+            "CAPITALIZATION",
+            "CURRENCYID",
+            "DIVISOR",
+            "TRADINGSESSION",
+            "VOLUME",
+            "TRADE_SESSION_DATE",
+            "RECALC_DATE"
+          ],
+          "data": [
+            [
+              "SNDX",
+              "IMOEX",
+              "2025-04-10",
+              "Индекс МосБиржи",
+              "Индекс МосБиржи",
+              2764.28,
+              2790.31,
+              2801.19,
+              2742.48,
+              90685181557.81,
+              0,
+              0,
+              2,
+              6151158842571.267,
+              "RUB",
+              2225231673.115,
+              "3",
+              null,
+              "2025-04-10",
+              null
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "comparisons": [
+        {
+          "physicalSessionDate": "2025-04-10",
+          "source": "moex_iss",
+          "conclusion": "non_overlapping",
+          "comparisonScope": "index_ohlc_volume_zero_not_traded_turnover",
+          "intradayRows": 10,
+          "firstPeriodBegin": "2025-04-10 09:00:00",
+          "lastPeriodEnd": "2025-04-10 18:54:02",
+          "actual": {
+            "open": 2790.31,
+            "high": 2801.19,
+            "low": 2742.48,
+            "close": 2764.28,
+            "volume": 0,
+            "value": 90685181557.81
+          },
+          "aggregate": {
+            "open": 2790.31,
+            "high": 2801.19,
+            "low": 2742.48,
+            "close": 2764.28,
+            "volume": 0,
+            "value": 90685181557.81
+          },
+          "mismatches": [],
+          "historicalAvailability": "unknown",
+          "adjustmentPolicy": "source_native_no_retro_adjustment_applied",
+          "unknowns": [
+            "Historical first publication time is not supplied by these endpoints.",
+            "Hourly reconciliation establishes non-overlap for this observed series, not immutable future provider behavior."
+          ]
+        }
+      ],
+      "logicalHistoryComparison": [
+        {
+          "logicalTradingDate": "2025-04-10",
+          "physicalSessionDates": [
+            "2025-04-10"
+          ],
+          "boundedByPriorHistory": false,
+          "actual": {
+            "open": 2790.31,
+            "high": 2801.19,
+            "low": 2742.48,
+            "close": 2764.28,
+            "volume": null,
+            "value": 90685181557.81
+          },
+          "aggregate": {
+            "open": 2790.31,
+            "high": 2801.19,
+            "low": 2742.48,
+            "close": 2764.28,
+            "volume": 0,
+            "value": 90685181557.81
+          },
+          "mismatches": [],
+          "conclusion": "unknown_boundary"
+        }
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "IMOEX",
+        "market": "index",
+        "board": "SNDX"
+      },
+      "range": {
+        "id": "index-conflict2026",
+        "from": "2026-10-12",
+        "till": "2026-10-12"
+      },
+      "fieldMapping": {
+        "daily": "open/high/low/close/volume/value/begin/end",
+        "intraday": "same fields; ordered disjoint hourly periods",
+        "history": "TRADEDATE/TRADINGSESSION/OPEN/HIGH/LOW/CLOSE/VOLUME/VALUE where present"
+      },
+      "daily": {
+        "observedAt": "2026-10-25T19:25:48.498Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX/candles.json?from=2026-10-12&till=2026-10-12&iss.meta=off&interval=24",
+        "status": 200,
+        "sourceResponseHash": "4b28ed4af420c0d3d910c0a5a08bdcca7e183c29af958a1f8e41f28c22bb5047",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              2403.06,
+              2389.04,
+              2423.79,
+              2374.48,
+              163579450619.64,
+              0,
+              "2026-10-12 00:00:00",
+              "2026-10-12 23:59:59"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "intraday": {
+        "observedAt": "2026-10-25T19:25:48.499Z",
+        "endpoint": "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities/IMOEX/candles.json?from=2026-10-12&till=2026-10-12&iss.meta=off&interval=60",
+        "status": 200,
+        "sourceResponseHash": "209ac788ee9f9818ae9287ccccb074f4127b26d23cb0fa862f49b49b920ded60",
+        "table": {
+          "columns": [
+            "open",
+            "close",
+            "high",
+            "low",
+            "value",
+            "volume",
+            "begin",
+            "end"
+          ],
+          "data": [
+            [
+              2403.06,
+              2388.41,
+              2403.06,
+              2383.76,
+              9074718500.67,
+              0,
+              "2026-10-12 07:00:00",
+              "2026-10-12 07:59:59"
+            ],
+            [
+              2388.42,
+              2394.89,
+              2397.11,
+              2382.71,
+              4933970555.58,
+              0,
+              "2026-10-12 08:00:00",
+              "2026-10-12 08:59:59"
+            ],
+            [
+              2394.89,
+              2393.04,
+              2402.05,
+              2392.1,
+              6491599897.52,
+              0,
+              "2026-10-12 09:00:00",
+              "2026-10-12 09:59:59"
+            ],
+            [
+              2393.08,
+              2394.94,
+              2403.18,
+              2385.92,
+              12252788881.52,
+              0,
+              "2026-10-12 10:00:00",
+              "2026-10-12 10:59:59"
+            ],
+            [
+              2394.95,
+              2387.3,
+              2396.02,
+              2383.74,
+              8451453501.299995,
+              0,
+              "2026-10-12 11:00:00",
+              "2026-10-12 11:59:59"
+            ],
+            [
+              2387.26,
+              2385.56,
+              2394.33,
+              2379.93,
+              5960110150.660004,
+              0,
+              "2026-10-12 12:00:00",
+              "2026-10-12 12:59:59"
+            ],
+            [
+              2385.46,
+              2378.47,
+              2392.96,
+              2374.48,
+              7895490382.129997,
+              0,
+              "2026-10-12 13:00:00",
+              "2026-10-12 13:59:59"
+            ],
+            [
+              2378.53,
+              2392.65,
+              2394.49,
+              2377.09,
+              6156597571.480003,
+              0,
+              "2026-10-12 14:00:00",
+              "2026-10-12 14:59:59"
+            ],
+            [
+              2392.51,
+              2393.93,
+              2397.03,
+              2386.16,
+              5488312297.5,
+              0,
+              "2026-10-12 15:00:00",
+              "2026-10-12 15:59:59"
+            ],
+            [
+              2393.84,
+              2391.8,
+              2398.65,
+              2391.8,
+              5491704519.190002,
+              0,
+              "2026-10-12 16:00:00",
+              "2026-10-12 16:59:59"
+            ],
+            [
+              2391.73,
+              2395.49,
+              2397.02,
+              2390.55,
+              4589290633.179993,
+              0,
+              "2026-10-12 17:00:00",
+              "2026-10-12 17:59:59"
+            ],
+            [
+              2395.49,
+              2393.8,
+              2395.51,
+              2388.72,
+              4455511343.889999,
+              0,
+              "2026-10-12 18:00:00",
+              "2026-10-12 18:58:58"
+            ],
+            [
+              2393.83,
+              2393.25,
+              2394.06,
+              2391.54,
+              75716456780.20999,
+              0,
+              "2026-10-12 19:00:00",
+              "2026-10-12 19:59:59"
+            ],
+            [
+              2393.27,
+              2394.62,
+              2395.36,
+              2393.23,
+              1566360341.4200134,
+              0,
+              "2026-10-12 20:00:00",
+              "2026-10-12 20:59:59"
+            ],
+            [
+              2394.62,
+              2388.61,
+              2395.04,
+              2387.6,
+              2178666324.75,
+              0,
+              "2026-10-12 21:00:00",
+              "2026-10-12 21:59:59"
+            ],
+            [
+              2388.59,
+              2390.38,
+              2392.13,
+              2388.36,
+              1418489470.5100098,
+              0,
+              "2026-10-12 22:00:00",
+              "2026-10-12 22:59:59"
+            ],
+            [
+              2390.37,
+              2389.04,
+              2391.03,
+              2388.67,
+              1457929468.130005,
+              0,
+              "2026-10-12 23:00:00",
+              "2026-10-12 23:59:55"
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "history": {
+        "observedAt": "2026-10-25T19:25:48.499Z",
+        "endpoint": "https://iss.moex.com/iss/history/engines/stock/markets/index/boards/SNDX/securities/IMOEX.json?from=2026-10-12&till=2026-10-12&iss.meta=off",
+        "status": 200,
+        "sourceResponseHash": "76d208e44157878dbc6dd8f619eaeb4eb550f15a879fc51bf18a915912b0aea3",
+        "table": {
+          "columns": [
+            "BOARDID",
+            "SECID",
+            "TRADEDATE",
+            "SHORTNAME",
+            "NAME",
+            "CLOSE",
+            "OPEN",
+            "HIGH",
+            "LOW",
+            "VALUE",
+            "DURATION",
+            "YIELD",
+            "DECIMALS",
+            "CAPITALIZATION",
+            "CURRENCYID",
+            "DIVISOR",
+            "TRADINGSESSION",
+            "VOLUME",
+            "TRADE_SESSION_DATE",
+            "RECALC_DATE"
+          ],
+          "data": [
+            [
+              "SNDX",
+              "IMOEX",
+              "2026-10-12",
+              "Индекс МосБиржи",
+              "Индекс МосБиржи",
+              2389.04,
+              2403.06,
+              2423.79,
+              2374.48,
+              163579450619.64,
+              0,
+              0,
+              2,
+              5944639794450.213,
+              "RUB",
+              2488299883.6111,
+              "3",
+              null,
+              "2026-10-12",
+              null
+            ]
+          ]
+        },
+        "pages": 1
+      },
+      "comparisons": [
+        {
+          "physicalSessionDate": "2026-10-12",
+          "source": "moex_iss",
+          "conclusion": "unknown",
+          "comparisonScope": "index_ohlc_volume_zero_not_traded_turnover",
+          "intradayRows": 17,
+          "firstPeriodBegin": "2026-10-12 07:00:00",
+          "lastPeriodEnd": "2026-10-12 23:59:55",
+          "actual": {
+            "open": 2403.06,
+            "high": 2423.79,
+            "low": 2374.48,
+            "close": 2389.04,
+            "volume": 0,
+            "value": 163579450619.64
+          },
+          "aggregate": {
+            "open": 2403.06,
+            "high": 2403.18,
+            "low": 2374.48,
+            "close": 2389.04,
+            "volume": 0,
+            "value": 163579450619.64
+          },
+          "mismatches": [
+            "high"
+          ],
+          "historicalAvailability": "unknown",
+          "adjustmentPolicy": "source_native_no_retro_adjustment_applied",
+          "unknowns": [
+            "Historical first publication time is not supplied by these endpoints.",
+            "Hourly reconciliation establishes non-overlap for this observed series, not immutable future provider behavior."
+          ]
+        }
+      ],
+      "logicalHistoryComparison": [
+        {
+          "logicalTradingDate": "2026-10-12",
+          "physicalSessionDates": [
+            "2026-10-12"
+          ],
+          "boundedByPriorHistory": false,
+          "actual": {
+            "open": 2403.06,
+            "high": 2423.79,
+            "low": 2374.48,
+            "close": 2389.04,
+            "volume": null,
+            "value": 163579450619.64
+          },
+          "aggregate": {
+            "open": 2403.06,
+            "high": 2423.79,
+            "low": 2374.48,
+            "close": 2389.04,
+            "volume": 0,
+            "value": 163579450619.64
+          },
+          "mismatches": [],
+          "conclusion": "unknown_boundary"
+        }
+      ]
+    }
+  ]
+}

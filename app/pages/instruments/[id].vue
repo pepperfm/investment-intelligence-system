@@ -61,6 +61,13 @@ useHead({ title: computed(() => `${data.value?.instrument.ticker ?? ''} · IIS`)
     </template>
     <template #body>
       <UAlert
+        v-if="data?.dataQuality.status === 'research_usable_with_limits'"
+        color="warning"
+        title="MOEX: реконструкция физических сессий"
+        description="Сверено с часовой историей. Историческая доступность и корректировки неизвестны; эти результаты несопоставимы с прежними логическими днями."
+        class="mb-4"
+      />
+      <UAlert
         v-if="data?.dataQuality.status === 'data_quality_blocked'"
         color="warning"
         class="mb-4"

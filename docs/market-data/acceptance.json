@@ -1,0 +1,1857 @@
+{
+  "date": "2026-10-25",
+  "baseline": "85dd666c66945c1a561047c723451efe8bb27e0d",
+  "scope": "local personal IIS; no live trading; explicitly selected MOEX research; broker/configuration unchanged",
+  "verdict": "real_reconstruction_pipeline_operational_with_limits",
+  "notGloballyVerified": true,
+  "sourcePolicy": "moex-iss-daily-hourly-physical-v1",
+  "physicalPolicy": "physical_session_v1",
+  "migration": "server/db/migrations/postgresql/20261025192349_bent_vengeance/migration.sql",
+  "backup": "tmp/pre-market-unblock-20261025.dump (0600)",
+  "isolatedDatabase": "iis_market_unblock_verify_20261025",
+  "primaryDatabase": "iis_finam",
+  "legacyPreservation": {
+    "identical": true,
+    "entities": {
+      "orders": {
+        "hash": null,
+        "count": 0
+      },
+      "candles": {
+        "hash": "5c70e4b380388b1b9b447b467c70eeed",
+        "count": 14131
+      },
+      "hypotheses": {
+        "hash": "5a009758cd04110c782e2896acda6a2b",
+        "count": 5
+      },
+      "analysis_runs": {
+        "hash": "0f49858489e63731221e0ad4b6eb12fa",
+        "count": 2
+      },
+      "source_snapshots": {
+        "hash": "b75eccec7d31a10c225ab549789f90dc",
+        "count": 43
+      },
+      "strategy_versions": {
+        "hash": "cd5f9df3895fddb6aecc99ee93777134",
+        "count": 2
+      },
+      "hypothesis_reviews": {
+        "hash": "c1f24aac01390c57210323288cdc9119",
+        "count": 5
+      },
+      "hypothesis_evaluation_revisions": {
+        "hash": null,
+        "count": 0
+      }
+    }
+  },
+  "newMarketStore": {
+    "audits": 7,
+    "rawPages": 218,
+    "quarantine": 17,
+    "normalizedBars": 6129
+  },
+  "realSync": [
+    {
+      "ticker": "NVTK",
+      "rows": 890
+    },
+    {
+      "ticker": "ROSN",
+      "rows": 894
+    },
+    {
+      "ticker": "SBER",
+      "rows": 894
+    },
+    {
+      "ticker": "TATN",
+      "rows": 892
+    },
+    {
+      "ticker": "CHMF",
+      "rows": 894
+    },
+    {
+      "ticker": "GAZP",
+      "rows": 894
+    },
+    {
+      "ticker": "IMOEX",
+      "rows": 771
+    }
+  ],
+  "qualityChecks": [
+    {
+      "ticker": "NVTK",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "NVTK@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:40.172Z",
+        "inputHash": "8d54a328e7372272e9364068de21bb8a20e472d8810f2aa51c7e7b74cab23d11",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:40.172Z",
+          "hash": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5"
+        }
+      }
+    },
+    {
+      "ticker": "ROSN",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "ROSN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:42.608Z",
+        "inputHash": "9b3ef56c63cd6cfb8dc03366e0f97d8bf498031b37c3ff8d781f501c65be66c8",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:42.608Z",
+          "hash": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c"
+        }
+      }
+    },
+    {
+      "ticker": "TATN",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:48.121Z",
+        "inputHash": "c14f962b03170ea6190dfc5c20bc85657a8b34c4749ab2b527536e5ba16a158b",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:48.121Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        }
+      }
+    },
+    {
+      "ticker": "CHMF",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "CHMF@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:51.978Z",
+        "inputHash": "76632ee0fb6227dd2f293495b0d36b113cdd008925f96c4bb3d02c6b368021a7",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:51.978Z",
+          "hash": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a"
+        }
+      }
+    },
+    {
+      "ticker": "GAZP",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "GAZP@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:54.517Z",
+        "inputHash": "bf2829b06f2b88d8d826111d7a29825afa0820e5711da766a21378376e8d6b1e",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:54.517Z",
+          "hash": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a"
+        }
+      }
+    },
+    {
+      "ticker": "IMOEX",
+      "date": "2024-11-29T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:58.672Z",
+        "inputHash": "7dd4a62ce3f7e15236ad582cc1269bf61002d4ff4d7758bcca91295e3f96d2b5",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:58.672Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      }
+    },
+    {
+      "ticker": "NVTK",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "NVTK@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:40.172Z",
+        "inputHash": "7d59c174a0a7321cf67de0e96c89a657dd0231ca21e85fee89cece2000bd05b4",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:40.172Z",
+          "hash": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5"
+        }
+      }
+    },
+    {
+      "ticker": "ROSN",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "ROSN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:42.608Z",
+        "inputHash": "c86b77ca69ccfc257beae3796465aa8901e128d48ae1ac3557651137f208744a",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:42.608Z",
+          "hash": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c"
+        }
+      }
+    },
+    {
+      "ticker": "TATN",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:48.121Z",
+        "inputHash": "97fe1be9bdfb1120b9cd54cc8876d0a0969fcdd10c91dad419eb3cca6ecf412f",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:48.121Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        }
+      }
+    },
+    {
+      "ticker": "CHMF",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "CHMF@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:51.978Z",
+        "inputHash": "a35ce227bbe81bb329ed46213cea84b40e7a06413d409c5b7d74f3af8e6f3331",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:51.978Z",
+          "hash": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a"
+        }
+      }
+    },
+    {
+      "ticker": "GAZP",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "GAZP@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:54.517Z",
+        "inputHash": "8ae363d23d0a21e441d6286665721207d4f822ab789343b487e4b86e80eb93c5",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:54.517Z",
+          "hash": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a"
+        }
+      }
+    },
+    {
+      "ticker": "IMOEX",
+      "date": "2025-01-24T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:58.672Z",
+        "inputHash": "d05688661b10944fc2926ea30156f5f9f22479296cc69db3b7742abe98acf2ec",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:58.672Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      }
+    },
+    {
+      "ticker": "NVTK",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "NVTK@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:40.172Z",
+        "inputHash": "91b9df6738e3e528baa4ec043f7ca5ffbf75d8cfe638cf88930ba97d196fd6c3",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:40.172Z",
+          "hash": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5"
+        }
+      }
+    },
+    {
+      "ticker": "ROSN",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "ROSN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:42.608Z",
+        "inputHash": "5078a27d5ea914ef9972813ff14717319b60daeda1af01d3eabe2072727c5605",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:42.608Z",
+          "hash": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c"
+        }
+      }
+    },
+    {
+      "ticker": "TATN",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:48.121Z",
+        "inputHash": "3dbe33a4040be335d3f824cff8534ee1e44216b38e24e602985ca7a33194877b",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:48.121Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        }
+      }
+    },
+    {
+      "ticker": "CHMF",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "CHMF@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:51.978Z",
+        "inputHash": "f30321d18fb5b7f507861c820a55e5254adcb32a0bc379aee8a04e6f39a49996",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:51.978Z",
+          "hash": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a"
+        }
+      }
+    },
+    {
+      "ticker": "GAZP",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "GAZP@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:54.517Z",
+        "inputHash": "a6142d04395740dd7c6d22bf2612414c20712d3d915fcaca2cc98f80af48684d",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:54.517Z",
+          "hash": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a"
+        }
+      }
+    },
+    {
+      "ticker": "IMOEX",
+      "date": "2026-09-25T20:59:59Z",
+      "status": "data_quality_blocked",
+      "bars": 0,
+      "issues": [
+        "IMOEX/2026-02-16:daily_intraday_mismatch:low",
+        "IMOEX/2026-06-11:daily_intraday_mismatch:high",
+        "IMOEX/2026-09-16:daily_intraday_mismatch:high",
+        "insufficient_required_window:IMOEX:207/210",
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:58.672Z",
+        "inputHash": "bda9cc1a3ebdb010ae57074b046682d7e5f5e7f870a28f1f602bbffeb9c8d764",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:58.672Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      }
+    },
+    {
+      "ticker": "NVTK",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "NVTK@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:40.172Z",
+        "inputHash": "b7ef98eebdd3197cc121b52be5edc63e71ff81a24c92eedab39834990c58bed6",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:40.172Z",
+          "hash": "67f2daac57940e638fba2bdc57ad39cc2e23b99a7dd48ccbab9bf96665f594a5"
+        }
+      }
+    },
+    {
+      "ticker": "ROSN",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "ROSN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:42.608Z",
+        "inputHash": "fecda8e368b7c54f4237a6c5f35dde5ff7973930074f21a82d8bad10d00da52f",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:42.608Z",
+          "hash": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c"
+        }
+      }
+    },
+    {
+      "ticker": "TATN",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "TATN@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:48.121Z",
+        "inputHash": "1edfc6b0953d2af0d99511ec5bb8f615d61e8ce247ebc5b45689c90b37c1d539",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:48.121Z",
+          "hash": "aa5ccb0710ca0bf7dd02e2671be0a66b211b6205a7e40d33b0db2bd863da336c"
+        }
+      }
+    },
+    {
+      "ticker": "CHMF",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "CHMF@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:51.978Z",
+        "inputHash": "7fd388d5d39628d7355ec08ed0947de851d08afd4d290cb291dc2f296a18462e",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:51.978Z",
+          "hash": "6e7be80758e847f7791afe2b0a3853528c8c9190b4bf81b10b749d549a2e613a"
+        }
+      }
+    },
+    {
+      "ticker": "GAZP",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "research_usable_with_limits",
+      "bars": 210,
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "GAZP@MISX",
+        "board": "TQBR",
+        "market": "shares",
+        "sourceRevision": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:54.517Z",
+        "inputHash": "2a6962ccf85a6c67e71af5ee90ab3cf1560f805946682ac44ae7be198218cef8",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:54.517Z",
+          "hash": "918352528e93a9e1c30042aaee0eb10911b94cc21946205a5fb5bd171b14ee9a"
+        }
+      }
+    },
+    {
+      "ticker": "IMOEX",
+      "date": "2026-10-25T19:00:00Z",
+      "status": "data_quality_blocked",
+      "bars": 0,
+      "issues": [
+        "IMOEX/2026-02-16:daily_intraday_mismatch:low",
+        "IMOEX/2026-06-11:daily_intraday_mismatch:high",
+        "IMOEX/2026-09-16:daily_intraday_mismatch:high",
+        "IMOEX/2026-10-05:daily_intraday_mismatch:low",
+        "IMOEX/2026-10-12:daily_intraday_mismatch:high",
+        "insufficient_required_window:IMOEX:205/210",
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "provenance": {
+        "selection": {
+          "provider": "moex_iss",
+          "policyId": "physical_session_v1",
+          "revisionCutoff": "2026-10-25T19:33:07.507Z",
+          "inputSetVersion": "moex-iss-daily-hourly-physical-v1",
+          "auditIds": {
+            "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+            "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null,
+            "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+            "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+            "39e41989-9d75-462a-9e4e-71b406f752be": null,
+            "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+            "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+            "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+            "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+            "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+            "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+            "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+            "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+            "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+            "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+            "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null
+          }
+        },
+        "source": "moex_iss",
+        "instrument": "IMOEX@MISX",
+        "board": "SNDX",
+        "market": "index",
+        "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "barPolicy": "physical_session_v1",
+        "historicalAvailability": "unknown",
+        "reconstruction": true,
+        "adjustmentPolicy": "source_native_adjustment_unknown",
+        "observedAt": "2026-10-25T19:25:58.672Z",
+        "inputHash": "9d7bd88598d0a8d1c87de97e1db64bcb49f50985f803eefa7a6df2f6bbd75ea4",
+        "coverage": {
+          "from": "2023-10-26",
+          "to": "2026-10-25",
+          "observedAt": "2026-10-25T19:25:58.672Z",
+          "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2"
+        }
+      }
+    }
+  ],
+  "repeatedIdenticalRead": true,
+  "realAgentAcceptance": {
+    "runId": "e29da1b1-8eab-4971-bdbc-ed6562015e78",
+    "hypothesisIds": [
+      "8f9ff6fb-2151-49b1-be48-3d1d2c1c2f58"
+    ],
+    "asOf": "2024-11-29T20:59:59.000Z",
+    "kind": "why_not_buy",
+    "provider": "codex",
+    "critic": "codex",
+    "status": "completed",
+    "direction": "no_trade",
+    "validation": {
+      "ok": true,
+      "issues": []
+    },
+    "selection": {
+      "auditIds": {
+        "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+        "39e41989-9d75-462a-9e4e-71b406f752be": null,
+        "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+        "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+        "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+        "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+        "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+        "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+        "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+        "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+        "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+        "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+        "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+        "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+        "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+        "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+      },
+      "policyId": "physical_session_v1",
+      "provider": "moex_iss",
+      "revisionCutoff": "2026-10-25T19:30:13.675Z",
+      "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+    },
+    "rules": {
+      "swing": {
+        "rules": {
+          "rsiMax": 62,
+          "rsiMin": 38,
+          "slowSma": 200,
+          "stopAtr": 2,
+          "trendSma": 50,
+          "atrPeriod": 14,
+          "regimeSma": 0,
+          "rsiPeriod": 14,
+          "targetAtr": 3,
+          "horizonDays": 10,
+          "minMomentum": -0.05,
+          "allowPullback": true,
+          "maxVolatility": 0.6,
+          "minRewardRisk": 1.2,
+          "entryValidDays": 3,
+          "minAvgTurnover": 50000000,
+          "breakoutLookback": 20,
+          "momentumLookback": 20
+        },
+        "version": 1,
+        "rulesHash": "30ef260ee311ef1f0a1dd47d8753e463df3a2b1d693ebc7888b59aba6bbe51d2",
+        "strategyVersionId": "58fa53ba-9312-4845-8945-951f75e55f8e"
+      }
+    },
+    "signal": {
+      "setup": false,
+      "setupType": "pullback",
+      "reasons": [
+        "Моментум 8.0% за 20 дн.",
+        "RSI14 52.8 в зоне отката 38–62"
+      ],
+      "failures": [
+        "Цена 474 ниже SMA50 482: нет восходящего тренда"
+      ],
+      "entry": 474.15,
+      "stopLoss": 443.5575,
+      "takeProfit": 520.0388,
+      "rewardRisk": 1.5,
+      "metrics": {
+        "close": 474.15,
+        "sma20": 465.22749999999996,
+        "sma50": 481.598,
+        "sma200": 531.5392499999999,
+        "ema20": 465.96777891735655,
+        "rsi14": 52.812830402544385,
+        "atr14": 15.296272615588268,
+        "atrPct": 0.03226040834248291,
+        "volatility60": 0.2831805831178534,
+        "momentum20": 0.07994533652203617,
+        "momentum60": -0.007535321821036112,
+        "momentum120": -0.15759083237096927,
+        "high20": 498.8,
+        "high55": 532,
+        "avgTurnover20": 3118258561.95,
+        "drawdown250": -0.2755340453938585,
+        "bars": 210
+      }
+    },
+    "dataQuality": {
+      "status": "research_usable_with_limits",
+      "issues": [
+        "historical_availability_unknown:explicit_market_reconstruction",
+        "source_adjustment_policy_unknown:backtest_not_verified",
+        "benchmark:historical_availability_unknown:explicit_market_reconstruction",
+        "benchmark:source_adjustment_policy_unknown:backtest_not_verified"
+      ],
+      "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+      "normalizationVersion": "moex-iss-daily-hourly-physical-v1"
+    },
+    "backtestQuality": {
+      "status": "research_usable_with_limits",
+      "issues": [
+        "MGNT@MISX:MGNT:missing_source_revision:manual_sync_required",
+        "MGNT@MISX:MGNT:missing_completed_reconciled_bars",
+        "MGNT@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "MGNT@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "MTSS@MISX:MTSS:missing_source_revision:manual_sync_required",
+        "MTSS@MISX:MTSS:missing_completed_reconciled_bars",
+        "MTSS@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "MTSS@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "NVTK@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "NVTK@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "PHOR@MISX:PHOR:missing_source_revision:manual_sync_required",
+        "PHOR@MISX:PHOR:missing_completed_reconciled_bars",
+        "PHOR@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "PHOR@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "PLZL@MISX:PLZL:missing_source_revision:manual_sync_required",
+        "PLZL@MISX:PLZL:missing_completed_reconciled_bars",
+        "PLZL@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "PLZL@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "ROSN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "ROSN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "SBER@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "SBER@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "TATN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "TATN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "YDEX@MISX:YDEX:missing_source_revision:manual_sync_required",
+        "YDEX@MISX:YDEX:missing_completed_reconciled_bars",
+        "YDEX@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "YDEX@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "AFLT@MISX:AFLT:missing_source_revision:manual_sync_required",
+        "AFLT@MISX:AFLT:missing_completed_reconciled_bars",
+        "AFLT@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "AFLT@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "ALRS@MISX:ALRS:missing_source_revision:manual_sync_required",
+        "ALRS@MISX:ALRS:missing_completed_reconciled_bars",
+        "ALRS@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "ALRS@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "CHMF@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "CHMF@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "GAZP@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "GAZP@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "GMKN@MISX:GMKN:missing_source_revision:manual_sync_required",
+        "GMKN@MISX:GMKN:missing_completed_reconciled_bars",
+        "GMKN@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "GMKN@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "LKOH@MISX:LKOH:missing_source_revision:manual_sync_required",
+        "LKOH@MISX:LKOH:missing_completed_reconciled_bars",
+        "LKOH@MISX:historical_availability_unknown:explicit_market_reconstruction",
+        "LKOH@MISX:source_adjustment_policy_unknown:backtest_not_verified",
+        "benchmark:historical_availability_unknown:explicit_market_reconstruction",
+        "benchmark:source_adjustment_policy_unknown:backtest_not_verified",
+        "partial_universe_excluded:MGNT@MISX,MTSS@MISX,PHOR@MISX,PLZL@MISX,YDEX@MISX,AFLT@MISX,ALRS@MISX,GMKN@MISX,LKOH@MISX"
+      ],
+      "excludedSymbols": [
+        "MGNT@MISX",
+        "MTSS@MISX",
+        "PHOR@MISX",
+        "PLZL@MISX",
+        "YDEX@MISX",
+        "AFLT@MISX",
+        "ALRS@MISX",
+        "GMKN@MISX",
+        "LKOH@MISX"
+      ],
+      "includedSymbols": [
+        "NVTK@MISX",
+        "ROSN@MISX",
+        "SBER@MISX",
+        "TATN@MISX",
+        "CHMF@MISX",
+        "GAZP@MISX"
+      ],
+      "selection": {
+        "auditIds": {
+          "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+          "39e41989-9d75-462a-9e4e-71b406f752be": null,
+          "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+          "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+          "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+          "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+          "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+          "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+          "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+          "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+          "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+          "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+          "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+          "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+          "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+          "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+        },
+        "policyId": "physical_session_v1",
+        "provider": "moex_iss",
+        "revisionCutoff": "2026-10-25T19:30:13.675Z",
+        "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+      },
+      "statisticsMeaning": "Exploratory reconstruction/partial-universe statistics, not verified profitable-strategy evidence."
+    },
+    "localCodexExec": true,
+    "paidHttpCalls": 0,
+    "realOrders": 0,
+    "mockPrices": false,
+    "billing": "Local Codex CLI used; CLI account billing not measured. No LLMost or API-key HTTP provider calls initiated."
+  },
+  "evaluation": {
+    "first": {
+      "evaluated": 1,
+      "pending": 0,
+      "reviewed": 0,
+      "reviewErrors": [],
+      "unchanged": 0
+    },
+    "repeat": {
+      "evaluated": 0,
+      "pending": 0,
+      "reviewed": 0,
+      "reviewErrors": [],
+      "unchanged": 1
+    },
+    "revisions": [
+      {
+        "id": "a7bfd502-9312-4524-b622-35612321bd3f",
+        "hypothesisId": "8f9ff6fb-2151-49b1-be48-3d1d2c1c2f58",
+        "evaluationVersion": "scenario-decision-v2",
+        "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+        "costModelHash": "127915b8c32b0d9e2212abf508c7b82b430771cf1f5c9e18b3b923e77641f7b0",
+        "sourceSnapshotHash": "98da906dcc2479b7ff3cc11774f1c112b184c1a71722f1bbf4cf912ae5bd4a92",
+        "status": "evaluated",
+        "scenario": {
+          "costs": {
+            "spread": 0.0005,
+            "slippage": 0.002,
+            "totalPct": 0.0035000000000000005,
+            "commission": 0.001
+          },
+          "exitAt": "2024-12-13T00:00:00.000Z",
+          "status": "evaluated",
+          "entered": true,
+          "entryAt": "2024-12-02T00:00:00.000Z",
+          "outcome": "loss",
+          "exitPrice": 483.65,
+          "netReturn": -0.004223140495867858,
+          "entryPrice": 484,
+          "exitReason": "time_exit",
+          "grossReturn": -0.0007231404958678578,
+          "maxDrawdown": -0.029958677685950397,
+          "excessReturn": 0.03408286641538877,
+          "maxFavorable": 0.026446280991735627,
+          "benchmarkReturn": -0.03830600691125663,
+          "isCounterfactual": true
+        },
+        "reconstructionAudit": {
+          "note": "Counterfactual historical market reconstruction. Eligibility uses a conservative finalization buffer, not a verified last-trade or publication time. Source adjustment policy remains unknown.",
+          "barPolicy": "physical_session_v1",
+          "horizonUnit": "confirmed_sessions",
+          "limitations": [
+            "historical_availability_unknown:explicit_market_reconstruction",
+            "source_adjustment_policy_unknown:backtest_not_verified",
+            "benchmark:historical_availability_unknown:explicit_market_reconstruction",
+            "benchmark:source_adjustment_policy_unknown:backtest_not_verified"
+          ],
+          "paperExecution": false,
+          "reconstruction": true,
+          "researchQuality": "research_usable_with_limits",
+          "futureProvenance": {
+            "board": "TQBR",
+            "market": "shares",
+            "source": "moex_iss",
+            "coverage": {
+              "to": "2026-10-25",
+              "from": "2023-10-26",
+              "hash": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+              "observedAt": "2026-10-25T19:25:42.608Z"
+            },
+            "barPolicy": "physical_session_v1",
+            "inputHash": "6de228cd70385302a8fd2429b096daa96ec7adc24dc99cdd0fdba7c52e55c860",
+            "selection": {
+              "auditIds": {
+                "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+                "39e41989-9d75-462a-9e4e-71b406f752be": null,
+                "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+                "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+                "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+                "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+                "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+                "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+                "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+                "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+                "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+                "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+                "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+                "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+                "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+                "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+              },
+              "policyId": "physical_session_v1",
+              "provider": "moex_iss",
+              "revisionCutoff": "2026-10-25T19:25:42.608Z",
+              "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+            },
+            "instrument": "ROSN@MISX",
+            "observedAt": "2026-10-25T19:25:42.608Z",
+            "reconstruction": true,
+            "sourceRevision": "8f40db82010448a66d71892e408e8ea946f8db2eff7053631e52d87231236e9c",
+            "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+            "adjustmentPolicy": "source_native_adjustment_unknown",
+            "historicalAvailability": "unknown"
+          },
+          "originalSelection": {
+            "auditIds": {
+              "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+              "39e41989-9d75-462a-9e4e-71b406f752be": null,
+              "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+              "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+              "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+              "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+              "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+              "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+              "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+              "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+              "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+              "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+              "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+              "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+              "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+              "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+            },
+            "policyId": "physical_session_v1",
+            "provider": "moex_iss",
+            "revisionCutoff": "2026-10-25T19:30:13.675Z",
+            "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+          },
+          "benchmarkProvenance": {
+            "board": "SNDX",
+            "market": "index",
+            "source": "moex_iss",
+            "coverage": {
+              "to": "2026-10-25",
+              "from": "2023-10-26",
+              "hash": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+              "observedAt": "2026-10-25T19:25:58.672Z"
+            },
+            "barPolicy": "physical_session_v1",
+            "inputHash": "0048884de6ec91e07e1a929b1b08f2bde9b6a7265ce0ad7cf4344c6bfcfccfec",
+            "selection": {
+              "auditIds": {
+                "1945a889-05f6-48a0-a631-efe9f89b52df": null,
+                "39e41989-9d75-462a-9e4e-71b406f752be": null,
+                "3c72c9c6-b92f-41ef-a89b-1a7016cbf8e0": null,
+                "42c7a310-5ab4-462e-a4fd-a50d1c92b3b8": "78e1e037-287d-43e4-8d25-60e6b7c6fa2f",
+                "48cfbd80-10d6-4a42-9aee-4787a8cf403d": null,
+                "643f9aa5-4fbd-4dae-8435-4fa9135a457a": null,
+                "6476b8a2-67f0-4461-9e71-f3d59e0dd75d": null,
+                "70715409-427d-4dc8-a09f-658982711b62": "fcfa7d97-8ccf-4851-871c-bac3ce9ae821",
+                "72887eeb-de17-4ca1-aba2-a21893579019": "3596102c-2708-4182-a1c4-3552a7aa9099",
+                "77ec0f16-bd57-4788-8c4a-41ce0171fe75": "670d63c0-0362-4977-a8fa-b501f4f279d5",
+                "ac5086d2-15c7-4046-bee2-a8920d21dace": null,
+                "af4b1a81-127a-4f80-be0e-c14f5278ce1d": "27c995c4-8c04-471c-9f5f-0decff18ed65",
+                "b223e65f-b20e-4a41-aad4-a0374bc720f3": "ce392a7e-2686-4b95-806a-c30a4fd3cf7a",
+                "c33e5c1d-ebbd-4b1d-b9ae-6693b50f0792": "50187a20-21d6-49f2-9620-d2df051a49a0",
+                "de9d567b-732a-40a4-aa2c-5b10111ede94": null,
+                "fe5f2a3c-cf09-4373-8bd8-8453dc6eaf06": null
+              },
+              "policyId": "physical_session_v1",
+              "provider": "moex_iss",
+              "revisionCutoff": "2026-10-25T19:25:58.672Z",
+              "inputSetVersion": "moex-iss-daily-hourly-physical-v1"
+            },
+            "instrument": "IMOEX@MISX",
+            "observedAt": "2026-10-25T19:25:58.672Z",
+            "reconstruction": true,
+            "sourceRevision": "0e6decf331e45575a37dfbc4721ab44c9410c2ad1e24e211c76ff3fbe8c95ca2",
+            "calendarVersion": "moex-iss-daily-hourly-physical-v1",
+            "adjustmentPolicy": "source_native_adjustment_unknown",
+            "historicalAvailability": "unknown"
+          },
+          "historicalAvailability": "unknown"
+        }
+      }
+    ]
+  },
+  "blockedAcceptance": {
+    "runId": "a489ea66-6fca-4b87-87ff-a353b1117c6d",
+    "status": "blocked",
+    "summary": {
+      "failures": [],
+      "candidates": 1,
+      "hypotheses": [],
+      "screenedOut": [],
+      "blockedByDataQuality": [
+        {
+          "symbol": "ROSN@MISX",
+          "reasons": [
+            "data_quality_blocked: контракт дневных свечей или календаря не подтверждён; новый вывод не сформирован",
+            "Нет сетапа: RSI14 67.1 вне 38–62 и нет пробоя",
+            "historical_availability_unknown:explicit_market_reconstruction",
+            "source_adjustment_policy_unknown:backtest_not_verified",
+            "benchmark:IMOEX/2026-02-16:daily_intraday_mismatch:low",
+            "benchmark:IMOEX/2026-06-11:daily_intraday_mismatch:high",
+            "benchmark:IMOEX/2026-09-16:daily_intraday_mismatch:high",
+            "benchmark:IMOEX/2026-10-05:daily_intraday_mismatch:low",
+            "benchmark:IMOEX/2026-10-12:daily_intraday_mismatch:high",
+            "benchmark:insufficient_required_window:IMOEX:205/210",
+            "benchmark:historical_availability_unknown:explicit_market_reconstruction",
+            "benchmark:source_adjustment_policy_unknown:backtest_not_verified"
+          ],
+          "strategy": "swing"
+        }
+      ]
+    },
+    "aiCalls": 0
+  },
+  "browser": {
+    "host": "http://127.0.0.1:3015",
+    "database": "isolated",
+    "explicitSourceSelection": true,
+    "sourceAuditVisible": true,
+    "blockedStatusSeparateFromScreening": true,
+    "realHypothesisVisible": true,
+    "consoleWarningsOrErrors": 0,
+    "screenshots": [
+      "tmp/market-source-preview.png",
+      "tmp/market-blocked-preview.png",
+      "tmp/market-hypothesis-preview.png",
+      "tmp/market-run-preview.png"
+    ],
+    "snapshotOnlyPhysicalChart": true,
+    "legacyDataBlocksCorrectlyDisplayedWithoutMutation": true
+  },
+  "verification": {
+    "typecheck": "passed; existing nonfatal Volar plugin warning",
+    "worker": "passed",
+    "lint": "passed",
+    "test": {
+      "files": 25,
+      "passed": 176
+    },
+    "build": "passed",
+    "diffCheck": "passed"
+  },
+  "limitations": [
+    "Finam D aggregation/completion contract remains unverified; arbitrary verified:true cannot grant it permission.",
+    "MOEX historical publication and adjustment policy remain unknown; all accepted real bars are explicitly research_usable_with_limits reconstructions.",
+    "Per-period OHLCV must match complete hourly pagination. Conflicting daily/hourly rows are retained and quarantined, never removed to make a signal pass.",
+    "Fresh and2026-09-25 benchmark windows contain actual IMOEX conflicts and still block new hypotheses. Five original real hypotheses are not reinterpreted as physical-session scenarios.",
+    "Future physical-session deadlines remain conditional without published dated admission/schedules. Monitoring checkAt is not a promised execution deadline.",
+    "Paper is suspended until verified observed prices, fresh risk and critic checks; reconstructed MOEX prices cannot fill orders.",
+    "Input-set version is new and explicitly pinned; existing strategy versions and active settings are not changed."
+  ]
+}

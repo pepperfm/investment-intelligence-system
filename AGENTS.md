@@ -56,6 +56,9 @@ IIS (investment-intelligence-system) — локальная персональн
 | `nuxt.config.ts` | Модули, runtimeConfig (провайдеры AI/рынка, Codex-модель), preset `bun` |
 | `server/services/analysis.ts` | Оркестратор исследования: пакет данных, агенты, критик, hard gate |
 | `server/domain/strategies/rules.ts` | Правила стратегий и детерминированный сигнал (`evaluateSignal`) |
+| `server/services/market.ts` | Единый loadResearchBars, явный источник/бар-политика, immutable raw/normalized/audit revisions |
+| `server/adapters/market/moex-iss.ts` | MOEX ISS: физические свечи со сверкой полного часового OHLCV |
+| `server/domain/market/physical-session-clock.ts` | Подтверждённые scoped сессии 2024–2026 и условные будущие сроки |
 | `server/domain/market/bar-quality.ts` | Проверка завершения/доступности дневных баров; неподтверждённый Finam заблокирован |
 | `server/domain/strategies/pinned.ts` | Immutable ID/rules/hash, закреплённые в запуске анализа |
 | `server/domain/evaluations/` | Симуляция исхода, бэктест, walk-forward |

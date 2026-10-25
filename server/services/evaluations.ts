@@ -1,16 +1,26 @@
 import { db, schema } from '@nuxthub/db'
 import { and, desc, eq, inArray, lte } from 'drizzle-orm'
 import { outcomeReviewSchema } from '../../shared/schemas/investment'
-import type { CostModel, NumericRuleKey, StrategyId, StrategyRules } from '../../shared/types/investment'
+import type { Candle, CostModel, NumericRuleKey, StrategyId, StrategyRules } from '../../shared/types/investment'
+import type { ResearchBarSelection } from '../../shared/types/market-data'
 import type { OutcomePacket } from '../ai/contracts'
 import { backtest, evaluationHash, walkForwardCompare } from '../domain/evaluations/backtest'
 import { aggregateStats, evaluateScenarioDecision, EVALUATION_VERSION } from '../domain/evaluations/outcome'
 import { addTradingDays, calendarVersion } from '../domain/market/calendar'
 import { inspectBarQuality } from '../domain/market/bar-quality'
-import { benchmarkInstrument, getInstrument, loadCandles } from './market'
+import { benchmarkInstrument, getInstrument, loadCandles, loadResearchBars, researchBarSelection, freezeResearchSelection } from './market'
+import { researchSessionClock } from '../domain/market/physical-session-clock'
 import { upsertDocument } from './memory'
 import { getCostModel } from './settings'
 import { activeVersion, proposeVersion } from './strategies'
+
+export async function futureEvaluationSelection(original: ResearchBarSelection, computedAt: Date) {
+  return freezeResearchSelection({
+    ...original,
+    auditIds: undefined,
+    revisionCutoff: computedAt.toISOString(),
+  })
+}
 
 const EVALUABLE = ['user_approved', 'user_rejected', 'watching', 'closed', 'ready_for_user', 'needs_review']
 
@@ -49,47 +59,110 @@ export async function recomputeEvaluations(hypothesisIds?: string[]) {
       provider,
       asOf: h.evidenceTimestamp,
     })
-    const horizonBars = (scenario?.entry ?? h.entryScenario).validDays + (scenario?.exit ?? h.exitScenario).timeExitDays - 1
-    const future = (await loadCandles(h.instrumentId, { after: h.evidenceTimestamp })).slice(0, horizonBars)
-    const benchmarkFuture = benchmark && future.length
-      ? await loadCandles(benchmark.id, {
-          after: h.evidenceTimestamp,
-          to: new Date(future.at(-1)!.ts),
-        })
-      : []
-    const quality = inspectBarQuality(future, {
-      dataSource: provider,
-      board: instrument.board,
-      asOf: new Date(),
-    })
-    const issues = quality.issues.filter(issue => issue !== 'missing_candles')
-    // Counting rows as trading days is only safe on a contiguous confirmed calendar.
-    let previous = h.evidenceTimestamp
-    for (const candle of quality.completedBars) {
-      try {
-        const expected = addTradingDays(previous, 1, {
-          provider,
-          board: instrument.board,
-        }).toISOString().slice(0, 10)
-        if (candle.ts.slice(0, 10) !== expected) {
-          issues.push(`missing_trading_period:${expected}`)
-        }
-      } catch {
-        issues.push('evaluation_calendar_range_unverified')
+    const now = new Date()
+    const entry = scenario?.entry ?? h.entryScenario
+    const exit = scenario?.exit ?? h.exitScenario
+    const physical = scenario?.researchSelection?.policyId === 'physical_session_v1'
+    const horizonBars = (physical && entry.type === 'market_next_open' ? 1 : entry.validDays) + exit.timeExitDays - 1
+    let future: Candle[]
+    let benchmarkFuture: Candle[]
+    let completedFuture: Candle[]
+    let issues: string[]
+    let actualCalendar = currentCalendar
+    let reconstructionAudit: Record<string, unknown> | null = null
+    if (physical) {
+      // The signal's snapshot stays fixed. Future-only observations get a new, recorded revision.
+      const futureSelection = await futureEvaluationSelection(scenario.researchSelection!, now)
+      const input = await loadResearchBars({
+        instrumentId: h.instrumentId,
+        asOf: now,
+        after: h.evidenceTimestamp,
+        purpose: 'evaluation',
+        limit: horizonBars,
+        selection: futureSelection,
+      })
+      const benchmarkInput = benchmark
+        ? await loadResearchBars({
+            instrumentId: benchmark.id,
+            asOf: new Date(Math.min(now.getTime(), Date.parse(input.bars.at(-1)?.earliestUseAt ?? now.toISOString()))),
+            after: h.evidenceTimestamp,
+            purpose: 'evaluation',
+            selection: futureSelection,
+          })
+        : null
+      future = input.bars
+      benchmarkFuture = benchmarkInput && benchmarkInput.quality.status !== 'data_quality_blocked' ? benchmarkInput.bars : []
+      const clock = researchSessionClock(future, input.provenance, now)
+      const confirmed = new Set(clock.completedSessions(h.evidenceTimestamp, now).map(fact => fact.sessionDate))
+      completedFuture = future.filter(bar => confirmed.has(bar.physicalSessionDate ?? bar.sessionDate ?? ''))
+      actualCalendar = input.quality.calendarVersion
+      issues = input.quality.status === 'data_quality_blocked' ? input.quality.issues.filter(issue => !issue.includes('missing_completed_reconciled_bars') && !issue.startsWith('historical_availability_unknown:') && !issue.startsWith('source_adjustment_policy_unknown:')) : []
+      if (completedFuture.length !== future.length) {
+        issues.push('physical_clock_rejected_confirmed_bars')
       }
-      previous = new Date(candle.ts)
+      const stableProvenance = (value: typeof input.provenance) => ({
+        ...value,
+        selection: {
+          ...value.selection,
+          revisionCutoff: value.observedAt ?? scenario.researchSelection!.revisionCutoff,
+        },
+      })
+      reconstructionAudit = {
+        barPolicy: 'physical_session_v1',
+        horizonUnit: 'confirmed_sessions',
+        reconstruction: true,
+        historicalAvailability: 'unknown',
+        paperExecution: false,
+        note: 'Counterfactual historical market reconstruction. Eligibility uses a conservative finalization buffer, not a verified last-trade or publication time. Source adjustment policy remains unknown.',
+        originalSelection: scenario.researchSelection,
+        futureProvenance: stableProvenance(input.provenance),
+        benchmarkProvenance: benchmarkInput ? stableProvenance(benchmarkInput.provenance) : null,
+        researchQuality: input.quality.status,
+        limitations: [...input.quality.issues, ...(benchmarkInput?.quality.issues.map(issue => `benchmark:${issue}`) ?? [])],
+      }
+    } else {
+      // Existing logical/legacy hypotheses are never silently reinterpreted as session-based ideas.
+      future = (await loadCandles(h.instrumentId, { after: h.evidenceTimestamp })).slice(0, horizonBars)
+      benchmarkFuture = benchmark && future.length
+        ? await loadCandles(benchmark.id, {
+            after: h.evidenceTimestamp,
+            to: new Date(future.at(-1)!.ts),
+          })
+        : []
+      const quality = inspectBarQuality(future, {
+        dataSource: provider,
+        board: instrument.board,
+        asOf: now,
+      })
+      completedFuture = quality.completedBars
+      issues = quality.issues.filter(issue => issue !== 'missing_candles')
+      let previous = h.evidenceTimestamp
+      for (const candle of completedFuture) {
+        try {
+          const expected = addTradingDays(previous, 1, {
+            provider,
+            board: instrument.board,
+          }).toISOString().slice(0, 10)
+          if (candle.ts.slice(0, 10) !== expected) {
+            issues.push(`missing_trading_period:${expected}`)
+          }
+        } catch {
+          issues.push('evaluation_calendar_range_unverified')
+        }
+        previous = new Date(candle.ts)
+      }
     }
     if (!costs) {
       issues.push('legacy_cost_model_not_pinned')
     }
     if (!pinnedCalendar) {
       issues.push('legacy_calendar_not_pinned')
-    } else if (pinnedCalendar !== currentCalendar) {
+    } else if (pinnedCalendar !== actualCalendar) {
       issues.push('calendar_version_mismatch')
     }
     const result = {
       ...evaluateScenarioDecision({
-        future: quality.completedBars,
+        future: completedFuture,
         benchmarkFuture,
         entry: scenario?.entry ?? h.entryScenario,
         exit: scenario?.exit ?? h.exitScenario,
@@ -114,10 +187,11 @@ export async function recomputeEvaluations(hypothesisIds?: string[]) {
       futureData: {
         candles: future,
         benchmarkCandles: benchmarkFuture,
-        provider,
+        provider: physical ? 'moex_iss' : provider,
         board: instrument.board,
       },
       originalSnapshotId: h.snapshotId,
+      reconstructionAudit,
     }
     const identity = {
       evaluationVersion: EVALUATION_VERSION,
@@ -295,7 +369,13 @@ export async function listEvaluations() {
   }
   const seen = new Set<string>()
   const current = revisions.map(({ revision, ...row }) => {
-    const result = revision.result as unknown as ReturnType<typeof evaluateScenarioDecision>
+    const result = revision.result as unknown as ReturnType<typeof evaluateScenarioDecision> & {
+      reconstructionAudit?: {
+        researchQuality?: string
+        reconstruction?: boolean
+        note?: string
+      }
+    }
     const isLatest = !seen.has(row.hypothesisId)
     seen.add(row.hypothesisId)
     return {
@@ -309,6 +389,8 @@ export async function listEvaluations() {
       status: result.status,
       issues: result.issues,
       decisionEvaluation: result.decisionEvaluation,
+      reconstructionAudit: result.reconstructionAudit ?? null,
+      dataQuality: result.reconstructionAudit?.researchQuality ?? (result.status === 'ambiguous_session' ? 'data_quality_blocked' : 'legacy_unknown'),
       evaluation: {
         ...result.scenarioEvaluation,
         id: revision.id,
@@ -328,6 +410,8 @@ export async function listEvaluations() {
     status: 'legacy' as const,
     issues: ['Historical mechanics are not versioned; preserved for audit, excluded from new statistics.'],
     decisionEvaluation: null,
+    reconstructionAudit: null,
+    dataQuality: 'legacy_unknown',
     evaluation: {
       ...row.evaluation,
       recordedIsCounterfactual: row.evaluation.isCounterfactual,
@@ -355,6 +439,10 @@ export async function strategyStats(strategyId?: StrategyId) {
   const longs = rows.filter(r => r.direction === 'long')
   const benchmarkReturns = longs.map(r => r.evaluation.benchmarkReturn).filter((value): value is number => value !== null)
   return {
+    includesReconstruction: rows.some(row => row.reconstructionAudit?.reconstruction),
+    statisticsMeaning: rows.some(row => row.reconstructionAudit?.reconstruction)
+      ? 'Includes counterfactual historical reconstruction with unknown source adjustment/publication policy; not verified evidence of profitable trading.'
+      : 'Counterfactual scenario statistics; user approval does not prove execution or decision correctness.',
     all: toStats(longs),
     approved: toStats(longs.filter(r => r.userApproved)),
     counterfactual: toStats(longs.filter(r => r.evaluation.isCounterfactual)),
@@ -365,53 +453,74 @@ export async function strategyStats(strategyId?: StrategyId) {
   }
 }
 
-/** With asOf, every series is truncated there: trades that had not closed by then simply do not exist. */
-async function backtestUniverse(asOf = new Date()) {
+/** A bounded, source-pinned replay can disclose partial universe coverage without fabricating completeness. */
+export async function backtestUniverse(asOf = new Date(), selection: ResearchBarSelection = researchBarSelection()) {
+  selection = selection.auditIds ? selection : await freezeResearchSelection(selection)
   const benchmark = await benchmarkInstrument()
   const equities = await db.select().from(schema.instruments).where(and(eq(schema.instruments.kind, 'equity'), eq(schema.instruments.active, true)))
-  const rawSeries = await Promise.all(equities.map(async i => ({
-    symbol: i.symbol,
-    candles: await loadCandles(i.id, { to: asOf }),
-    instrument: i,
-  })))
-  const issues: string[] = []
-  const series = rawSeries.map((row) => {
-    const checked = inspectBarQuality(row.candles, {
-      dataSource: row.instrument.provider === 'mock' ? 'mock' : 'finam',
-      board: row.instrument.board,
-      asOf,
-    })
-    issues.push(...checked.issues.map(issue => `${row.symbol}:${issue}`))
-    return {
-      symbol: row.symbol,
-      candles: checked.completedBars,
-    }
-  })
-  const rawBenchmark = benchmark ? await loadCandles(benchmark.id, { to: asOf }) : []
-  const checkedBenchmark = benchmark
-    ? inspectBarQuality(rawBenchmark, {
-        dataSource: benchmark.provider === 'mock' ? 'mock' : 'finam',
-        board: benchmark.board,
+  const load = async (instrument: typeof equities[number]) => {
+    try {
+      const input = await loadResearchBars({
+        instrumentId: instrument.id,
         asOf,
+        purpose: 'backtest',
+        selection,
       })
-    : null
-  if (checkedBenchmark) {
-    issues.push(...checkedBenchmark.issues.map(issue => `benchmark:${issue}`))
+      return {
+        symbol: instrument.symbol,
+        ...input,
+        error: null,
+      }
+    } catch (error) {
+      return {
+        symbol: instrument.symbol,
+        bars: [] as Candle[],
+        quality: null,
+        provenance: null,
+        gaps: [],
+        error: error instanceof Error ? error.message : 'research_series_load_failed',
+      }
+    }
   }
+  const rawSeries = await Promise.all(equities.map(load))
+  const checkedBenchmark = benchmark ? await load(benchmark) : null
+  const usable = rawSeries.filter(row => row.quality?.status !== 'data_quality_blocked' && row.bars.length > 0 && !row.error)
+  const excludedSymbols = rawSeries.filter(row => !usable.includes(row)).map(row => row.symbol)
+  const benchmarkUsable = checkedBenchmark && checkedBenchmark.quality?.status !== 'data_quality_blocked' && checkedBenchmark.bars.length > 0 && !checkedBenchmark.error
+  const issues = rawSeries.flatMap(row => [...(row.quality?.issues ?? []), ...(row.error ? [row.error] : [])].map(issue => `${row.symbol}:${issue}`))
+  if (checkedBenchmark) {
+    issues.push(...[...(checkedBenchmark.quality?.issues ?? []), ...(checkedBenchmark.error ? [checkedBenchmark.error] : [])].map(issue => `benchmark:${issue}`))
+  } else {
+    issues.push('benchmark_missing')
+  }
+  if (excludedSymbols.length) {
+    issues.push(`partial_universe_excluded:${excludedSymbols.join(',')}`)
+  }
+  const allVerified = !excludedSymbols.length && !!benchmarkUsable && usable.every(row => row.quality?.status === 'verified') && checkedBenchmark?.quality?.status === 'verified'
   return {
-    // A partial universe would bias comparison; block the entire replay if any required feed is ambiguous.
-    series: issues.length ? [] : series,
-    benchmarkCandles: issues.length ? [] : checkedBenchmark?.completedBars ?? [],
+    series: usable.map(row => ({
+      symbol: row.symbol,
+      candles: row.bars,
+    })),
+    benchmarkCandles: benchmarkUsable ? checkedBenchmark.bars : [],
     dataQuality: {
-      status: issues.length ? 'data_quality_blocked' : 'verified',
-      issues,
+      status: !usable.length ? 'data_quality_blocked' as const : allVerified ? 'verified' as const : 'research_usable_with_limits' as const,
+      issues: [...new Set(issues)],
+      excludedSymbols,
+      includedSymbols: usable.map(row => row.symbol),
+      selection,
+      statisticsMeaning: allVerified ? 'Verified input series; statistical limitations still apply.' : 'Exploratory reconstruction/partial-universe statistics, not verified profitable-strategy evidence.',
     },
     rawInput: {
-      series: rawSeries.map(({ symbol, candles }) => ({
+      selection,
+      series: rawSeries.map(({ symbol, bars, quality, provenance, error }) => ({
         symbol,
-        candles,
+        candles: bars,
+        quality,
+        provenance,
+        error,
       })),
-      benchmark: rawBenchmark,
+      benchmark: checkedBenchmark,
     },
   }
 }
@@ -430,9 +539,9 @@ type TrackRecordResult = ReturnType<typeof backtest> & {
 const trackRecordCache = new Map<string, Promise<TrackRecordResult>>()
 
 /** Point-in-time track record of a rule version: used as evidence for analyst and critic, no future data. */
-export async function trackRecord(strategyId: StrategyId, versionId: string, rules: StrategyRules, asOf: Date, pinnedCosts?: CostModel) {
+export async function trackRecord(strategyId: StrategyId, versionId: string, rules: StrategyRules, asOf: Date, pinnedCosts?: CostModel, selection?: ResearchBarSelection) {
   const costs = pinnedCosts ?? await getCostModel()
-  const { series, benchmarkCandles, dataQuality, rawInput } = await backtestUniverse(asOf)
+  const { series, benchmarkCandles, dataQuality, rawInput } = await backtestUniverse(asOf, selection)
   const key = evaluationHash({
     strategyId,
     versionId,

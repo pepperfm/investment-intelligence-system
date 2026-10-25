@@ -3,7 +3,7 @@ import { calendarVersion, isTradingDay } from './calendar'
 
 export const BAR_NORMALIZATION_VERSION = 'trading-day-v1'
 
-/** Only an independently verified adapter can supply this contract. Legacy stored rows cannot. */
+/** Legacy diagnostic shape only. Never grants real-data permission; use DB-backed loadResearchBars. */
 export interface VerifiedDailyBarContract {
   model: 'trading_day'
   timestampMeaning: 'trading_date'
@@ -32,6 +32,9 @@ export function inspectBarQuality(candles: Candle[], options: BarQualityOptions)
   const issues: string[] = []
   const completedBars: Candle[] = []
   const contract = options.contract
+  if (options.dataSource === 'finam') {
+    issues.push('finam_daily_contract_unverified: legacy contract flags cannot replace a persisted source-policy audit')
+  }
   if (!Number.isFinite(options.asOf.getTime())) {
     issues.push('invalid_as_of')
   }

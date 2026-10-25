@@ -36,6 +36,51 @@ export const candles = pgTable('candles', {
   metadata: jsonb('metadata').$type<Partial<import('../../../shared/types/investment').Candle> & { rawTimestamp?: string }>(),
 }, table => [primaryKey({ columns: [table.instrumentId, table.timeframe, table.ts] })])
 
+/** Immutable public endpoint pages. Repeated/contradictory rows are retained verbatim. */
+export const rawMarketBars = pgTable('raw_market_bars', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  instrumentId: uuid('instrument_id').notNull().references(() => instruments.id),
+  source: text('source').notNull(),
+  endpoint: text('endpoint').notNull(),
+  board: text('board').notNull(),
+  interval: text('interval').notNull(),
+  payload: jsonb('payload').$type<unknown>().notNull(),
+  responseHash: text('response_hash').notNull(),
+  observedAt: timestamp('observed_at', { withTimezone: true }).notNull(),
+}, t => [index('raw_market_instrument_idx').on(t.instrumentId, t.observedAt)])
+
+export const barQualityAudits = pgTable('bar_quality_audits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  instrumentId: uuid('instrument_id').notNull().references(() => instruments.id),
+  source: text('source').notNull(),
+  policyId: text('policy_id').notNull(),
+  policyVersion: text('policy_version').notNull(),
+  sourceRevision: text('source_revision').notNull(),
+  board: text('board').notNull(),
+  market: text('market').notNull(),
+  fromDate: text('from_date').notNull(),
+  toDate: text('to_date').notNull(),
+  status: text('status').notNull(),
+  payload: jsonb('payload').$type<{
+    assessments: import('../../domain/market/source-policy').PhysicalBarAssessment[]
+    rawIds: string[]
+    issues: string[]
+  }>().notNull(),
+  observedAt: timestamp('observed_at', { withTimezone: true }).notNull(),
+}, t => [index('bar_audit_instrument_idx').on(t.instrumentId, t.source, t.observedAt)])
+
+export const normalizedMarketBars = pgTable('normalized_market_bars', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditId: uuid('audit_id').notNull().references(() => barQualityAudits.id),
+  instrumentId: uuid('instrument_id').notNull().references(() => instruments.id),
+  source: text('source').notNull(),
+  policyId: text('policy_id').notNull(),
+  sourceRevision: text('source_revision').notNull(),
+  sessionDate: text('session_date').notNull(),
+  status: text('status').notNull(),
+  candle: jsonb('candle').$type<import('../../../shared/types/investment').Candle>().notNull(),
+}, t => [uniqueIndex('normalized_audit_date_idx').on(t.auditId, t.sessionDate), index('normalized_instrument_idx').on(t.instrumentId, t.policyId, t.sessionDate)])
+
 export const marketEvents = pgTable('market_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   externalId: text('external_id').notNull().unique(),
@@ -112,6 +157,7 @@ export const analysisRuns = pgTable('analysis_runs', {
   provider: text('provider').notNull(),
   criticProvider: text('critic_provider').notNull(),
   pinnedStrategies: jsonb('pinned_strategies').$type<Record<string, PinnedStrategy>>(),
+  researchSelection: jsonb('research_selection').$type<import('../../../shared/types/market-data').ResearchBarSelection>(),
   executionCosts: jsonb('execution_costs').$type<import('../../../shared/types/investment').CostModel>(),
   rulesVersions: jsonb('rules_versions').$type<Record<string, number>>().notNull().default({}),
   log: jsonb('log').$type<RunLogEntry[]>().notNull().default([]),
